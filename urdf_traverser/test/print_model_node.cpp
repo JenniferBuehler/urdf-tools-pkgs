@@ -17,6 +17,8 @@
 **/
 #include <ros/ros.h>
 #include <urdf_traverser/UrdfTraverser.h>
+#include <urdf_traverser/PrintModel.h>
+
 #include <string>
 
 using urdf_traverser::UrdfTraverser;
@@ -44,7 +46,6 @@ int main(int argc, char **argv)
     ROS_INFO_STREAM("Traversing model from file "<<inputFile<<"...");
     if (!fromLink.empty()) ROS_INFO_STREAM("Starting from link "<<fromLink);
 
-    bool verbose=false;
 
     ROS_INFO("Loading file...");
     UrdfTraverser traverser;
@@ -53,39 +54,17 @@ int main(int argc, char **argv)
         ROS_ERROR_STREAM("Could not load file "<<inputFile);
         return 0;
     }
+    
+    bool verbose=true;
+
+    /*
     ROS_INFO("###### MODEL #####");
     traverser.printModel(verbose);
     ROS_INFO("###### JOINT NAMES #####");
     traverser.printJointNames(fromLink);
-
-
-    ROS_INFO("Join fixed links...");
-    if (!traverser.joinFixedLinks(fromLink))
-    {
-        ROS_ERROR_STREAM("Could not join fixed links");
-        return 0;
-    }
-    ROS_INFO("$$$--- Model after fixed linked joining:");
-    traverser.printModel(verbose);
-    ROS_INFO("$$$--- Joint names after fixed linked joining:");
-    traverser.printJointNames(fromLink);
-
-    ROS_INFO("Align rotation axis...");
-    
-    verbose = true;
-    
-    ROS_INFO("###### MODEL BEFORE #####");
-    traverser.printModel(verbose);
-
-    Eigen::Vector3d axis(0,0,1);
-    if (!traverser.allRotationsToAxis(fromLink, axis))
-    {
-        ROS_ERROR_STREAM("Could not rotate axes");
-        return 0;
-    }
-    ROS_INFO("###### MODEL AFTER #####");
-    traverser.printModel(verbose);
-   
+*/
+    ROS_INFO("###### MODEL #####");
+    print_model::printModel(traverser,verbose);
     
     return 0;
 }

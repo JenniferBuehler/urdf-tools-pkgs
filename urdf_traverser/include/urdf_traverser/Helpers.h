@@ -47,11 +47,6 @@ namespace helpers
  * ################################################################################################################
  */
 
-extern void resetStdOut();
-
-// see http://homepage.ntlworld.com/jonathan.deboynepollard/FGA/redirecting-standard-io.html
-extern void redirectStdOut(const char * toFile);
-
 // returns filename extension without the dot. Make sure first that this is a file.
 extern std::string fileExtension(const char* file);
 

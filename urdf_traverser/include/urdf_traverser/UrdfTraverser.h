@@ -21,6 +21,7 @@
 // Copyright Jennifer Buehler
 
 //-----------------------------------------------------
+
 #include <urdf/model.h>
 
 #include <iostream>
@@ -28,10 +29,8 @@
 #include <map>
 #include <vector>
 
-#include <Eigen/Core>
-#include <Eigen/Geometry>
 
-#include <architecture_binding/SharedPtr.h>
+#include <urdf_traverser/Types.h>
 #include <urdf_traverser/RecursionParams.h>
 
 
@@ -41,15 +40,15 @@ namespace urdf_traverser
 /**
  * \brief This class provides functions to traverse the robot URDF and provides convenience functions to access the URDF model.
  *
+ * Traversal through a model is always done on links. This is because the root of a model is always a link.
+ * Traversal through joint space is also possible by using the link's parent joint as reference.
+ *
  * \author Jennifer Buehler
  * \date May 2016
  */
 class UrdfTraverser
 {
 public:
-    typedef Eigen::Transform<double, 3, Eigen::Affine> EigenTransform;
-    typedef architecture_binding::shared_ptr<urdf::Link>::type LinkPtr;
-    typedef RecursionParams::Ptr RecursionParamsPtr;
 
     /**
      */
@@ -146,17 +145,6 @@ public:
     int traverseTreeBottomUp(const std::string& linkName, boost::function< int(RecursionParamsPtr&)> link_cb,
                             RecursionParamsPtr& params, bool includeLink=true);
 protected:
-    typedef architecture_binding::shared_ptr<urdf::Visual>::type VisualPtr;
-    typedef architecture_binding::shared_ptr<urdf::Geometry>::type GeometryPtr;
-    typedef architecture_binding::shared_ptr<urdf::Mesh>::type MeshPtr;
-    typedef architecture_binding::shared_ptr<urdf::Sphere>::type SpherePtr;
-    typedef architecture_binding::shared_ptr<urdf::Box>::type BoxPtr;
-    typedef architecture_binding::shared_ptr<urdf::Cylinder>::type CylinderPtr;
-    typedef architecture_binding::shared_ptr<urdf::Collision>::type CollisionPtr;
-
-    typedef architecture_binding::shared_ptr<const urdf::Joint>::type JointConstPtr;
-    typedef architecture_binding::shared_ptr<const urdf::Link>::type LinkConstPtr;
-    typedef architecture_binding::shared_ptr<urdf::Joint>::type JointPtr;
 
     /**
      * \brief Recursion data for getting a list of joints, ordered by dependency (no joint depending on others
@@ -179,7 +167,7 @@ protected:
         virtual ~OrderedJointsRecursionParams() {}
 
         // Result set
-        std::vector<UrdfTraverser::JointPtr> dependencyOrderedJoints;
+        std::vector<JointPtr> dependencyOrderedJoints;
 
         // Allow splits, i.e. one link has several child joints. If this is set to false,
         // the recursive operation will fail at splitting points.
@@ -209,14 +197,6 @@ protected:
         // Result set
         Eigen::Vector3d vec;
     };
-
-
-
-    // Returns the joint's rotation axis as Eigen Vector
-    inline Eigen::Vector3d getRotationAxis(const JointPtr& j) const
-    {
-        return Eigen::Vector3d(j->axis.x, j->axis.y, j->axis.z);
-    }
 
     /**
      * Returns all joints starting from from_joint (including from_joint) within the tree. This is obtained by depth-first traversal,
@@ -276,27 +256,6 @@ protected:
     LinkPtr getLink(const std::string& name);
     LinkConstPtr readLink(const std::string& name) const;
 
-    // Scales up the translation part of the transform t by the given factor
-    void scaleTranslation(EigenTransform& t, double scale_factor);
-
-    void setTransform(const EigenTransform& t, urdf::Pose& p);
-    void setTransform(const EigenTransform& t, JointPtr& joint);
-
-    // Get joint transform to parent
-    EigenTransform getTransform(const urdf::Pose& p) const;
-
-    // Get joint transform to parent
-    EigenTransform getTransform(const JointConstPtr& joint) const; 
-
-    // Get transform to parent link (transform of link's parent joint)
-    EigenTransform getTransform(const LinkConstPtr& link) const; 
-
-    Eigen::Matrix4d getTransformMatrix(const LinkConstPtr& from_link,  const LinkConstPtr& to_link) const;
-
-    EigenTransform getTransform(const LinkConstPtr& from_link,  const LinkConstPtr& to_link) const; 
-
-    EigenTransform getTransform(const LinkPtr& from_link,  const JointPtr& to_joint) const;
-
     const urdf::Model& getRobot() const
     {
         return robot;
@@ -304,26 +263,6 @@ protected:
     
     // returns true if there are any fixed joints down from from_link
     bool hasFixedJoints(LinkPtr& from_link);
-
-    /**
-     * Applies the transformation on the joint transform
-     * \param scaleTransform set to true if the urdf's transforms are to be scaled (using scaleFactor) before applying the transform
-     */
-    bool applyTransform(JointPtr& joint, const EigenTransform& trans, bool preMult);
-
-    /**
-     * Applies the transformation on the link's visuals, collisions and intertial.
-     * \param scaleTransform set to true if the urdf's transforms are to be scaled (using scaleFactor) before applying the transform
-     */
-    void applyTransform(LinkPtr& link, const EigenTransform& trans, bool preMult);
-
-    void applyTransform(const EigenTransform& t, urdf::Vector3& v);
-
-    /**
-     * Returns all joints between \e from_link and \e to_link which are along the path between the
-     * links - this will only work if there is only one path between both links.
-     */
-    std::vector<JointPtr> getChain(const LinkConstPtr& from_link, const LinkConstPtr& to_link) const;
 
     /**
      * \return true if this joint needs a transformation to align its rotation axis with the given axis.
@@ -343,22 +282,14 @@ protected:
     int allRotationsToAxis(RecursionParamsPtr& params);
 
     /**
-     * scales the translation part of the joint transform by the given factor
-     */
-    bool scaleTranslation(JointPtr& joint, double scale_factor);
-
-    /**
-     * scales the translation part of the origins of visuals/collisions/inertial by the given factor
-     */
-    void scaleTranslation(LinkPtr& link, double scale_factor);
-
-    /**
      * Removes all fixed links down the chain in the model by adding visuals and collision geometry to the first parent link which is
      * attached to a non-fixed link.
      */
     bool joinFixedLinks(LinkPtr& from_link);
 
     bool hasChildLink(const LinkConstPtr& link, const std::string& childName) const;
+    
+    EigenTransform getTransform(const LinkPtr& from_link,  const JointPtr& to_joint);
 
 private:
 

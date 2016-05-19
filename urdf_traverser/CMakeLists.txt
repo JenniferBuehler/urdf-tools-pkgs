@@ -51,6 +51,8 @@ include_directories(
 add_library(urdf_traverser
   src/UrdfTraverser.cpp
   src/Helpers.cpp
+  src/PrintModel.cpp
+  src/Functions.cpp
 )
 
 ## Add cmake target dependencies of the library
@@ -59,11 +61,11 @@ add_library(urdf_traverser
 add_dependencies(urdf_traverser ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
 
 ## Declare a C++ executable
-add_executable(join_fixed_links test/join_fixed_links_node.cpp)
+add_executable(print_model test/print_model_node.cpp)
 
 ## Add cmake target dependencies of the executable
 ## same as for the library above
-add_dependencies(join_fixed_links ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
+add_dependencies(print_model ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
 
 set (DEPEND_LIBRARIES
    ${catkin_LIBRARIES}
@@ -71,7 +73,7 @@ set (DEPEND_LIBRARIES
 
 ## Specify libraries to link a library or executable target against
 target_link_libraries(urdf_traverser ${DEPEND_LIBRARIES})
-target_link_libraries(join_fixed_links urdf_traverser ${DEPEND_LIBRARIES})
+target_link_libraries(print_model urdf_traverser ${DEPEND_LIBRARIES})
 
 #############
 ## Install ##

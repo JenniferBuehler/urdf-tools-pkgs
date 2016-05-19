@@ -17,6 +17,7 @@
 **/
 
 #include <urdf_traverser/Helpers.h>
+#include <urdf_traverser/Functions.h>
 #include <urdf_traverser/UrdfTraverser.h>
 
 #include <string>
@@ -52,45 +53,6 @@ std::string UrdfTraverser::getRootLinkName() const
     }
     return root->name;
 }
-
-bool UrdfTraverser::scaleTranslation(JointPtr& joint, double scale_factor)
-{
-    EigenTransform vTrans = getTransform(joint);
-    scaleTranslation(vTrans, scale_factor);
-    setTransform(vTrans, joint);
-}
-
-void UrdfTraverser::scaleTranslation(LinkPtr& link, double scale_factor)
-{
-    for (std::vector<VisualPtr >::iterator vit = link->visual_array.begin();
-            vit != link->visual_array.end(); ++vit)
-    {
-        VisualPtr visual = *vit;
-        EigenTransform vTrans = getTransform(visual->origin);
-        scaleTranslation(vTrans, scale_factor);
-        setTransform(vTrans, visual->origin);
-    }
-
-
-    for (std::vector<CollisionPtr >::iterator cit = link->collision_array.begin();
-            cit != link->collision_array.end(); ++cit)
-    {
-        CollisionPtr coll = *cit;
-        EigenTransform vTrans = getTransform(coll->origin);
-        scaleTranslation(vTrans, scale_factor);
-        setTransform(vTrans, coll->origin);
-    }
-    if (!link->inertial)
-    {
-        // ROS_WARN("Link %s  has no inertial",link->name.c_str());
-        return;
-    }
-
-    EigenTransform vTrans = getTransform(link->inertial->origin);
-    scaleTranslation(vTrans, scale_factor);
-    setTransform(vTrans, link->inertial->origin);
-}
-
 
 bool UrdfTraverser::scaleModelRecursive(double scale_factor)
 {
@@ -131,18 +93,14 @@ int UrdfTraverser::scaleModel(RecursionParamsPtr& p)
         ROS_ERROR("Recursion parameter must have initialised link!");
         return -1;
     }
-    scaleTranslation(link, param->factor);
+    urdf_traverser::scaleTranslation(link, param->factor);
     JointPtr pjoint = link->parent_joint;
     if (pjoint)
     {
-        scaleTranslation(pjoint, param->factor);
+        urdf_traverser::scaleTranslation(pjoint, param->factor);
     }
     return 1;
 }
-
-
-
-    
 
 
 bool UrdfTraverser::getDependencyOrderedJoints(std::vector<JointPtr>& result,
@@ -231,9 +189,6 @@ int UrdfTraverser::addJointLink(RecursionParamsPtr& p)
     return 1;
 }
 
-
-
-
 int UrdfTraverser::getChildJoint(const JointPtr& joint, JointPtr& child)
 {
     LinkPtr childLink = getChildLink(joint);
@@ -257,14 +212,14 @@ int UrdfTraverser::getChildJoint(const JointPtr& joint, JointPtr& child)
     return 1;
 }
 
-UrdfTraverser::LinkPtr UrdfTraverser::getChildLink(const JointPtr& joint)
+urdf_traverser::LinkPtr UrdfTraverser::getChildLink(const JointPtr& joint)
 {
     LinkPtr childLink;
     getRobot().getLink(joint->child_link_name, childLink);
     return childLink;
 }
 
-UrdfTraverser::LinkConstPtr UrdfTraverser::readChildLink(const JointPtr& joint) const
+urdf_traverser::LinkConstPtr UrdfTraverser::readChildLink(const JointPtr& joint) const
 {
     LinkPtr childLink;
     getRobot().getLink(joint->child_link_name, childLink);
@@ -273,23 +228,19 @@ UrdfTraverser::LinkConstPtr UrdfTraverser::readChildLink(const JointPtr& joint) 
 
 
 
-UrdfTraverser::JointPtr UrdfTraverser::getParentJoint(const JointPtr& joint)
+urdf_traverser::JointPtr UrdfTraverser::getParentJoint(const JointPtr& joint)
 {
     LinkConstPtr parentLink = getRobot().getLink(joint->parent_link_name);
     if (!parentLink) return JointPtr();
     return parentLink->parent_joint;
 }
 
-UrdfTraverser::JointConstPtr UrdfTraverser::readParentJoint(const JointPtr& joint) const
+urdf_traverser::JointConstPtr UrdfTraverser::readParentJoint(const JointPtr& joint) const
 {
     LinkConstPtr parentLink = getRobot().getLink(joint->parent_link_name);
     if (!parentLink) return JointPtr();
     return parentLink->parent_joint;
 }
-
-
-
-
 
 bool UrdfTraverser::isChildOf(const LinkConstPtr& parent, const LinkConstPtr& child) const
 {
@@ -301,7 +252,6 @@ bool UrdfTraverser::isChildOf(const LinkConstPtr& parent, const LinkConstPtr& ch
     return false;
 }
 
-
 bool UrdfTraverser::isChildJointOf(const LinkConstPtr& parent, const JointConstPtr& joint) const
 {
     for (unsigned int i = 0; i < parent->child_joints.size(); ++i)
@@ -311,101 +261,6 @@ bool UrdfTraverser::isChildJointOf(const LinkConstPtr& parent, const JointConstP
     }
     return false;
 }
-
-
-bool UrdfTraverser::printModel(const std::string& fromLink, bool verbose)
-{
-    // get root link
-    LinkPtr root_link=getLink(fromLink);
-    if (!root_link)
-    {
-        ROS_ERROR("no root link %s", this->robot.getName().c_str());
-        return false;
-    }
-
-    ROS_INFO("Root link: %s", root_link->name.c_str());
-
-    // go through entire tree
-    RecursionParamsPtr p(new FlagRecursionParams(verbose));
-    return this->traverseTreeTopDown(root_link, boost::bind(&UrdfTraverser::printLink, this, _1), p, true, 0) >= 0;
-}
-
-bool UrdfTraverser::printModel(bool verbose)
-{
-    // get root link
-    LinkPtr root_link = this->robot.root_link_;
-    if (!root_link)
-    {
-        ROS_ERROR("no root link %s", this->robot.getName().c_str());
-        return false;
-    }
-
-    ROS_INFO("Root link: %s", root_link->name.c_str());
-
-    // go through entire tree
-    RecursionParamsPtr p(new FlagRecursionParams(verbose));
-    return this->traverseTreeTopDown(root_link, boost::bind(&UrdfTraverser::printLink, this, _1), p, true, 0) >= 0;
-}
-
-
-int UrdfTraverser::printLink(RecursionParamsPtr& p)
-{
-    if (!p->link)
-    {
-        ROS_ERROR("printLink: NULL link in parameters!");
-        return -1;
-    }
-    LinkPtr link = p->link;
-    LinkPtr parent = link->getParent();
-    unsigned int level = p->level;
-
-    bool verbose=true;
-    // if the flag in the paramter is true, print verbose.
-    FlagRecursionParams::Ptr flagParam = architecture_binding_ns::dynamic_pointer_cast<FlagRecursionParams>(p);
-    if (flagParam) verbose=flagParam->flag;
-
-    std::stringstream _indent;
-    for (unsigned int i = 0; i < level; ++i) _indent << "   ";
-    std::string indent = _indent.str();
-
-    std::string pjoint("NULL");
-    if (link->parent_joint) pjoint = link->parent_joint->name;
-    ROS_INFO("%s**%s: parent joint %s", indent.c_str(), link->name.c_str(), pjoint.c_str());
-    
-    if (!verbose) return 1;
-
-    // can only print more information if the parent joint is not NULL
-    if (!link->parent_joint) return 1;
-
-    Eigen::Vector3d rotAx=getRotationAxis(link->parent_joint);
-    ROS_INFO("%s  - Parent joint axis: %f %f %f", indent.c_str(), rotAx.x(), rotAx.y(), rotAx.z());
-
-    // get translation
-    double x = link->parent_joint->parent_to_joint_origin_transform.position.x;
-    double y = link->parent_joint->parent_to_joint_origin_transform.position.y;
-    double z = link->parent_joint->parent_to_joint_origin_transform.position.z;
-    ROS_INFO("%s  - Translation: %f %f %f", indent.c_str(), x, y, z);
-
-    double qx = link->parent_joint->parent_to_joint_origin_transform.rotation.x;
-    double qy = link->parent_joint->parent_to_joint_origin_transform.rotation.y;
-    double qz = link->parent_joint->parent_to_joint_origin_transform.rotation.z;
-    double qw = link->parent_joint->parent_to_joint_origin_transform.rotation.w;
-    ROS_INFO("%s  - Quaternion: %f %f %f %f", indent.c_str(), qx, qy, qz, qw);
-
-    // get rpy
-    double roll, pitch, yaw;
-    link->parent_joint->parent_to_joint_origin_transform.rotation.getRPY(roll, pitch, yaw);
-
-    if (isnan(roll) || isnan(pitch) || isnan(yaw))
-    {
-        ROS_ERROR("getRPY() returned nan!");
-        return -1;
-    }
-
-    ROS_INFO("%s     (=RPY: %f %f %f)", indent.c_str(), roll, pitch, yaw);
-    return 1;
-}
-
 
 bool UrdfTraverser::getJointNames(const std::string& fromLink, const bool skipFixed, std::vector<std::string>& result)
 {
@@ -480,8 +335,6 @@ bool UrdfTraverser::hasChildLink(const LinkConstPtr& link, const std::string& ch
     }
     return false;
 }
-
-
 
 
 int UrdfTraverser::traverseTreeTopDown(const std::string& linkName, boost::function< int(RecursionParamsPtr&)> link_cb,
@@ -619,140 +472,7 @@ int UrdfTraverser::traverseTreeBottomUp(const LinkPtr& link, boost::function<int
     }
     return cbRet;
 }
-/*
-bool UrdfTraverser::traverseTreeBottomUp(LinkPtr& link, boost::function< LinkPtr(LinkPtr&)> link_cb)
-{
-    std::set<std::string> toTraverse;
-    for (unsigned int i = 0; i < link->child_links.size(); ++i)
-    {
-        LinkPtr childLink = link->child_links[i];
-        toTraverse.insert(childLink->name);
-    }
 
-    for (std::set<std::string>::iterator it = toTraverse.begin(); it != toTraverse.end(); ++it)
-    {
-        if (!hasChildLink(link,*it))
-        {
-            ROS_ERROR_STREAM("Consistency: Link "<<link->name<<" does not have child "<<*it<<" any more.");
-            return false;
-        }
-        
-        LinkPtr childLink;
-        this->robot.getLink(*it, childLink);
-
-        if (childLink)
-        {
-            // ROS_INFO("Traversal into child %s",childLink->name.c_str());
-            // recurse down the tree
-            if (!traverseTreeBottomUp(childLink, link_cb))
-            {
-                ROS_ERROR("Error parsing branch of %s", childLink->name.c_str());
-                return false;
-            }
-        }
-        else
-        {
-            ROS_ERROR("root link: %s has a null child!", link->name.c_str());
-            return false;
-        }
-    }
-
-    // ROS_INFO("Relink child %s",link->name.c_str());
-    link = link_cb(link);
-    if (!link)
-    {
-        ROS_ERROR("Error parsing branch of %s", link->name.c_str());
-        return false;
-    }
-    return true;
-}
-*/
-
-#if 0  // OLD
-bool UrdfTraverser::allRotationsToAxis(const std::string& fromLinkName, const Eigen::Vector3d& axis)
-{
-    // ROS_INFO_STREAM("### Transforming all rotations starting from "<<fromLinkName<<" to axis "<<axis);
-    std::string rootLink=fromLinkName;
-    if (rootLink.empty()){
-        rootLink = getRootLinkName();
-    }
-    LinkPtr from_link=getLink(rootLink);
-    if (!from_link)
-    {
-        ROS_ERROR("Link %s does not exist", fromLinkName.c_str());
-        return false;
-    }
-
-    if (from_link->parent_joint && !allRotationsToAxis(from_link->parent_joint, axis))
-    {
-        ROS_ERROR("Aborting recursion.");
-        return false;
-    }
-
-    for (std::vector<JointPtr>::iterator pj = from_link->child_joints.begin();
-            pj != from_link->child_joints.end(); pj++)
-    {
-        if (!allRotationsToAxis(*pj, axis))
-        {
-            ROS_ERROR("Aborting recursion.");
-            return false;
-        }
-    }
-    return true;
-}
-
-
-bool UrdfTraverser::allRotationsToAxis(JointPtr& joint, const Eigen::Vector3d& axis)
-{
-    if (!joint)
-    {
-        ROS_ERROR_STREAM("allRotationsToAxis: Joint is NULL");
-        return false;
-    }
-
-    LinkPtr childLink;
-    getRobot().getLink(joint->child_link_name, childLink);
-
-    if (!childLink)
-    {
-        ROS_ERROR("All joints must have a child link!");
-        return false;
-    }
-    Eigen::Quaterniond alignAxis;
-    if (jointTransformForAxis(*joint, axis, alignAxis))
-    {
-        // ROS_INFO_STREAM("Transforming axis for joint "<<joint->name<<" with transform "<<alignAxis);
-        applyTransform(joint, EigenTransform(alignAxis), false);
-        // the link has to receive the inverse transorm, so it stays at the original position
-        Eigen::Quaterniond alignAxisInv = alignAxis.inverse();
-        applyTransform(childLink, EigenTransform(alignAxisInv), true);
-
-        // now, we have to fix the child joint's (1st order child joints) transform
-        // to correct for this transformation.
-        for (std::vector<JointPtr>::iterator pj = childLink->child_joints.begin();
-                pj != childLink->child_joints.end(); pj++)
-        {
-            applyTransform(*pj, EigenTransform(alignAxisInv), true);
-        }
-
-        // finally, set the rotation axis to the target
-        joint->axis.x = axis.x();
-        joint->axis.y = axis.y();
-        joint->axis.z = axis.z();
-    }
-    // recurse
-    for (std::vector<JointPtr>::iterator pj = childLink->child_joints.begin();
-            pj != childLink->child_joints.end(); pj++)
-    {
-        if (!allRotationsToAxis(*pj, axis))
-        {
-            ROS_ERROR("Aborting recursion.");
-            return false;
-        }
-    }
-    return true;
-}
-#endif
 
 bool UrdfTraverser::allRotationsToAxis(const std::string& fromLinkName, const Eigen::Vector3d& axis)
 {
@@ -813,17 +533,17 @@ int UrdfTraverser::allRotationsToAxis(RecursionParamsPtr& p)
     if (jointTransformForAxis(*joint, axis, alignAxis))
     {
         // ROS_INFO_STREAM("Transforming axis for joint "<<joint->name<<" with transform "<<alignAxis);
-        applyTransform(joint, EigenTransform(alignAxis), false);
+        urdf_traverser::applyTransform(joint, EigenTransform(alignAxis), false);
         // the link has to receive the inverse transorm, so it stays at the original position
         Eigen::Quaterniond alignAxisInv = alignAxis.inverse();
-        applyTransform(link, EigenTransform(alignAxisInv), true);
+        urdf_traverser::applyTransform(link, EigenTransform(alignAxisInv), true);
 
         // now, we have to fix the child joint's (1st order child joints) transform
         // to correct for this transformation.
         for (std::vector<JointPtr>::iterator pj = link->child_joints.begin();
                 pj != link->child_joints.end(); pj++)
         {
-            applyTransform(*pj, EigenTransform(alignAxisInv), true);
+            urdf_traverser::applyTransform(*pj, EigenTransform(alignAxisInv), true);
         }
 
         // finally, set the rotation axis to the target
@@ -835,13 +555,6 @@ int UrdfTraverser::allRotationsToAxis(RecursionParamsPtr& p)
     // all good, indicate that recursion can continue
     return 1;
 }
-
-
-
-
-
-
-
 
 
 int UrdfTraverser::checkActiveJoints(RecursionParamsPtr& p)
@@ -893,7 +606,7 @@ bool UrdfTraverser::joinFixedLinks(LinkPtr& from_link)
 //        <<" with "<<from_link->child_links.size()<<" children");
 
  
-#if 0
+#if 0  // XXX old implementation
     // call joinFixedLinksOnThis only from child
     // links of from_link, because the joining happens with the
     // parent joint.
@@ -927,7 +640,7 @@ bool UrdfTraverser::joinFixedLinks(LinkPtr& from_link)
         // childLink=lp->result;
     }
 #else
-    // ALTERNATIVE: join fixed joints incl. parent joint
+    // join fixed joints *not* incl. parent joint
     bool includeParent = false;
     LinkRecursionParams * lp =new LinkRecursionParams();
     RecursionParamsPtr p(lp);
@@ -949,7 +662,7 @@ bool UrdfTraverser::joinFixedLinks(LinkPtr& from_link)
     return true;
 }
 
-//UrdfTraverser::LinkPtr UrdfTraverser::joinFixedLinksOnThis(LinkPtr& link)
+//urdf_traverser::LinkPtr UrdfTraverser::joinFixedLinksOnThis(LinkPtr& link)
 int UrdfTraverser::joinFixedLinksOnThis(RecursionParamsPtr& params)
 {
     LinkRecursionParams::Ptr lparam = architecture_binding_ns::dynamic_pointer_cast<LinkRecursionParams>(params);
@@ -1030,7 +743,7 @@ int UrdfTraverser::joinFixedLinksOnThis(RecursionParamsPtr& params)
     }
 
     // the local transfrom of the parent joint
-    EigenTransform localTrans = getTransform(link);
+    EigenTransform localTrans = urdf_traverser::getTransform(link);
     // ROS_INFO_STREAM("Transform between "<<parentLink->name<<" and "<<link->name<<": "<<localTrans);
     // all this link's child joints now must receive the extra transform from this joint which we removed.
     // then, the joints should be added to the parent link
@@ -1042,15 +755,15 @@ int UrdfTraverser::joinFixedLinksOnThis(RecursionParamsPtr& params)
             ROS_ERROR("consistency: At this stage, we should only have active joints, found joint %s!",
                       child->name.c_str());
         }
-        EigenTransform jTrans = getTransform(child);
+        EigenTransform jTrans = urdf_traverser::getTransform(child);
 
         jTrans = localTrans * jTrans;
-        setTransform(jTrans, child);
+        urdf_traverser::setTransform(jTrans, child);
 #if 0
         EigenTransform rotAxTrans=jTrans.inverse();
         // ROS_INFO_STREAM("Transforming rotation axis by "<<rotAxTrans);
         // ROS_INFO_STREAM("Old child axis of "<<child->name<<": "<<child->axis);
-        applyTransform(rotAxTrans,child->axis); 
+        urdf_traverser::applyTransform(rotAxTrans,child->axis); 
         /*Eigen::Vector3d childAxis(child->axis.x, child->axis.y, child->axis.z);
         childAxis.normalize();
         child->axis.x=childAxis.x();
@@ -1078,9 +791,9 @@ int UrdfTraverser::joinFixedLinksOnThis(RecursionParamsPtr& params)
     {
         VisualPtr visual = *vit;
         // apply the transform to the visual before adding it to the parent
-        EigenTransform jTrans = getTransform(visual->origin);
+        EigenTransform jTrans = urdf_traverser::getTransform(visual->origin);
         jTrans = localTrans * jTrans;
-        setTransform(jTrans, visual->origin);
+        urdf_traverser::setTransform(jTrans, visual->origin);
         parentLink->visual_array.push_back(visual);
     }
 
@@ -1090,9 +803,9 @@ int UrdfTraverser::joinFixedLinksOnThis(RecursionParamsPtr& params)
     {
         CollisionPtr coll = *cit;
         // apply the transform to the visual before adding it to the parent
-        EigenTransform jTrans = getTransform(coll->origin);
+        EigenTransform jTrans = urdf_traverser::getTransform(coll->origin);
         jTrans = localTrans * jTrans;
-        setTransform(jTrans, coll->origin);
+        urdf_traverser::setTransform(jTrans, coll->origin);
         parentLink->collision_array.push_back(coll);
     }
 
@@ -1109,57 +822,21 @@ int UrdfTraverser::joinFixedLinksOnThis(RecursionParamsPtr& params)
 }
 
 
-std::vector<UrdfTraverser::JointPtr> UrdfTraverser::getChain(const LinkConstPtr& from_link, const LinkConstPtr& to_link) const
-{
-    std::vector<JointPtr> chain;
-
-    if (to_link->name == from_link->name) return chain;
-
-    LinkConstPtr curr = to_link;
-    LinkConstPtr pl = to_link->getParent();
-
-    while (curr && (curr->name != from_link->name))
-    {
-        // ROS_INFO_STREAM("Chain: "<<curr->name);
-        JointPtr pj = curr->parent_joint;
-        if (!pj)
-        {
-            ROS_ERROR("UrdfTraverser: End of chain at link '%s'", curr->name.c_str());
-            return std::vector<JointPtr>();
-        }
-        chain.push_back(pj);
-        curr = pl;
-        pl = curr->getParent();
-        // if (pl) ROS_INFO_STREAM("Parent: "<<pl->name);
-    }
-    if (curr->name != from_link->name)
-    {
-        ROS_ERROR_STREAM("UrdfTraverser: could not find link "<<
-            from_link->name<<" while traversing up the chain starting from "<<
-            to_link->name<<". Failed to find parent chain!");
-        return std::vector<JointPtr>();
-    }
-
-    std::reverse(chain.begin(), chain.end());
-
-    return chain;
-}
-
-UrdfTraverser::LinkPtr UrdfTraverser::getLink(const std::string& name)
+urdf_traverser::LinkPtr UrdfTraverser::getLink(const std::string& name)
 {
     LinkPtr ptr;
     this->robot.getLink(name, ptr);
     return ptr;
 }
 
-UrdfTraverser::LinkConstPtr UrdfTraverser::readLink(const std::string& name) const
+urdf_traverser::LinkConstPtr UrdfTraverser::readLink(const std::string& name) const
 {
     LinkPtr ptr;
     this->robot.getLink(name, ptr);
     return ptr;
 }
 
-UrdfTraverser::JointPtr UrdfTraverser::getJoint(const std::string& name)
+urdf_traverser::JointPtr UrdfTraverser::getJoint(const std::string& name)
 {
     JointPtr ptr;
     if (this->robot.joints_.find(name) == this->robot.joints_.end()) ptr.reset();
@@ -1167,120 +844,12 @@ UrdfTraverser::JointPtr UrdfTraverser::getJoint(const std::string& name)
     return ptr;
 }
 
-UrdfTraverser::JointConstPtr UrdfTraverser::readJoint(const std::string& name) const
+urdf_traverser::JointConstPtr UrdfTraverser::readJoint(const std::string& name) const
 {
     JointConstPtr ptr;
     if (this->robot.joints_.find(name) == this->robot.joints_.end()) ptr.reset();
     else ptr = this->robot.joints_.find(name)->second;
     return ptr;
-}
-
-void UrdfTraverser::setTransform(const EigenTransform& t, urdf::Pose& p)
-{
-    Eigen::Vector3d trans(t.translation());
-    Eigen::Quaterniond rot(t.rotation());
-
-    p.position.x = trans.x();
-    p.position.y = trans.y();
-    p.position.z = trans.z();
-    p.rotation.x = rot.x();
-    p.rotation.y = rot.y();
-    p.rotation.z = rot.z();
-    p.rotation.w = rot.w();
-}
-
-void UrdfTraverser::applyTransform(const EigenTransform& t, urdf::Vector3& v)
-{
-    Eigen::Vector3d _v(v.x,v.y,v.z);
-    Eigen::Quaterniond rot(t.rotation());
-    //ROS_INFO_STREAM("Rotation: "<<rot);
-    _v=rot*_v;
-    v.x=_v.x();
-    v.y=_v.y();
-    v.z=_v.z();
-}
-
-void UrdfTraverser::setTransform(const EigenTransform& t, JointPtr& joint)
-{
-    setTransform(t, joint->parent_to_joint_origin_transform);
-}
-
-void UrdfTraverser::scaleTranslation(EigenTransform& t, double scale_factor)
-{
-    Eigen::Vector3d trans = t.translation();
-    trans *= scale_factor;
-    Eigen::Matrix3d rot = t.rotation();
-    t.setIdentity();
-    t.translate(trans);
-    t.rotate(rot);
-}
-
-
-UrdfTraverser::EigenTransform UrdfTraverser::getTransform(const JointConstPtr& joint) const
-{
-    return getTransform(joint->parent_to_joint_origin_transform);
-}
-
-UrdfTraverser::EigenTransform UrdfTraverser::getTransform(const LinkConstPtr& link) const
-{
-    return getTransform(link->parent_joint);
-}
-
-UrdfTraverser::EigenTransform UrdfTraverser::getTransform(const LinkConstPtr& from_link,  const LinkConstPtr& to_link) const
-{
-    return EigenTransform(getTransformMatrix(from_link, to_link));
-}
-
-UrdfTraverser::EigenTransform UrdfTraverser::getTransform(const urdf::Pose& p) const
-{
-    urdf::Vector3 _jtr = p.position;
-    Eigen::Vector3d jtr(_jtr.x, _jtr.y, _jtr.z);
-    urdf::Rotation _jrot = p.rotation;
-    Eigen::Quaterniond jrot(_jrot.w, _jrot.x, _jrot.y, _jrot.z);
-    jrot.normalize();
-    EigenTransform tr;
-    tr.setIdentity();
-    tr = tr.translate(jtr);
-    tr = tr.rotate(jrot);
-    return tr;
-}
-
-Eigen::Matrix4d UrdfTraverser::getTransformMatrix(const LinkConstPtr& from_link,  const LinkConstPtr& to_link) const
-{
-    if (from_link->name == to_link->name) return Eigen::Matrix4d::Identity();
-
-    std::vector<JointPtr> pjoints = getChain(from_link, to_link);
-
-    if (pjoints.empty())
-    {
-        ROS_ERROR("could not get chain from %s to %s", from_link->name.c_str(), to_link->name.c_str());
-        return Eigen::Matrix4d::Identity();
-    }
-
-    // ROS_INFO("Chain from %s to %s",from_link->name.c_str(),to_link->name.c_str());
-
-    Eigen::Matrix4d ret = Eigen::Matrix4d::Identity();
-
-    for (std::vector<JointPtr>::iterator it = pjoints.begin(); it != pjoints.end(); ++it)
-    {
-        // ROS_INFO("Chain joint %s",(*it)->name.c_str());
-        Eigen::Matrix4d mat = getTransform(*it).matrix();
-        ret *= mat;
-    }
-    return ret;
-}
-
-UrdfTraverser::EigenTransform UrdfTraverser::getTransform(const LinkPtr& from_link,  const JointPtr& to_joint) const
-{
-    LinkPtr link1 = from_link;
-    LinkPtr link2;
-    this->robot.getLink(to_joint->child_link_name, link2);
-    if (!link1 || !link2)
-    {
-        ROS_ERROR("Invalid joint specifications (%s, %s), first needs parent and second child",
-                  link1->name.c_str(), link2->name.c_str());
-    }
-    return getTransform(link1, link2);
 }
 
 
@@ -1307,48 +876,6 @@ bool UrdfTraverser::jointTransformForAxis(const urdf::Joint& joint,
     // ROS_WARN_STREAM("z alignment: "<<rotation);
     return true;
 }
-
-
-bool UrdfTraverser::applyTransform(JointPtr& joint, const EigenTransform& trans, bool preMult)
-{
-    EigenTransform vTrans = getTransform(joint);
-    if (preMult) vTrans = trans * vTrans;
-    else vTrans = vTrans * trans;
-    setTransform(vTrans, joint);
-}
-
-void UrdfTraverser::applyTransform(LinkPtr& link, const EigenTransform& trans, bool preMult)
-{
-    // ROS_INFO("applying transform to link %s",link->name.c_str());
-
-    for (std::vector<VisualPtr >::iterator vit = link->visual_array.begin();
-            vit != link->visual_array.end(); ++vit)
-    {
-        VisualPtr visual = *vit;
-        EigenTransform vTrans = getTransform(visual->origin);
-        // ROS_INFO_STREAM("a visual for link"<<link->name<<" with transform "<<vTrans);
-        if (preMult) vTrans = trans * vTrans;
-        else vTrans = vTrans * trans;
-        setTransform(vTrans, visual->origin);
-    }
-
-
-    for (std::vector<CollisionPtr >::iterator cit = link->collision_array.begin();
-            cit != link->collision_array.end(); ++cit)
-    {
-        CollisionPtr coll = *cit;
-        EigenTransform vTrans = getTransform(coll->origin);
-        if (preMult) vTrans = trans * vTrans;
-        else vTrans = vTrans * trans;
-        setTransform(vTrans, coll->origin);
-    }
-
-    EigenTransform vTrans = getTransform(link->inertial->origin);
-    if (preMult) vTrans = trans * vTrans;
-    else vTrans = vTrans * trans;
-    setTransform(vTrans, link->inertial->origin);
-}
-
 
 void UrdfTraverser::printJointNames(const std::string& fromLink) 
 {
@@ -1425,3 +952,18 @@ bool UrdfTraverser::getModelFromFile(const std::string& filename, std::string& x
     }
     return false;
 }
+
+urdf_traverser::EigenTransform UrdfTraverser::getTransform(const LinkPtr& from_link,  const JointPtr& to_joint)
+{
+    LinkPtr link1 = from_link;
+    LinkPtr link2;
+    this->robot.getLink(to_joint->child_link_name, link2);
+    if (!link1 || !link2)
+    {
+        ROS_ERROR("Invalid joint specifications (%s, %s), first needs parent and second child",
+                  link1->name.c_str(), link2->name.c_str());
+    }
+    return urdf_traverser::getTransform(link1, link2);
+}
+
+

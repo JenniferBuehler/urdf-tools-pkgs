@@ -23,8 +23,8 @@
 #define URDF_TRAVERSER_RECURSIONPARAMS_H
 // Copyright Jennifer Buehler
 
-#include <urdf_model/link.h>
 #include <architecture_binding/SharedPtr.h>
+#include <urdf_traverser/Types.h>
 
 namespace urdf_traverser
 {
@@ -44,12 +44,12 @@ class RecursionParams
 friend class UrdfTraverser;
 public:
     typedef architecture_binding::shared_ptr<RecursionParams>::type Ptr;
-    typedef architecture_binding::shared_ptr<urdf::Link>::type LinkPtr;
 
     explicit RecursionParams(): level(-1) {}
     explicit RecursionParams(const RecursionParams& o):
         link(o.link),
-        level(o.level) {}
+        level(o.level),
+        newBaseLink(o.newBaseLink) {}
     virtual ~RecursionParams() {}
 
     RecursionParams& operator=(const RecursionParams& o)
@@ -63,9 +63,51 @@ public:
     {
         return link;
     }
+
+    /**
+     * Returns the current level in the tree (distance to link on which traversal was started)
+     */
     unsigned int getLevel() const
     {
         return level;
+    }
+
+    /**
+     * After a traversal was finished without error, this method
+     * may return a new base link.
+     * The "base link" is the link on which the traversal was started.
+     * The new base link replaces the one used before the traversal.
+     *  
+     * If a NULL pointer is returned, the base link of the model
+     * is assumed to remain unchanged.
+     *
+     * The feature to re-assign the base link will have to be handled by the
+     * callback function of the traversal (hint: when the level is 0,
+     * the traversal is at the base link).
+     * the feature is required for the case in which the root link of the URDF
+     * model has to be changed in the main model.
+     *
+     * See also setNewBaseLink().
+     */
+    LinkPtr getNewBaseLink() const
+    {
+        return newBaseLink;
+    }
+
+    /**
+     * Set the new base link to replace the one before traversal.
+     * 
+     * Careful: If traversal is started at a link which is *not* the root of the URDF,
+     * the \e newBase link's parent joint
+     * (and the parent joint's reference to this new link) must be updated
+     * accordingly in the \e newBase link! In other words, only set new base
+     * links which have a correctly referenced data structure.
+     *
+     * See also getNewBaseLink().
+     */
+    void setNewBaseLink(const LinkPtr& newBase)
+    {
+        newBaseLink = newBase;
     }
 
  protected:
@@ -83,11 +125,17 @@ public:
 
     // the link the recursion is applied on
     LinkPtr link;
-
-    // level in the tree (distance to root)
+    
+    // level in the tree (distance to link on which traversal was started)
     unsigned int level;
+    
+    // as a *result* of the traversal, if the link the traversal
+    // was started on (the "base" link of the traversal) has
+    // been re-assigned during traversal, this is the new link which
+    // replaces the one used before the traversal.
+    LinkPtr newBaseLink;
 };
-
+typedef RecursionParams::Ptr RecursionParamsPtr;
 
 /**
  * \brief Includes a factor value to be passed on in recursion.
@@ -108,6 +156,7 @@ public:
 
     double factor;
 };
+typedef FactorRecursionParams::Ptr FactorRecursionParamsPtr;
 
 /**
  * \brief Includes a flag to be passed on in recursion.
@@ -128,6 +177,7 @@ public:
 
     bool flag;
 };
+typedef FlagRecursionParams::Ptr FlagRecursionParamsPtr;
 
 
 
@@ -153,6 +203,7 @@ public:
 private:
     explicit StringVectorRecursionParams(){}
 };
+typedef StringVectorRecursionParams::Ptr StringVectorRecursionParamsPtr;
 
 
 /**
@@ -171,6 +222,7 @@ public:
 
     LinkPtr resultLink;
 };
+typedef LinkRecursionParams::Ptr LinkRecursionParamsPtr;
 
 
 }  // namespace

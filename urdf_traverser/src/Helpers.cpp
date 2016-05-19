@@ -35,52 +35,6 @@
  * ################################################################################################################
  */
 
-
-// handle for stdout redirect
-int stdout_fd;
-
-void urdf_traverser::helpers::resetStdOut()
-{
-    if (stdout_fd < 0)
-    {
-        return;
-    }
-    fflush(stdout);
-    if (dup2(stdout_fd, STDOUT_FILENO) < 0)
-    {
-        ROS_ERROR("Could not restore stdout");
-        return;
-    }
-    close(stdout_fd);
-
-    // setbuf(stdout,NULL);//reset to unnamed buffer
-}
-
-// See http://homepage.ntlworld.com/jonathan.deboynepollard/FGA/redirecting-standard-io.html
-void urdf_traverser::helpers::redirectStdOut(const char * toFile)
-{
-    fflush(stdout);
-
-    mode_t mode = S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH;
-    int file = open(toFile, O_CREAT | O_APPEND | O_WRONLY, mode);
-    if (file < 0)
-    {
-        ROS_ERROR("could not create new output stream %s: %s", toFile, strerror(errno));
-        return;
-    }
-    stdout_fd = dup(STDOUT_FILENO);                // Clone stdout to a new descriptor
-    if (dup2(file, STDOUT_FILENO) < 0)
-    {
-        ROS_ERROR("could not redirect output stream");
-        return;      // Change stdout to file
-    }
-    // close(file);  // stdout is still valid
-
-    // setvbuf(stdout,toString,_IOFBF,stringSize);
-}
-
-
-
 void urdf_traverser::helpers::findAndReplace(const std::string& newStr, const std::string& oldStr, const std::string& in, std::string& out){
   size_t pos = 0;
   out=in;
