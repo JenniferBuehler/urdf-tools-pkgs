@@ -214,10 +214,6 @@ int UrdfTraverser::traverseTreeTopDown(const LinkPtr& link, boost::function< int
     return 1;
 };
 
-
-
-
-
 int UrdfTraverser::traverseTreeBottomUp(const std::string& linkName, boost::function< int(RecursionParamsPtr&)> link_cb,
                                       RecursionParamsPtr& params, bool includeLink)
 {
@@ -293,89 +289,6 @@ int UrdfTraverser::traverseTreeBottomUp(const LinkPtr& link, boost::function<int
 }
 
 
-bool UrdfTraverser::allRotationsToAxis(const std::string& fromLinkName, const Eigen::Vector3d& axis)
-{
-    // ROS_INFO_STREAM("### Transforming all rotations starting from "<<fromLinkName<<" to axis "<<axis);
-    std::string rootLink=fromLinkName;
-    if (rootLink.empty()){
-        rootLink = getRootLinkName();
-    }
-    LinkPtr from_link=getLink(rootLink);
-    if (!from_link)
-    {
-        ROS_ERROR("Link %s does not exist", fromLinkName.c_str());
-        return false;
-    }
-
-    Vector3RecursionParams * vp = new Vector3RecursionParams(axis);
-    RecursionParamsPtr p(vp);
-
-    // traverse top-down, but don't include the link itself, as the method allRotationsToAxis()
-    // operates on the links parent joints.
-    int travRet = this->traverseTreeTopDown(from_link,
-            boost::bind(&UrdfTraverser::allRotationsToAxis, this, _1), p, false, 0);
-    if (travRet <= 0)
-    {
-        ROS_ERROR("Recursion to align all rotation axes failed");
-        return false;
-    }
-    return true;
-}
-
-
-int UrdfTraverser::allRotationsToAxis(RecursionParamsPtr& p)
-{
-    LinkPtr link = p->link;
-    if (!link)
-    {
-        ROS_ERROR("allRotationsToAxis: NULL link passed");
-        return -1;
-    }
-    
-    Vector3RecursionParams::Ptr param = baselib_binding_ns::dynamic_pointer_cast<Vector3RecursionParams>(p);
-    if (!param)
-    {
-        ROS_ERROR("Wrong recursion parameter type");
-        return -1;
-    }
-    
-    JointPtr joint = link->parent_joint;
-    if (!joint)
-    {
-        ROS_INFO_STREAM("allRotationsToAxis: Joint for link "<<link->name<<" is NULL, so this must be the root joint");
-        return 1;
-    }
-    
-    Eigen::Vector3d axis=param->vec;
-
-    Eigen::Quaterniond alignAxis;
-    if (jointTransformForAxis(*joint, axis, alignAxis))
-    {
-        // ROS_INFO_STREAM("Transforming axis for joint "<<joint->name<<" with transform "<<alignAxis);
-        urdf_traverser::applyTransform(joint, EigenTransform(alignAxis), false);
-        // the link has to receive the inverse transorm, so it stays at the original position
-        Eigen::Quaterniond alignAxisInv = alignAxis.inverse();
-        urdf_traverser::applyTransform(link, EigenTransform(alignAxisInv), true);
-
-        // now, we have to fix the child joint's (1st order child joints) transform
-        // to correct for this transformation.
-        for (std::vector<JointPtr>::iterator pj = link->child_joints.begin();
-                pj != link->child_joints.end(); pj++)
-        {
-            urdf_traverser::applyTransform(*pj, EigenTransform(alignAxisInv), true);
-        }
-
-        // finally, set the rotation axis to the target
-        joint->axis.x = axis.x();
-        joint->axis.y = axis.y();
-        joint->axis.z = axis.z();
-    }
-
-    // all good, indicate that recursion can continue
-    return 1;
-}
-
-
 urdf_traverser::LinkPtr UrdfTraverser::getLink(const std::string& name)
 {
     LinkPtr ptr;
@@ -407,30 +320,6 @@ urdf_traverser::JointConstPtr UrdfTraverser::readJoint(const std::string& name) 
 }
 
 
-bool equalAxes(const Eigen::Vector3d& z1, const Eigen::Vector3d& z2, double tolerance)
-{
-    Eigen::Vector3d _z1=z1;
-    Eigen::Vector3d _z2=z2;
-    _z1.normalize();
-    _z2.normalize();
-    double dot = _z1.dot(_z2);
-    return (std::fabs(dot - 1.0)) < tolerance;
-}
-
-
-bool UrdfTraverser::jointTransformForAxis(const urdf::Joint& joint,
-        const Eigen::Vector3d& axis, Eigen::Quaterniond& rotation)
-{
-    Eigen::Vector3d rotAxis(joint.axis.x, joint.axis.y, joint.axis.z);
-    rotAxis.normalize();
-    // ROS_INFO_STREAM("Rotation axis for joint "<<joint.name<<": "<<rotAxis);
-    if (equalAxes(rotAxis, axis, 1e-06)) return false;
-
-    rotation = Eigen::Quaterniond::FromTwoVectors(rotAxis, axis);
-    // ROS_WARN_STREAM("z alignment: "<<rotation);
-    return true;
-}
-
 void UrdfTraverser::printJointNames(const std::string& fromLink) 
 {
     std::vector<std::string> jointNames;
@@ -445,7 +334,6 @@ void UrdfTraverser::printJointNames(const std::string& fromLink)
         ROS_INFO("---");
     }
 }
-
 
 bool UrdfTraverser::loadModelFromFile(const std::string& urdfFilename)
 {
@@ -518,5 +406,3 @@ urdf_traverser::EigenTransform UrdfTraverser::getTransform(const LinkPtr& from_l
     }
     return urdf_traverser::getTransform(link1, link2);
 }
-
-

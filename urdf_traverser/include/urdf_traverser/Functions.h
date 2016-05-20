@@ -43,7 +43,12 @@ namespace urdf_traverser
 
     extern bool isChildOf(const LinkConstPtr& parent, const LinkConstPtr& child);
     extern bool isChildJointOf(const LinkConstPtr& parent, const JointConstPtr& joint);
- 
+
+    /**
+     * \return true if this joint needs a transformation to align its rotation axis with the given axis.
+     * In this case the rotation parameter contains the necessary rotation.
+     */
+    bool jointTransformForAxis(const JointConstPtr& joint, const Eigen::Vector3d& axis, Eigen::Quaterniond& rotation);
 
     /**
      *  Scales up the **translation part** of the transform \e t by the given factor

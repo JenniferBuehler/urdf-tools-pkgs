@@ -42,6 +42,9 @@ namespace urdf_traverser
  * Traversal through a model is always done on links. This is because the root of a model is always a link.
  * Traversal through joint space is also possible by using the link's parent joint as reference.
  *
+ *  Methods int traverseTreeTopDown() and traverseTreeBottomUp() can be used and will require a callback function
+ *  for the traversal. An example of how to use the functions can for example be found in PrintModel.h or JointNames.h.
+ *
  * \author Jennifer Buehler
  * \date May 2016
  */
@@ -83,13 +86,9 @@ public:
     //bool loadModelFromParameterServer(); 
 
     /**
-     * Transform the URDF such that all rotation axises (in the joint's local reference frame) are this axis
-     */
-    bool allRotationsToAxis(const std::string& fromLinkName, const Eigen::Vector3d& axis);
-
-    /**
      * Prints the joint names. Can't be const in this version because
      * of the use of a recursive method.
+     * Only joints *after* the given link are printed.
      */
     void printJointNames(const std::string& fromLink);
 
@@ -172,26 +171,6 @@ protected:
      */
     bool getDependencyOrderedJoints(std::vector<JointPtr>& result, const LinkPtr& from_link,
                                     bool allowSplits = true, bool onlyActive = true);
-    /**
-     * \brief
-     * \author Jennifer Buehler
-     */
-    class Vector3RecursionParams: public RecursionParams
-    {
-    public:
-        typedef baselib_binding::shared_ptr<Vector3RecursionParams>::type Ptr;
-        Vector3RecursionParams(): RecursionParams() {}
-        Vector3RecursionParams(const Eigen::Vector3d& _vec):
-            RecursionParams(),
-            vec(_vec){}
-        Vector3RecursionParams(const Vector3RecursionParams& o):
-            RecursionParams(o),
-            vec(o.vec) {}
-        virtual ~Vector3RecursionParams() {}
-
-        // Result set
-        Eigen::Vector3d vec;
-    };
 
     /**
      * \retval -2 on error
@@ -212,28 +191,6 @@ protected:
      */
     int traverseTreeBottomUp(const LinkPtr& link, boost::function<int(RecursionParamsPtr&)> link_cb,
                               RecursionParamsPtr& params, bool includeLink=true, unsigned int level=0);
-    //bool traverseTreeBottomUp(LinkPtr& link, boost::function< LinkPtr(LinkPtr&)> link_cb);
-
-
-
-
-    /**
-     * \return true if this joint needs a transformation to align its rotation axis with the given axis.
-     * In this case the rotation parameter contains the necessary rotation.
-     */
-    bool jointTransformForAxis(const urdf::Joint& joint, const Eigen::Vector3d& axis, Eigen::Quaterniond& rotation);
-
-
-    /**
-     * Recursion method to be used with traverseTreeTopDown() and recursion parameters
-     * of type *Vector3RecursionParams*.
-     *
-     * Re-arranges the joint-transform of the recursion link's *parent joint*, along with
-     * the link's visual/collision/intertial rotations, such that all joints rotate around the axis
-     * given in the recursion parameters vector.
-     */
-    int allRotationsToAxis(RecursionParamsPtr& params);
-
 
     bool hasChildLink(const LinkConstPtr& link, const std::string& childName) const;
     

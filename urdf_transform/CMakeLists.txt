@@ -44,6 +44,7 @@ include_directories(
 add_library(urdf_transform
     src/ScaleModel.cpp
     src/JoinFixedLinks.cpp
+    src/AlignRotationAxis.cpp
 )
 
 ## Add cmake target dependencies of the library

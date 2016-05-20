@@ -20,6 +20,7 @@
 #include <urdf_traverser/PrintModel.h>
 #include <urdf_transform/ScaleModel.h>
 #include <urdf_transform/JoinFixedLinks.h>
+#include <urdf_transform/AlignRotationAxis.h>
 #include <string>
 
 using urdf_traverser::UrdfTraverser;
@@ -128,7 +129,7 @@ int main(int argc, char **argv)
             ROS_INFO("###### MODEL BEFORE #####");
             traverser.printModel(verbose);
             Eigen::Vector3d axis(0,0,1);
-            if (!traverser.allRotationsToAxis(fromLink, axis))
+            if (!urdf_transform::allRotationsToAxis(traverser, fromLink, axis))
             {
                 ROS_ERROR_STREAM("Could not rotate axes");
                 return 0;

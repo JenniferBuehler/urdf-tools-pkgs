@@ -247,4 +247,30 @@ bool urdf_traverser::isChildJointOf(const LinkConstPtr& parent, const JointConst
     return false;
 }
 
+bool equalAxes(const Eigen::Vector3d& z1, const Eigen::Vector3d& z2, double tolerance)
+{
+    Eigen::Vector3d _z1=z1;
+    Eigen::Vector3d _z2=z2;
+    _z1.normalize();
+    _z2.normalize();
+    double dot = _z1.dot(_z2);
+    return (std::fabs(dot - 1.0)) < tolerance;
+}
+
+
+bool urdf_traverser::jointTransformForAxis(const JointConstPtr& joint,
+        const Eigen::Vector3d& axis, Eigen::Quaterniond& rotation)
+{
+    Eigen::Vector3d rotAxis(joint->axis.x, joint->axis.y, joint->axis.z);
+    if (rotAxis.norm() < 1e-06) return false;
+    rotAxis.normalize();
+    // ROS_INFO_STREAM("Rotation axis for joint "<<joint.name<<": "<<rotAxis);
+    if (equalAxes(rotAxis, axis, 1e-06)) return false;
+
+    rotation = Eigen::Quaterniond::FromTwoVectors(rotAxis, axis);
+    // ROS_WARN_STREAM("z alignment: "<<rotation);
+    return true;
+}
+
+
 
