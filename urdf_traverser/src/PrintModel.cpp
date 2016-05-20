@@ -65,7 +65,7 @@ int printLink(urdf_traverser::RecursionParamsPtr& p)
     return 1;
 }
 
-bool print_model::printModel(UrdfTraverser& traverser, const std::string& fromLink, bool verbose)
+bool urdf_traverser::printModel(UrdfTraverser& traverser, const std::string& fromLink, bool verbose)
 {
     ROS_INFO("Printing model down from link: %s", fromLink.c_str());
 
@@ -74,7 +74,7 @@ bool print_model::printModel(UrdfTraverser& traverser, const std::string& fromLi
     return traverser.traverseTreeTopDown(fromLink, boost::bind(&printLink, _1), p, true) >= 0;
 }
 
-bool print_model::printModel(UrdfTraverser& traverser, bool verbose)
+bool urdf_traverser::printModel(UrdfTraverser& traverser, bool verbose)
 {
     std::string root_link = traverser.getRootLinkName();
     return printModel(traverser, root_link, verbose);

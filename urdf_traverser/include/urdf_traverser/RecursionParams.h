@@ -105,7 +105,7 @@ class ModelRecursionParams: public RecursionParams
 public:
     typedef baselib_binding::shared_ptr<ModelRecursionParams>::type Ptr;
     explicit ModelRecursionParams(): RecursionParams() {}
-    explicit ModelRecursionParams(urdf::Model& _model):
+    explicit ModelRecursionParams(const ModelPtr& _model):
         RecursionParams(),
         model(_model) {}
     ModelRecursionParams(const ModelRecursionParams& o):
@@ -113,9 +113,31 @@ public:
         model(o.model) {}
     virtual ~ModelRecursionParams() {}
 
-    urdf::Model model;
+    ModelPtr model;
 };
 typedef ModelRecursionParams::Ptr ModelRecursionParamsPtr;
+
+/**
+ * \brief Can be used for all recursive functions which have a specific link as a result.
+ * A reference to the model is also included so that it can be used from within the callbacks.
+ * \author Jennifer Buehler
+ */
+class LinkRecursionParams: public ModelRecursionParams
+{
+public:
+    typedef baselib_binding::shared_ptr<LinkRecursionParams>::type Ptr;
+    explicit LinkRecursionParams(): ModelRecursionParams() {}
+    explicit LinkRecursionParams(const ModelPtr& model): ModelRecursionParams(model) {}
+    LinkRecursionParams(const LinkRecursionParams& o):
+        ModelRecursionParams(o),
+        resultLink(o.resultLink) {}
+    virtual ~LinkRecursionParams() {}
+
+    LinkPtr resultLink;
+};
+typedef LinkRecursionParams::Ptr LinkRecursionParamsPtr;
+
+
 
 
 /**
@@ -186,24 +208,6 @@ private:
 };
 typedef StringVectorRecursionParams::Ptr StringVectorRecursionParamsPtr;
 
-
-/**
- * \brief Can be used for all recursive functions which have a specific link as a result.
- * \author Jennifer Buehler
- */
-class LinkRecursionParams: public RecursionParams
-{
-public:
-    typedef baselib_binding::shared_ptr<LinkRecursionParams>::type Ptr;
-    explicit LinkRecursionParams(): RecursionParams() {}
-    LinkRecursionParams(const LinkRecursionParams& o):
-        RecursionParams(o),
-        resultLink(o.resultLink) {}
-    virtual ~LinkRecursionParams() {}
-
-    LinkPtr resultLink;
-};
-typedef LinkRecursionParams::Ptr LinkRecursionParamsPtr;
 
 
 }  // namespace

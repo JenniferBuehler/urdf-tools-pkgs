@@ -6,7 +6,7 @@ namespace urdf_traverser
     class UrdfTraverser;
 }
 
-namespace print_model
+namespace urdf_traverser
 {
 
 extern bool printModel(urdf_traverser::UrdfTraverser& traverser, const std::string& fromLink, bool verbose);

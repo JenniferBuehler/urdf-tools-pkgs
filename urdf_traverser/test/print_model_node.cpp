@@ -18,6 +18,7 @@
 #include <ros/ros.h>
 #include <urdf_traverser/UrdfTraverser.h>
 #include <urdf_traverser/PrintModel.h>
+#include <urdf_traverser/DependencyOrderedJoints.h>
 
 #include <string>
 
@@ -60,12 +61,28 @@ int main(int argc, char **argv)
     /*
     ROS_INFO("###### MODEL #####");
     traverser.printModel(verbose);
-    ROS_INFO("###### JOINT NAMES #####");
-    traverser.printJointNames(fromLink);
 */
     ROS_INFO("###### MODEL #####");
-    print_model::printModel(traverser,verbose);
+    traverser.printModel(verbose);
     
+    ROS_INFO("###### JOINT NAMES #####");
+    traverser.printJointNames(fromLink);
+
+/*    std::vector<urdf_traverser::JointPtr> depOrdered;
+    if (!urdf_traverser::getDependencyOrderedJoints(traverser,depOrdered, fromLink, true, false))
+    {
+        ROS_ERROR("Could not get dependency ordered joints");
+    }
+    else
+    {
+        ROS_INFO("Dependency ordered joints:");
+    }
+    for (std::vector<urdf_traverser::JointPtr>::iterator it=depOrdered.begin(); it!=depOrdered.end(); ++it)
+    {
+        urdf_traverser::JointPtr j=*it;
+        std::cout<<j->name<<std::endl;
+    }
+*/
     return 0;
 }
 

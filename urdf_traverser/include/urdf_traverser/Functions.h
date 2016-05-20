@@ -41,6 +41,10 @@ namespace urdf_traverser
     // Returns if this is an active joint in the URDF description
     extern bool isActive(const JointPtr& joint);
 
+    extern bool isChildOf(const LinkConstPtr& parent, const LinkConstPtr& child);
+    extern bool isChildJointOf(const LinkConstPtr& parent, const JointConstPtr& joint);
+ 
+
     /**
      *  Scales up the **translation part** of the transform \e t by the given factor
      */
@@ -93,6 +97,8 @@ namespace urdf_traverser
      * links - this will only work if there is only one path between both links.
      */
     extern std::vector<JointPtr> getChain(const LinkConstPtr& from_link, const LinkConstPtr& to_link);
+
+
 
 }  // namespace
 

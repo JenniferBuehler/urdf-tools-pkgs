@@ -227,3 +227,24 @@ std::vector<urdf_traverser::JointPtr> urdf_traverser::getChain(const LinkConstPt
 }
 
 
+bool urdf_traverser::isChildOf(const LinkConstPtr& parent, const LinkConstPtr& child)
+{
+    for (unsigned int i = 0; i < parent->child_links.size(); ++i)
+    {
+        LinkPtr childLink = parent->child_links[i];
+        if (childLink->name == child->name) return true;
+    }
+    return false;
+}
+
+bool urdf_traverser::isChildJointOf(const LinkConstPtr& parent, const JointConstPtr& joint) 
+{
+    for (unsigned int i = 0; i < parent->child_joints.size(); ++i)
+    {
+        JointPtr childJnt = parent->child_joints[i];
+        if (childJnt->name == joint->name) return true;
+    }
+    return false;
+}
+
+

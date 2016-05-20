@@ -51,6 +51,9 @@ add_library(urdf_traverser
   src/UrdfTraverser.cpp
   src/Helpers.cpp
   src/PrintModel.cpp
+  src/JointNames.cpp
+  src/ActiveJoints.cpp
+  src/DependencyOrderedJoints.cpp
   src/Functions.cpp
 )
 

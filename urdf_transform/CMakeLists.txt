@@ -43,6 +43,7 @@ include_directories(
 ## Declare a C++ library
 add_library(urdf_transform
     src/ScaleModel.cpp
+    src/JoinFixedLinks.cpp
 )
 
 ## Add cmake target dependencies of the library

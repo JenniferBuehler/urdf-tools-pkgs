@@ -5,6 +5,7 @@
 #include <Eigen/Core>
 #include <Eigen/Geometry>
 
+#include <urdf/model.h>
 #include <urdf_model/link.h>
 #include <urdf_model/joint.h>
 
@@ -26,6 +27,9 @@ typedef boost::shared_ptr<urdf::Sphere> SpherePtr;
 typedef boost::shared_ptr<urdf::Box> BoxPtr;
 typedef boost::shared_ptr<urdf::Cylinder> CylinderPtr;
 typedef boost::shared_ptr<urdf::Collision> CollisionPtr;
+
+typedef boost::shared_ptr<urdf::Model> ModelPtr;
+typedef boost::shared_ptr<const urdf::Model> ModelConstPtr;
 
 
 };

@@ -18,6 +18,8 @@
 #include <ros/ros.h>
 #include <urdf_traverser/UrdfTraverser.h>
 #include <urdf_traverser/PrintModel.h>
+#include <urdf_transform/ScaleModel.h>
+#include <urdf_transform/JoinFixedLinks.h>
 #include <string>
 
 using urdf_traverser::UrdfTraverser;
@@ -93,19 +95,23 @@ int main(int argc, char **argv)
         {
             ROS_INFO("###### MODEL #####");
             verbose=true;
-            print_model::printModel(traverser,verbose);
+            traverser.printModel(verbose);
             ROS_INFO("###### JOINT NAMES #####");
             traverser.printJointNames(fromLink);
             break;
         }
         case SCALE:
         {
+            ROS_INFO("###### MODEL BEFORE #####");
+            verbose=true;
+            traverser.printModel(verbose);
+            urdf_transform::scaleModel(traverser,2);
             break;
         }
         case JOIN:
         {
             ROS_INFO("Join fixed links...");
-            if (!traverser.joinFixedLinks(fromLink))
+            if (!urdf_transform::joinFixedLinks(traverser,fromLink))
             {
                 ROS_ERROR_STREAM("Could not join fixed links");
                 return 0;
@@ -120,7 +126,7 @@ int main(int argc, char **argv)
             verbose = true;
             ROS_INFO("Align rotation axis...");
             ROS_INFO("###### MODEL BEFORE #####");
-            print_model::printModel(traverser,verbose);
+            traverser.printModel(verbose);
             Eigen::Vector3d axis(0,0,1);
             if (!traverser.allRotationsToAxis(fromLink, axis))
             {
@@ -139,7 +145,7 @@ int main(int argc, char **argv)
     if (op!=PRINT)
     {
         ROS_INFO("### Model after processing:");
-        print_model::printModel(traverser,verbose);
+        traverser.printModel(verbose);
     }
     
     return 0;

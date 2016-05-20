@@ -22,7 +22,6 @@
 
 //-----------------------------------------------------
 
-#include <urdf/model.h>
 
 #include <iostream>
 #include <string>
@@ -52,7 +51,8 @@ public:
 
     /**
      */
-    explicit UrdfTraverser()
+    explicit UrdfTraverser():
+        model(new urdf::Model())
     {}
 
     ~UrdfTraverser()
@@ -83,12 +83,6 @@ public:
     //bool loadModelFromParameterServer(); 
 
     /**
-     * Removes all fixed links in the model by adding visuals and collision geometry to the first parent link which is
-     * attached to a non-fixed link. Model has to be loaded with any of the load() methods first. 
-     */
-    bool joinFixedLinks(const std::string& from_link);
-
-    /**
      * Transform the URDF such that all rotation axises (in the joint's local reference frame) are this axis
      */
     bool allRotationsToAxis(const std::string& fromLinkName, const Eigen::Vector3d& axis);
@@ -99,18 +93,17 @@ public:
      */
     void printJointNames(const std::string& fromLink);
 
-    /**
-     * Returns all joint names in depth-frist search order starting from \e fromLink (or from root if
-     * \e fromLink is empty)
-     */
-    bool getJointNames(const std::string& fromLink, const bool skipFixed, std::vector<std::string>& result);
-
     std::string getRootLinkName() const;
    
     std::string getModelName() const
     { 
-        return this->model.getName();
+        return this->model->getName();
     }
+
+    bool printModel(const std::string& fromLink, bool verbose);
+
+    bool printModel(bool verbose);
+
 
     /**
      * Traverses the tree starting from link (depth first) and calls link_cb on each link.
@@ -133,39 +126,52 @@ public:
      */
     int traverseTreeBottomUp(const std::string& linkName, boost::function< int(RecursionParamsPtr&)> link_cb,
                             RecursionParamsPtr& params, bool includeLink=true);
+
+
+    JointPtr getJoint(const std::string& name);
+    JointConstPtr readJoint(const std::string& name) const;
+    LinkPtr getLink(const std::string& name);
+    LinkConstPtr readLink(const std::string& name) const;
+
+    LinkPtr getChildLink(const JointPtr& joint);
+    LinkConstPtr readChildLink(const JointPtr& joint) const;
+    
+    JointPtr getParentJoint(const JointPtr& joint);
+    JointConstPtr readParentJoint(const JointPtr& joint) const;
+ 
+
+    ModelPtr getModel()
+    {
+        return model;
+    }
+    ModelConstPtr readModel() const
+    {
+        return model;
+    }
+
+    /**
+     * Returns all joint names in depth-frist search order starting from \e fromLink (or from root if
+     * \e fromLink is empty). Only joints *after* the given link are returned.
+     */
+    bool getJointNames(const std::string& fromLink,
+            const bool skipFixed, std::vector<std::string>& result);
+
+
 protected:
 
     /**
-     * \brief Recursion data for getting a list of joints, ordered by dependency (no joint depending on others
-     * will come before them in the result vector)
-     * \author Jennifer Buehler
+     * Returns all joints starting from from_joint (including from_joint) within the tree. This is obtained by depth-first traversal,
+     * so all joints in the result won't depend on any joints further back in the result set.
      */
-    class OrderedJointsRecursionParams: public RecursionParams
-    {
-    public:
-        typedef baselib_binding::shared_ptr<OrderedJointsRecursionParams>::type Ptr;
-        OrderedJointsRecursionParams(): RecursionParams() {}
-        OrderedJointsRecursionParams(bool _allowSplits, bool _onlyActive):
-            allowSplits(_allowSplits),
-            onlyActive(_onlyActive) {}
-        OrderedJointsRecursionParams(const OrderedJointsRecursionParams& o):
-            RecursionParams(o),
-            allowSplits(o.allowSplits),
-            onlyActive(o.onlyActive),
-            dependencyOrderedJoints(o.dependencyOrderedJoints) {}
-        virtual ~OrderedJointsRecursionParams() {}
+    bool getDependencyOrderedJoints(std::vector<JointPtr>& result, const JointPtr& from_joint,
+                                    bool allowSplits = true, bool onlyActive = true);
 
-        // Result set
-        std::vector<JointPtr> dependencyOrderedJoints;
-
-        // Allow splits, i.e. one link has several child joints. If this is set to false,
-        // the recursive operation will fail at splitting points.
-        bool allowSplits;
-
-        // Only add joints to the result which are active.
-        bool onlyActive;
-    };
-
+    /**
+     * Returns all joints down from from_link within the tree. This is obtained by depth-first traversal,
+     * so all joints in the result won't depend on any joints further back in the result set.
+     */
+    bool getDependencyOrderedJoints(std::vector<JointPtr>& result, const LinkPtr& from_link,
+                                    bool allowSplits = true, bool onlyActive = true);
     /**
      * \brief
      * \author Jennifer Buehler
@@ -188,40 +194,12 @@ protected:
     };
 
     /**
-     * Returns all joints starting from from_joint (including from_joint) within the tree. This is obtained by depth-first traversal,
-     * so all joints in the result won't depend on any joints further back in the result set.
-     */
-    bool getDependencyOrderedJoints(std::vector<JointPtr>& result, const JointPtr& from_joint,
-                                    bool allowSplits = true, bool onlyActive = true);
-
-    /**
-     * Returns all joints down from from_link within the tree. This is obtained by depth-first traversal,
-     * so all joints in the result won't depend on any joints further back in the result set.
-     */
-    bool getDependencyOrderedJoints(std::vector<JointPtr>& result, const LinkPtr& from_link,
-                                    bool allowSplits = true, bool onlyActive = true);
-
-    /**
      * \retval -2 on error
      * \retval -1 if the joint has multiple children
      * \retval 0 if the joint has no child joints (it's an end effector joint),
      * \retval 1 if a child joint is returned in parameter "child"
      */
     int getChildJoint(const JointPtr& joint, JointPtr& child);
-
-    bool isChildOf(const LinkConstPtr& parent, const LinkConstPtr& child) const;
-    bool isChildJointOf(const LinkConstPtr& parent, const JointConstPtr& joint) const;
-    
-    LinkPtr getChildLink(const JointPtr& joint);
-    LinkConstPtr readChildLink(const JointPtr& joint) const;
-    
-    JointPtr getParentJoint(const JointPtr& joint);
-    JointConstPtr readParentJoint(const JointPtr& joint) const;
- 
-    /**
-     * Helper function for getJointNames(const std::string&, std::vector<std::string>&).
-     */
-    int getJointNames(RecursionParamsPtr& p);
 
     /**
      * Main recursive top-down traversal method, called from other traverseTreeTopDown(). 
@@ -236,23 +214,8 @@ protected:
                               RecursionParamsPtr& params, bool includeLink=true, unsigned int level=0);
     //bool traverseTreeBottomUp(LinkPtr& link, boost::function< LinkPtr(LinkPtr&)> link_cb);
 
-    JointPtr getJoint(const std::string& name);
-    JointConstPtr readJoint(const std::string& name) const;
-    LinkPtr getLink(const std::string& name);
-    LinkConstPtr readLink(const std::string& name) const;
 
-    urdf::Model& getModel()
-    {
-        return model;
-    }
-    const urdf::Model& readModel() const
-    {
-        return model;
-    }
- 
 
-    // returns true if there are any fixed joints down from from_link
-    bool hasFixedJoints(LinkPtr& from_link);
 
     /**
      * \return true if this joint needs a transformation to align its rotation axis with the given axis.
@@ -271,11 +234,6 @@ protected:
      */
     int allRotationsToAxis(RecursionParamsPtr& params);
 
-    /**
-     * Removes all fixed links down the chain in the model by adding visuals and collision geometry to the first parent link which is
-     * attached to a non-fixed link.
-     */
-    bool joinFixedLinks(LinkPtr& from_link);
 
     bool hasChildLink(const LinkConstPtr& link, const std::string& childName) const;
     
@@ -283,32 +241,14 @@ protected:
 
 private:
 
-    // Function for recursive getDependencyOrderedJoints
-    int addJointLink(RecursionParamsPtr& p);
-
     /**
      * printing a link, used by recursive printModel().
      * Supports FlagRecursionParamsPtr, if the flag is true it prints verbose.
      */
     int printLink(RecursionParamsPtr& p);
 
-    /**
-     * Function which can be used for recursion which returns -1 if there are any inactive joints in the urdf.
-     */
-    int checkActiveJoints(RecursionParamsPtr& p);
 
-    /**
-     * Helper: If the parent joint of this link is fixed, it will be removed, and this link's visual will be
-     * connected to the parent link.
-     * If the joint was active, the function returns the same link as in the parameter.
-     * Otherwise, it returns the pointer to the parent link which now contains
-     * this link's visual/collision.
-     */
-    int joinFixedLinksOnThis(RecursionParamsPtr& params);
-    //LinkPtr joinFixedLinksOnThis(LinkPtr& link);
-
-
-    urdf::Model model;
+    ModelPtr model;
 };
 
 }  //  namespace urdf_traverser

@@ -33,14 +33,14 @@ int scaleModelFunc(urdf_traverser::RecursionParamsPtr& p)
     return 1;
 }
 
-bool scale_model::scaleModel(UrdfTraverser& traverser, const std::string& fromLink, double scale_factor)
+bool urdf_transform::scaleModel(UrdfTraverser& traverser, const std::string& fromLink, double scale_factor)
 {
     // do one call of scaleModel(RecursionParams) for the root link
     urdf_traverser::RecursionParamsPtr p(new urdf_traverser::FactorRecursionParams(scale_factor));
     return traverser.traverseTreeTopDown(fromLink, boost::bind(&scaleModelFunc, _1), p, true) == 1;
 }
 
-bool scale_model::scaleModel(UrdfTraverser& traverser, double scale_factor)
+bool urdf_transform::scaleModel(UrdfTraverser& traverser, double scale_factor)
 {
     std::string root_link = traverser.getRootLinkName();
     return scaleModel(traverser,root_link,scale_factor);
