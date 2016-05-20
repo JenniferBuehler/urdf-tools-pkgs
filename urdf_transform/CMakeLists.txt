@@ -1,26 +1,21 @@
 cmake_minimum_required(VERSION 2.8.3)
-project(urdf_traverser)
-
-set (CATKIN_PKGS
-  roscpp
-  urdf
-  eigen_conversions
-  baselib_binding
-  roslint
-)
+project(urdf_transform)
 
 ## Find catkin macros and libraries
 ## if COMPONENTS list like find_package(catkin REQUIRED COMPONENTS xyz)
 ## is used, also find other catkin packages
-find_package(catkin REQUIRED COMPONENTS ${CATKIN_PKGS})
+find_package(catkin REQUIRED COMPONENTS
+  roscpp
+  urdf_traverser
+  baselib_binding
+)
+
+## System dependencies are found with CMake's conventions
+# find_package(Boost REQUIRED COMPONENTS system)
 
 ###################################
 ## catkin specific configuration ##
 ###################################
-
-set (CATKIN_DEPEND_PKGS roscpp urdf eigen_conversions baselib_binding)
-#set (CATKIN_DEPENDS_LIBS <system libraries>)
-
 ## The catkin_package macro generates cmake config files for your package
 ## Declare things to be passed to dependent projects
 ## INCLUDE_DIRS: uncomment this if you package contains header files
@@ -29,10 +24,9 @@ set (CATKIN_DEPEND_PKGS roscpp urdf eigen_conversions baselib_binding)
 ## DEPENDS: system dependencies of this project that dependent projects also need
 catkin_package(
   INCLUDE_DIRS include
-  LIBRARIES urdf_traverser
-  CATKIN_DEPENDS ${CATKIN_DEPEND_PKGS} 
-  #DEPENDS ${CATKIN_DEPENDS_LIBS}
-  #  CFG_EXTRAS export_definitions.cmake
+  LIBRARIES urdf_transform
+  CATKIN_DEPENDS roscpp urdf_traverser baselib_binding
+#  DEPENDS system_lib
 )
 
 ###########
@@ -42,41 +36,38 @@ catkin_package(
 ## Specify additional locations of header files
 ## Your package locations should be listed before other locations
 include_directories(
-  include
-  ${catkin_INCLUDE_DIRS}
+    include
+    ${catkin_INCLUDE_DIRS}
 )
 
 ## Declare a C++ library
-add_library(urdf_traverser
-  src/UrdfTraverser.cpp
-  src/Helpers.cpp
-  src/PrintModel.cpp
-  src/Functions.cpp
+add_library(urdf_transform
+    src/ScaleModel.cpp
 )
 
 ## Add cmake target dependencies of the library
 ## as an example, code may need to be generated before libraries
 ## either from message generation or dynamic reconfigure
-add_dependencies(urdf_traverser ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
-
-add_definitions(${baselib_binding_DEFINITIONS})
+add_dependencies(urdf_transform ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
 
 ## Declare a C++ executable
-add_executable(print_model test/print_model_node.cpp)
+add_executable(process_model src/process_model_node.cpp)
 
 ## Add cmake target dependencies of the executable
 ## same as for the library above
-add_dependencies(print_model ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
-
-set (DEPEND_LIBRARIES
-   ${catkin_LIBRARIES}
-)
+add_dependencies(process_model ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
 
 add_definitions(${baselib_binding_DEFINITIONS})
 
 ## Specify libraries to link a library or executable target against
-target_link_libraries(urdf_traverser ${DEPEND_LIBRARIES})
-target_link_libraries(print_model urdf_traverser ${DEPEND_LIBRARIES})
+target_link_libraries(urdf_transform
+   ${catkin_LIBRARIES}
+)
+
+target_link_libraries(process_model
+   urdf_transform
+   ${catkin_LIBRARIES}
+)
 
 #############
 ## Install ##
@@ -93,7 +84,7 @@ target_link_libraries(print_model urdf_traverser ${DEPEND_LIBRARIES})
 # )
 
 ## Mark executables and/or libraries for installation
-# install(TARGETS urdf_traverser
+# install(TARGETS urdf_transform urdf_transform_node
 #   ARCHIVE DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
 #   LIBRARY DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
 #   RUNTIME DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
@@ -118,7 +109,7 @@ target_link_libraries(print_model urdf_traverser ${DEPEND_LIBRARIES})
 #############
 
 ## Add gtest based cpp test target and link libraries
-# catkin_add_gtest(${PROJECT_NAME}-test test/test_urdf_traverser.cpp)
+# catkin_add_gtest(${PROJECT_NAME}-test test/test_urdf_transform.cpp)
 # if(TARGET ${PROJECT_NAME}-test)
 #   target_link_libraries(${PROJECT_NAME}-test ${PROJECT_NAME})
 # endif()

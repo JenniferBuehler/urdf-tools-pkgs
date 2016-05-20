@@ -34,18 +34,9 @@
 
 using urdf_traverser::UrdfTraverser;
 
-// Returns if this is an active joint in the URDF description
-bool UrdfTraverser::isActive(const JointPtr& joint) const
-{
-    if (!joint) return false;
-    return (joint->type == urdf::Joint::REVOLUTE) ||
-           (joint->type == urdf::Joint::CONTINUOUS) ||
-           (joint->type == urdf::Joint::PRISMATIC);
-}
-
 std::string UrdfTraverser::getRootLinkName() const
 {
-    LinkConstPtr root = this->robot.getRoot();
+    LinkConstPtr root = this->model.getRoot();
     if (!root)
     {
         ROS_ERROR("Loaded model has no root");
@@ -54,60 +45,12 @@ std::string UrdfTraverser::getRootLinkName() const
     return root->name;
 }
 
-bool UrdfTraverser::scaleModelRecursive(double scale_factor)
-{
-    LinkPtr root_link = this->robot.root_link_;
-    if (!root_link)
-    {
-        ROS_ERROR("No root link");
-        return false;
-    }
-
-    // do one call of scaleModel(RecursionParams) for the root link
-    RecursionParamsPtr p(new FactorRecursionParams(scale_factor));
-    int cvt = scaleModel(p);
-
-    if (cvt < 0)
-    {
-        ROS_ERROR("Could not convert root mesh");
-        return false;
-    }
-
-    // go through entire tree
-    return (cvt == 0) ||
-           (this->traverseTreeTopDown(root_link, boost::bind(&UrdfTraverser::scaleModel, this, _1), p, true, 0) >= 0);
-}
-
-int UrdfTraverser::scaleModel(RecursionParamsPtr& p)
-{
-    FactorRecursionParams::Ptr param = architecture_binding_ns::dynamic_pointer_cast<FactorRecursionParams>(p);
-    if (!param)
-    {
-        ROS_ERROR("Wrong recursion parameter type");
-        return -1;
-    }
-
-    LinkPtr link = param->link;
-    if (!link)
-    {
-        ROS_ERROR("Recursion parameter must have initialised link!");
-        return -1;
-    }
-    urdf_traverser::scaleTranslation(link, param->factor);
-    JointPtr pjoint = link->parent_joint;
-    if (pjoint)
-    {
-        urdf_traverser::scaleTranslation(pjoint, param->factor);
-    }
-    return 1;
-}
-
 
 bool UrdfTraverser::getDependencyOrderedJoints(std::vector<JointPtr>& result,
         const JointPtr& from_joint, bool allowSplits, bool onlyActive)
 {
     LinkPtr childLink;
-    getRobot().getLink(from_joint->child_link_name, childLink);
+    readModel().getLink(from_joint->child_link_name, childLink);
     if (!childLink)
     {
         ROS_ERROR("Child link %s not found", from_joint->child_link_name.c_str());
@@ -118,7 +61,7 @@ bool UrdfTraverser::getDependencyOrderedJoints(std::vector<JointPtr>& result,
         ROS_ERROR("Could not get ordered joints for %s", from_joint->child_link_name.c_str());
         return false;
     }
-    if (!onlyActive || isActive(from_joint))
+    if (!onlyActive || urdf_traverser::isActive(from_joint))
     {
         result.insert(result.begin(), from_joint);
     }
@@ -149,7 +92,7 @@ bool UrdfTraverser::getDependencyOrderedJoints(std::vector<JointPtr>& result, co
 
 int UrdfTraverser::addJointLink(RecursionParamsPtr& p)
 {
-    OrderedJointsRecursionParams::Ptr param = architecture_binding_ns::dynamic_pointer_cast<OrderedJointsRecursionParams>(p);
+    OrderedJointsRecursionParams::Ptr param = baselib_binding_ns::dynamic_pointer_cast<OrderedJointsRecursionParams>(p);
     if (!param || !param->link)
     {
         ROS_ERROR("Wrong recursion parameter type, or NULL link");
@@ -178,7 +121,7 @@ int UrdfTraverser::addJointLink(RecursionParamsPtr& p)
         // this is a splitting point, we have to add support for this
     }
 
-    if (param->onlyActive && !isActive(param->link->parent_joint))
+    if (param->onlyActive && !urdf_traverser::isActive(param->link->parent_joint))
     {
         // ROS_INFO("No type");
         return 1;
@@ -215,14 +158,14 @@ int UrdfTraverser::getChildJoint(const JointPtr& joint, JointPtr& child)
 urdf_traverser::LinkPtr UrdfTraverser::getChildLink(const JointPtr& joint)
 {
     LinkPtr childLink;
-    getRobot().getLink(joint->child_link_name, childLink);
+    readModel().getLink(joint->child_link_name, childLink);
     return childLink;
 }
 
 urdf_traverser::LinkConstPtr UrdfTraverser::readChildLink(const JointPtr& joint) const
 {
     LinkPtr childLink;
-    getRobot().getLink(joint->child_link_name, childLink);
+    readModel().getLink(joint->child_link_name, childLink);
     return childLink;
 }
 
@@ -230,14 +173,14 @@ urdf_traverser::LinkConstPtr UrdfTraverser::readChildLink(const JointPtr& joint)
 
 urdf_traverser::JointPtr UrdfTraverser::getParentJoint(const JointPtr& joint)
 {
-    LinkConstPtr parentLink = getRobot().getLink(joint->parent_link_name);
+    LinkConstPtr parentLink = readModel().getLink(joint->parent_link_name);
     if (!parentLink) return JointPtr();
     return parentLink->parent_joint;
 }
 
 urdf_traverser::JointConstPtr UrdfTraverser::readParentJoint(const JointPtr& joint) const
 {
-    LinkConstPtr parentLink = getRobot().getLink(joint->parent_link_name);
+    LinkConstPtr parentLink = readModel().getLink(joint->parent_link_name);
     if (!parentLink) return JointPtr();
     return parentLink->parent_joint;
 }
@@ -271,7 +214,7 @@ bool UrdfTraverser::getJointNames(const std::string& fromLink, const bool skipFi
 
     // get root link
     LinkPtr root_link;
-    this->robot.getLink(rootLink, root_link);
+    this->model.getLink(rootLink, root_link);
     if (!root_link)
     {
         ROS_ERROR("no root link %s", fromLink.c_str());
@@ -294,7 +237,7 @@ bool UrdfTraverser::getJointNames(const std::string& fromLink, const bool skipFi
 
 int UrdfTraverser::getJointNames(RecursionParamsPtr& p)
 {
-    StringVectorRecursionParams::Ptr param = architecture_binding_ns::dynamic_pointer_cast<StringVectorRecursionParams>(p);
+    StringVectorRecursionParams::Ptr param = baselib_binding_ns::dynamic_pointer_cast<StringVectorRecursionParams>(p);
     if (!param)
     {
         ROS_ERROR("Wrong recursion parameter type");
@@ -319,7 +262,7 @@ int UrdfTraverser::getJointNames(RecursionParamsPtr& p)
     if (link->parent_joint)
     {
         pjoint = link->parent_joint->name;
-        if (!param->skipFixed || isActive(link->parent_joint))
+        if (!param->skipFixed || urdf_traverser::isActive(link->parent_joint))
             param->names.push_back(pjoint);
     }
     //ROS_INFO("Information about %s: parent joint %s (recursion level %i)", link->name.c_str(), pjoint.c_str(), level);
@@ -432,7 +375,7 @@ int UrdfTraverser::traverseTreeBottomUp(const LinkPtr& link, boost::function<int
         }
         
         LinkPtr childLink;
-        this->robot.getLink(*it, childLink);
+        this->model.getLink(*it, childLink);
 
         if (childLink)
         {
@@ -513,7 +456,7 @@ int UrdfTraverser::allRotationsToAxis(RecursionParamsPtr& p)
         return -1;
     }
     
-    Vector3RecursionParams::Ptr param = architecture_binding_ns::dynamic_pointer_cast<Vector3RecursionParams>(p);
+    Vector3RecursionParams::Ptr param = baselib_binding_ns::dynamic_pointer_cast<Vector3RecursionParams>(p);
     if (!param)
     {
         ROS_ERROR("Wrong recursion parameter type");
@@ -563,7 +506,7 @@ int UrdfTraverser::checkActiveJoints(RecursionParamsPtr& p)
     LinkPtr parent = link->getParent();
     unsigned int level = p->level;
     if (level==0) return 1;
-    if (link->parent_joint && !isActive(link->parent_joint))
+    if (link->parent_joint && !urdf_traverser::isActive(link->parent_joint))
     {
         ROS_INFO("UrdfTraverser: Found fixed joint %s", link->parent_joint->name.c_str());
         return -1;
@@ -627,7 +570,7 @@ bool UrdfTraverser::joinFixedLinks(LinkPtr& from_link)
         }
         
         LinkPtr childLink;
-        this->robot.getLink(*it, childLink);
+        this->model.getLink(*it, childLink);
  
         LinkRecursionParams * lp =new LinkRecursionParams();
         RecursionParamsPtr p(lp);
@@ -665,7 +608,7 @@ bool UrdfTraverser::joinFixedLinks(LinkPtr& from_link)
 //urdf_traverser::LinkPtr UrdfTraverser::joinFixedLinksOnThis(LinkPtr& link)
 int UrdfTraverser::joinFixedLinksOnThis(RecursionParamsPtr& params)
 {
-    LinkRecursionParams::Ptr lparam = architecture_binding_ns::dynamic_pointer_cast<LinkRecursionParams>(params);
+    LinkRecursionParams::Ptr lparam = baselib_binding_ns::dynamic_pointer_cast<LinkRecursionParams>(params);
     if (!lparam)
     {
         ROS_ERROR("Wrong recursion parameter type");
@@ -691,7 +634,7 @@ int UrdfTraverser::joinFixedLinksOnThis(RecursionParamsPtr& params)
 
 
     LinkPtr parentLink;
-    this->robot.getLink(jointToParent->parent_link_name, parentLink);
+    this->model.getLink(jointToParent->parent_link_name, parentLink);
     if (!parentLink)
     {
         ROS_WARN("End of chain at %s, because of no parent link", link->name.c_str());
@@ -705,7 +648,7 @@ int UrdfTraverser::joinFixedLinksOnThis(RecursionParamsPtr& params)
     }*/
 
 
-    if (isActive(jointToParent))
+    if (urdf_traverser::isActive(jointToParent))
     {
         // ROS_INFO("Parent of %s (%s) is active so won't delete",link->name.c_str(), jointToParent->name.c_str());
         // We won't delete this joint, as it is active.
@@ -750,7 +693,7 @@ int UrdfTraverser::joinFixedLinksOnThis(RecursionParamsPtr& params)
     for (std::vector<JointPtr >::iterator j = link->child_joints.begin(); j != link->child_joints.end(); j++)
     {
         JointPtr child = (*j);
-        if (!isActive(child))
+        if (!urdf_traverser::isActive(child))
         {
             ROS_ERROR("consistency: At this stage, we should only have active joints, found joint %s!",
                       child->name.c_str());
@@ -777,7 +720,7 @@ int UrdfTraverser::joinFixedLinksOnThis(RecursionParamsPtr& params)
 
         // this link's child link has to be added to parents as well
         LinkPtr childChildLink;
-        this->robot.getLink(child->child_link_name, childChildLink);
+        this->model.getLink(child->child_link_name, childChildLink);
         if (!childChildLink)
         {
             ROS_ERROR("consistency: found null child link for joint %s", child->name.c_str());
@@ -825,30 +768,30 @@ int UrdfTraverser::joinFixedLinksOnThis(RecursionParamsPtr& params)
 urdf_traverser::LinkPtr UrdfTraverser::getLink(const std::string& name)
 {
     LinkPtr ptr;
-    this->robot.getLink(name, ptr);
+    this->model.getLink(name, ptr);
     return ptr;
 }
 
 urdf_traverser::LinkConstPtr UrdfTraverser::readLink(const std::string& name) const
 {
     LinkPtr ptr;
-    this->robot.getLink(name, ptr);
+    this->model.getLink(name, ptr);
     return ptr;
 }
 
 urdf_traverser::JointPtr UrdfTraverser::getJoint(const std::string& name)
 {
     JointPtr ptr;
-    if (this->robot.joints_.find(name) == this->robot.joints_.end()) ptr.reset();
-    else ptr = this->robot.joints_.find(name)->second;
+    if (this->model.joints_.find(name) == this->model.joints_.end()) ptr.reset();
+    else ptr = this->model.joints_.find(name)->second;
     return ptr;
 }
 
 urdf_traverser::JointConstPtr UrdfTraverser::readJoint(const std::string& name) const
 {
     JointConstPtr ptr;
-    if (this->robot.joints_.find(name) == this->robot.joints_.end()) ptr.reset();
-    else ptr = this->robot.joints_.find(name)->second;
+    if (this->model.joints_.find(name) == this->model.joints_.end()) ptr.reset();
+    else ptr = this->model.joints_.find(name)->second;
     return ptr;
 }
 
@@ -914,19 +857,18 @@ bool UrdfTraverser::loadModelFromFile(const std::string& urdfFilename)
 
 bool UrdfTraverser::loadModelFromXMLString(const std::string& xmlString)
 {
-    bool success = robot.initString(xmlString);
+    bool success = model.initString(xmlString);
     if (!success)
     {
         ROS_ERROR("Could not load model from XML string");
         return false;
     }
-    robot_urdf=xmlString;
     return true;
 }
 
 /*bool UrdfTraverser::loadModelFromParameterServer()
 {
-    if (!robot.initParam("robot_description")) return false;
+    if (!model.initParam("robot_description")) return false;
     isScaled = false;
     return true;
 }*/
@@ -957,7 +899,7 @@ urdf_traverser::EigenTransform UrdfTraverser::getTransform(const LinkPtr& from_l
 {
     LinkPtr link1 = from_link;
     LinkPtr link2;
-    this->robot.getLink(to_joint->child_link_name, link2);
+    this->model.getLink(to_joint->child_link_name, link2);
     if (!link1 || !link2)
     {
         ROS_ERROR("Invalid joint specifications (%s, %s), first needs parent and second child",

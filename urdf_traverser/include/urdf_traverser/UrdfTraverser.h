@@ -38,7 +38,7 @@ namespace urdf_traverser
 {
 
 /**
- * \brief This class provides functions to traverse the robot URDF and provides convenience functions to access the URDF model.
+ * \brief This class provides functions to traverse the URDF and provides convenience functions to access the URDF model.
  *
  * Traversal through a model is always done on links. This is because the root of a model is always a link.
  * Traversal through joint space is also possible by using the link's parent joint as reference.
@@ -78,7 +78,7 @@ public:
     /**
      * Loads the URDF from parameter server
      * TODO: still need to re-activate this by also reading the
-     * robot urdf into field \e robot_urdf
+     * urdf into field \e robot_urdf
      */
     //bool loadModelFromParameterServer(); 
 
@@ -94,16 +94,6 @@ public:
     bool allRotationsToAxis(const std::string& fromLinkName, const Eigen::Vector3d& axis);
 
     /**
-     * Prints the structure of the URDF to standard out
-     */
-    bool printModel(bool verbose=true);
-
-    /**
-     * prints the URDF model to standard out, starting from this link.
-     */
-    bool printModel(const std::string& fromLink, bool verbose=true);
-
-    /**
      * Prints the joint names. Can't be const in this version because
      * of the use of a recursive method.
      */
@@ -117,23 +107,18 @@ public:
 
     std::string getRootLinkName() const;
    
-    std::string getRobotName() const
+    std::string getModelName() const
     { 
-        return this->robot.getName();
-    }
-
-    std::string getRobotURDF() const
-    {
-        return robot_urdf;
+        return this->model.getName();
     }
 
     /**
      * Traverses the tree starting from link (depth first) and calls link_cb on each link.
      * \param includeLink include the link itself. If false, will start to traverse starting from the link's children.
-     * \param link_cb returns -1 or 0 if traversal is to be stopped, otherwise 1. -1 is for stop because error,
-     * 0 is stop because an expected condition found
-     * \return -1 or 0 if traversal was stopped, otherwise 1. -1 is for stop because error, 0 is stop because an expected
-     * condition found in callback function
+     * \param link_cb Callback to be called when traversing a link.
+     *      returns -1 or 0 if traversal is to be stopped, otherwise 1. -1 is for stop because of an error,
+     *      while 0 is stop because an expected condition found and traversal has been stopped with  no error.
+     * \return the last return value of the callback
      */
     int traverseTreeTopDown(const std::string& linkName, boost::function< int(RecursionParamsPtr&)> link_cb,
                             RecursionParamsPtr& params, bool includeLink=true);
@@ -141,6 +126,10 @@ public:
      * Similar to traverseTreeTopDown(), but traverses bottom-up and is allows to re-link tree (by traversing it safely such
      * that changes in structure won't matter).
      * \param includeLink include the link itself. If false, will start to traverse starting from the link's children.
+     * \param link_cb Callback to be called when traversing a link.
+     *      returns -1 or 0 if traversal is to be stopped, otherwise 1. -1 is for stop because of an error,
+     *      while 0 is stop because an expected condition found and traversal has been stopped with  no error.
+     * \return the last return value of the callback
      */
     int traverseTreeBottomUp(const std::string& linkName, boost::function< int(RecursionParamsPtr&)> link_cb,
                             RecursionParamsPtr& params, bool includeLink=true);
@@ -154,7 +143,7 @@ protected:
     class OrderedJointsRecursionParams: public RecursionParams
     {
     public:
-        typedef boost::shared_ptr<OrderedJointsRecursionParams> Ptr;
+        typedef baselib_binding::shared_ptr<OrderedJointsRecursionParams>::type Ptr;
         OrderedJointsRecursionParams(): RecursionParams() {}
         OrderedJointsRecursionParams(bool _allowSplits, bool _onlyActive):
             allowSplits(_allowSplits),
@@ -184,7 +173,7 @@ protected:
     class Vector3RecursionParams: public RecursionParams
     {
     public:
-        typedef boost::shared_ptr<Vector3RecursionParams> Ptr;
+        typedef baselib_binding::shared_ptr<Vector3RecursionParams>::type Ptr;
         Vector3RecursionParams(): RecursionParams() {}
         Vector3RecursionParams(const Eigen::Vector3d& _vec):
             RecursionParams(),
@@ -247,20 +236,21 @@ protected:
                               RecursionParamsPtr& params, bool includeLink=true, unsigned int level=0);
     //bool traverseTreeBottomUp(LinkPtr& link, boost::function< LinkPtr(LinkPtr&)> link_cb);
 
-
-    // Returns if this is an active joint in the URDF description
-    bool isActive(const JointPtr& joint) const;
-
     JointPtr getJoint(const std::string& name);
     JointConstPtr readJoint(const std::string& name) const;
     LinkPtr getLink(const std::string& name);
     LinkConstPtr readLink(const std::string& name) const;
 
-    const urdf::Model& getRobot() const
+    urdf::Model& getModel()
     {
-        return robot;
+        return model;
     }
-    
+    const urdf::Model& readModel() const
+    {
+        return model;
+    }
+ 
+
     // returns true if there are any fixed joints down from from_link
     bool hasFixedJoints(LinkPtr& from_link);
 
@@ -297,18 +287,6 @@ private:
     int addJointLink(RecursionParamsPtr& p);
 
     /**
-     * Function used for recursion by scaleModelRecursive().
-     */
-    int scaleModel(RecursionParamsPtr& p);
-
-    /**
-     * Scales the URDF model by this factor. This means all translation parts of the joint transforms are multiplied by this.
-     * The mesh files are not touched, but the visual/collision/intertial translations are scaled as well.
-     * Meshes can be scaled using convertMeshes().
-     */
-    bool scaleModelRecursive(double scale_factor);
-
-    /**
      * printing a link, used by recursive printModel().
      * Supports FlagRecursionParamsPtr, if the flag is true it prints verbose.
      */
@@ -330,8 +308,7 @@ private:
     //LinkPtr joinFixedLinksOnThis(LinkPtr& link);
 
 
-    urdf::Model robot;
-    std::string robot_urdf;
+    urdf::Model model;
 };
 
 }  //  namespace urdf_traverser

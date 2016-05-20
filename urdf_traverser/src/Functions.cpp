@@ -1,7 +1,16 @@
 #include <ros/ros.h>
 #include <urdf_traverser/Functions.h>
 
-extern Eigen::Vector3d urdf_traverser::getRotationAxis(const JointPtr& j)
+
+bool urdf_traverser::isActive(const JointPtr& joint)
+{
+    if (!joint) return false;
+    return (joint->type == urdf::Joint::REVOLUTE) ||
+           (joint->type == urdf::Joint::CONTINUOUS) ||
+           (joint->type == urdf::Joint::PRISMATIC);
+}
+
+Eigen::Vector3d urdf_traverser::getRotationAxis(const JointPtr& j)
 {
     return Eigen::Vector3d(j->axis.x, j->axis.y, j->axis.z);
 }

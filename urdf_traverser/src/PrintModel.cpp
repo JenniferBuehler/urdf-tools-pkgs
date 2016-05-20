@@ -20,7 +20,7 @@ int printLink(urdf_traverser::RecursionParamsPtr& p)
 
     bool verbose=true;
     // if the flag in the paramter is true, print verbose.
-    urdf_traverser::FlagRecursionParamsPtr flagParam = architecture_binding_ns::dynamic_pointer_cast<FlagRecursionParams>(p);
+    urdf_traverser::FlagRecursionParamsPtr flagParam = baselib_binding_ns::dynamic_pointer_cast<FlagRecursionParams>(p);
     if (flagParam) verbose=flagParam->flag;
 
     std::stringstream _indent;
