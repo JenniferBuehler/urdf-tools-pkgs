@@ -55,8 +55,20 @@ std::string Urdf2Inventor::MESH_OUTPUT_DIRECTORY_NAME = "iv";
 
 bool Urdf2Inventor::joinFixedLinks(const std::string& fromLink)
 {
+    std::string startLinkName=fromLink;
+    if (startLinkName.empty()){
+        startLinkName = urdf_traverser->getRootLinkName();
+    }
+//    ROS_INFO_STREAM("Getting as inventor starting from '"<<startLinkName<<"'");
+    LinkPtr startLink = urdf_traverser->getLink(startLinkName);
+    if (!startLink.get())
+    {
+        ROS_ERROR_STREAM("No link named '"<<startLink<<"'");
+        return false;
+    }
+
     ROS_INFO("############### Joining fixed links");
-    if (!urdf_transform::joinFixedLinks(*urdf_traverser,fromLink))
+    if (!urdf_transform::joinFixedLinks(*urdf_traverser,startLinkName))
     {
         ROS_ERROR_STREAM("Could not join fixed links");
         return false;
@@ -66,6 +78,18 @@ bool Urdf2Inventor::joinFixedLinks(const std::string& fromLink)
     
 bool Urdf2Inventor::allRotationsToAxis(const std::string& fromLinkName, const Eigen::Vector3d& axis)
 {
+    std::string startLinkName=fromLinkName;
+    if (startLinkName.empty()){
+        startLinkName = urdf_traverser->getRootLinkName();
+    }
+//    ROS_INFO_STREAM("Getting as inventor starting from '"<<startLinkName<<"'");
+    LinkPtr startLink = urdf_traverser->getLink(startLinkName);
+    if (!startLink.get())
+    {
+        ROS_ERROR_STREAM("No link named '"<<startLink<<"'");
+        return false;
+    }
+
     ROS_INFO_STREAM("############### Aligning rotation axis to "<<axis);
     if (!urdf_transform::allRotationsToAxis(*urdf_traverser, fromLinkName, axis))
     {
@@ -100,6 +124,19 @@ bool Urdf2Inventor::loadModelFromFile(const std::string& urdfFilename)
     return urdf_traverser->loadModelFromFile(urdfFilename);
 }
 
+
+urdf_traverser::EigenTransform Urdf2Inventor::getTransform(const LinkPtr& from_link,  const JointPtr& to_joint)
+{
+    LinkPtr link1 = from_link;
+    LinkPtr link2 = urdf_traverser->getLink(to_joint->child_link_name);
+    if (!link1 || !link2)
+    {
+        ROS_ERROR("Invalid joint specifications (%s, %s), first needs parent and second child",
+                  link1->name.c_str(), link2->name.c_str());
+    }
+    return urdf_traverser::getTransform(link1, link2);
+}
+
 Urdf2Inventor::ConversionResultPtr Urdf2Inventor::preConvert(const ConversionParametersPtr& params)
 {
     ConversionResultPtr res(new ConversionResultT(OUTPUT_EXTENSION, MESH_OUTPUT_DIRECTORY_NAME));
@@ -132,7 +169,8 @@ Urdf2Inventor::ConversionResultPtr Urdf2Inventor::convert(const ConversionParame
     ROS_INFO("############### Converting meshes");
 
     if (!urdf2inventor::convertMeshes(*urdf_traverser, params->rootLinkName,
-                scaleFactor, params->material, params->addVisualTransform, res->meshes))
+                scaleFactor, params->material, OUTPUT_EXTENSION,
+                params->addVisualTransform, res->meshes))
     {
         ROS_ERROR("Could not convert meshes");
         return res;
@@ -394,20 +432,8 @@ Urdf2Inventor::ConversionResultPtr Urdf2Inventor::loadAndConvert(const std::stri
         return failResult;
     }
 
-    std::string startLinkName=params->rootLinkName;
-    if (startLinkName.empty()){
-        startLinkName = urdf_traverser->getRootLinkName();
-    }
-//    ROS_INFO_STREAM("Getting as inventor starting from '"<<startLinkName<<"'");
-    LinkPtr startLink = urdf_traverser->getLink(startLinkName);
-    if (!startLink.get())
-    {
-        ROS_ERROR_STREAM("No link named '"<<startLink<<"'");
-        return failResult;
-    }
-
     if (joinFixed) ROS_INFO("Joining fixed links..");
-    if (joinFixed && !joinFixedLinks(startLinkName))
+    if (joinFixed && !joinFixedLinks(params->rootLinkName))
     {
         ROS_ERROR("Could not join fixed links");
         return failResult;

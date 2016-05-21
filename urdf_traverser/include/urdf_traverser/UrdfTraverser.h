@@ -131,11 +131,11 @@ public:
     LinkPtr getLink(const std::string& name);
     LinkConstPtr readLink(const std::string& name) const;
 
-    LinkPtr getChildLink(const JointPtr& joint);
-    LinkConstPtr readChildLink(const JointPtr& joint) const;
+    LinkPtr getChildLink(const JointConstPtr& joint);
+    LinkConstPtr readChildLink(const JointConstPtr& joint) const;
     
-    JointPtr getParentJoint(const JointPtr& joint);
-    JointConstPtr readParentJoint(const JointPtr& joint) const;
+    JointPtr getParentJoint(const JointConstPtr& joint);
+    JointConstPtr readParentJoint(const JointConstPtr& joint) const;
  
 
     ModelPtr getModel()
@@ -192,7 +192,8 @@ protected:
                               RecursionParamsPtr& params, bool includeLink=true, unsigned int level=0);
 
     bool hasChildLink(const LinkConstPtr& link, const std::string& childName) const;
-    
+   
+
     EigenTransform getTransform(const LinkPtr& from_link,  const JointPtr& to_joint);
 
 private:

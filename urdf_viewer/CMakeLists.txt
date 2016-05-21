@@ -40,7 +40,7 @@ find_package(catkin REQUIRED COMPONENTS
 ## DEPENDS: system dependencies of this project that dependent projects also need
 catkin_package(
   INCLUDE_DIRS include
-#  LIBRARIES urdf_viewer
+  LIBRARIES urdf_viewer
   CATKIN_DEPENDS roscpp urdf2inventor
 #  DEPENDS system_lib
 )
@@ -57,18 +57,17 @@ include_directories(
 )
 
 ## Declare a C++ library
-# add_library(urdf_viewer
-#   src/${PROJECT_NAME}/urdf_viewer.cpp
-# )
+add_library(urdf_viewer
+    src/InventorViewer.cpp
+)
 
 ## Add cmake target dependencies of the library
 ## as an example, code may need to be generated before libraries
 ## either from message generation or dynamic reconfigure
-# add_dependencies(urdf_viewer ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
+add_dependencies(urdf_viewer ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
 
 ## Declare a C++ executable
 add_executable(urdf_viewer_node
-    src/InventorViewer.cpp
     src/urdf_viewer_node.cpp)
 
 ## Add cmake target dependencies of the executable
@@ -77,6 +76,7 @@ add_dependencies(urdf_viewer_node ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_E
 
 ## Specify libraries to link a library or executable target against
 target_link_libraries(urdf_viewer_node
+   urdf_viewer
    ${catkin_LIBRARIES}
 )
 

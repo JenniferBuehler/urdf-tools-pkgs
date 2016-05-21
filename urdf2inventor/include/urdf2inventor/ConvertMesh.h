@@ -23,6 +23,8 @@ namespace urdf2inventor
      * 
      * \param scaleFactor a factor to scale the mesh by while converting
      * \param material the material to use in the converted format
+     * \param file_extension when the meshes are written to file, this is the extension they will have.
+     *      This information may be required for generating the result meshes.
      * \param meshes the resulting meshes (inventor files), indexed by the link names
      * \param meshDescXML the resulting GraspIt! XML description files for the meshes, indexed by the link names
      * \param addVisualTransform this transform will be post-multiplied on all links' **visuals** (not links!) local
@@ -35,6 +37,7 @@ namespace urdf2inventor
                        const std::string& fromLinkName,
                        const float scaleFactor,
                        const std::string& material,
+                       const std::string& file_extension,
                        const urdf_traverser::EigenTransform& addVisualTransform,
                        std::map<std::string, MeshFormat>& meshes);
 

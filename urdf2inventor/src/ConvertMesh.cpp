@@ -4,6 +4,7 @@
 #include <urdf2inventor/Helpers.h>
 #include <urdf2inventor/IVHelpers.h>
 #include <urdf2inventor/ConvertMesh.h>
+#include <urdf2inventor/MeshConvertRecursionParams.h>
 
 #include <Inventor/nodes/SoTransform.h>
 #include <Inventor/nodes/SoSelection.h>
@@ -228,44 +229,6 @@ SoNode * urdf2inventor::getAllVisuals(const urdf_traverser::LinkPtr link, double
 }
 
 
-
- /**
- * \brief Includes parameters to be passed on in recursion when generating meshes.
- */
-template<class MeshFormat>
-class MeshConvertRecursionParams: public urdf_traverser::FactorRecursionParams
-{
-public:
-    typedef MeshConvertRecursionParams<MeshFormat> Self;
-    typedef typename baselib_binding::shared_ptr<Self>::type Ptr;
-    explicit MeshConvertRecursionParams(double _scale_factor, const std::string _material,
-                               const urdf_traverser::EigenTransform& _addVisualTransform):
-        FactorRecursionParams(_scale_factor),
-        material(_material), addVisualTransform(_addVisualTransform) {}
-    MeshConvertRecursionParams(const MeshConvertRecursionParams& o):
-        FactorRecursionParams(o),
-        material(o.material),
-        resultMeshes(o.resultMeshes),
-        addVisualTransform(o.addVisualTransform) {}
-    virtual ~MeshConvertRecursionParams() {}
-
-    std::string material;
-   
-    /** 
-     * this transform will be post-multiplied on all links' **visuals** (not links!) local
-     * transform (their "origin"). This can be used to correct transformation errors which may have been 
-     * introduced in converting meshes from one format to the other, losing orientation information
-     * (for example, .dae has an "up vector" definition which may have been ignored)
-     */
-    urdf_traverser::EigenTransform addVisualTransform;
-
-    // the resulting meshes (inventor files), indexed by the link name
-    std::map<std::string, MeshFormat> resultMeshes;
-private:
-    explicit MeshConvertRecursionParams(){}
-};
-
-
 /**
  * writes the contents of SoNode into the inventor (*.iv) format and returns the file
  * content as a string.
@@ -303,7 +266,7 @@ bool writeInventorFileString(SoNode * node, std::string& result)
  */
 int convertStringMesh(urdf_traverser::RecursionParamsPtr& p)
 {
-    typedef MeshConvertRecursionParams<std::string> MeshConvertRecursionParamsT;
+    typedef urdf2inventor::MeshConvertRecursionParams<std::string> MeshConvertRecursionParamsT;
     typename MeshConvertRecursionParamsT::Ptr param = baselib_binding_ns::dynamic_pointer_cast<MeshConvertRecursionParamsT>(p);
     if (!param.get())
     {
@@ -345,6 +308,7 @@ bool urdf2inventor::convertMeshes(urdf_traverser::UrdfTraverser& traverser,
                                  const std::string& fromLink,
                                  const float scaleFactor,
                                  const std::string& material,
+                                 const std::string& file_extension,
                                  const urdf_traverser::EigenTransform& addVisualTransform,
                                  std::map<std::string, MeshFormat>& meshes)
 {
@@ -361,9 +325,9 @@ bool urdf2inventor::convertMeshes(urdf_traverser::UrdfTraverser& traverser,
     }
 
     // do one call of convertMeshes
-    typedef MeshConvertRecursionParams<MeshFormat> MeshConvertRecursionParamsT;
+    typedef urdf2inventor::MeshConvertRecursionParams<MeshFormat> MeshConvertRecursionParamsT;
     typename MeshConvertRecursionParamsT::Ptr meshParams(
-            new MeshConvertRecursionParamsT(scaleFactor, material, addVisualTransform));
+            new MeshConvertRecursionParamsT(scaleFactor, material, file_extension, addVisualTransform));
 
     urdf_traverser::RecursionParamsPtr p(meshParams);
 
@@ -386,5 +350,6 @@ template bool urdf2inventor::convertMeshes<std::string>(urdf_traverser::UrdfTrav
                                  const std::string& fromLink,
                                  const float scaleFactor,
                                  const std::string& material,
+                                 const std::string& file_extension,
                                  const urdf_traverser::EigenTransform& addVisualTransform,
                                  std::map<std::string, std::string>& meshes);

@@ -115,28 +115,28 @@ int UrdfTraverser::getChildJoint(const JointPtr& joint, JointPtr& child)
     return 1;
 }
 
-urdf_traverser::LinkPtr UrdfTraverser::getChildLink(const JointPtr& joint)
+urdf_traverser::LinkPtr UrdfTraverser::getChildLink(const JointConstPtr& joint)
 {
     LinkPtr childLink;
     model->getLink(joint->child_link_name, childLink);
     return childLink;
 }
 
-urdf_traverser::LinkConstPtr UrdfTraverser::readChildLink(const JointPtr& joint) const
+urdf_traverser::LinkConstPtr UrdfTraverser::readChildLink(const JointConstPtr& joint) const
 {
     LinkPtr childLink;
     model->getLink(joint->child_link_name, childLink);
     return childLink;
 }
 
-urdf_traverser::JointPtr UrdfTraverser::getParentJoint(const JointPtr& joint)
+urdf_traverser::JointPtr UrdfTraverser::getParentJoint(const JointConstPtr& joint)
 {
     LinkConstPtr parentLink = model->getLink(joint->parent_link_name);
     if (!parentLink) return JointPtr();
     return parentLink->parent_joint;
 }
 
-urdf_traverser::JointConstPtr UrdfTraverser::readParentJoint(const JointPtr& joint) const
+urdf_traverser::JointConstPtr UrdfTraverser::readParentJoint(const JointConstPtr& joint) const
 {
     LinkConstPtr parentLink = model->getLink(joint->parent_link_name);
     if (!parentLink) return JointPtr();

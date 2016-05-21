@@ -68,6 +68,7 @@ public:
     typedef baselib_binding::shared_ptr<ConversionParameters>::type ConversionParametersPtr;
     
     typedef baselib_binding::shared_ptr<urdf_traverser::UrdfTraverser>::type UrdfTraverserPtr;
+    typedef baselib_binding::shared_ptr<const urdf_traverser::UrdfTraverser>::type UrdfTraverserConstPtr;
 
     typedef urdf_traverser::EigenTransform EigenTransform;
     typedef urdf_traverser::LinkPtr LinkPtr;
@@ -237,6 +238,16 @@ public:
     void cleanup();
 
 protected:
+    
+    UrdfTraverserPtr getTraverser()
+    {
+        return urdf_traverser;
+    }
+
+    UrdfTraverserConstPtr readTraverser() const
+    {
+        return urdf_traverser;
+    }
 
   
     /**
@@ -273,6 +284,7 @@ protected:
     void addLocalAxes(const LinkConstPtr& link, SoSeparator * addToNode, bool useScaleFactor,
         float _axesRadius, float _axesLength) const;
 
+    EigenTransform getTransform(const LinkPtr& from_link,  const JointPtr& to_joint);
  
 private:
 

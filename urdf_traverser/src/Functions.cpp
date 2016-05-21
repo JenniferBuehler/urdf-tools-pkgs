@@ -10,7 +10,7 @@ bool urdf_traverser::isActive(const JointPtr& joint)
            (joint->type == urdf::Joint::PRISMATIC);
 }
 
-Eigen::Vector3d urdf_traverser::getRotationAxis(const JointPtr& j)
+Eigen::Vector3d urdf_traverser::getRotationAxis(const JointConstPtr& j)
 {
     return Eigen::Vector3d(j->axis.x, j->axis.y, j->axis.z);
 }

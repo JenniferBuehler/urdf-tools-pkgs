@@ -36,7 +36,7 @@
 namespace urdf_traverser
 {
     // Returns the joint's rotation axis as Eigen Vector
-    extern Eigen::Vector3d getRotationAxis(const JointPtr& j); 
+    extern Eigen::Vector3d getRotationAxis(const JointConstPtr& j); 
 
     // Returns if this is an active joint in the URDF description
     extern bool isActive(const JointPtr& joint);
