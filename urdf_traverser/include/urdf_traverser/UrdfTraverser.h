@@ -16,8 +16,8 @@
     Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301  USA
 **/
 
-#ifndef URDF2INVENTOR_URDF2INVENTOR_H
-#define URDF2INVENTOR_URDF2INVENTOR_H
+#ifndef URDF_TRAVERSER_URDFTRAVERSER_H
+#define URDF_TRAVERSER_URDFTRAVERSER_H
 // Copyright Jennifer Buehler
 
 //-----------------------------------------------------
@@ -31,7 +31,6 @@
 
 #include <urdf_traverser/Types.h>
 #include <urdf_traverser/RecursionParams.h>
-
 
 namespace urdf_traverser
 {
@@ -209,4 +208,4 @@ private:
 };
 
 }  //  namespace urdf_traverser
-#endif   // URDF2INVENTOR_URDF2INVENTOR_H
+#endif   // URDF_TRAVERSER_URDFTRAVERSER_H

@@ -1,0 +1,58 @@
+<launch>
+    <arg name="urdf_file"/>
+    
+    # set to true to specify a IV file (in argument iv_file)
+    # instead of URDF
+    <arg name="iv" default="false"/>
+    <arg name="iv_file" default=""/>
+   
+    # set to true to use root_link as a root for displaying 
+    <arg name="use_root_link" default="false"/>
+    <arg name="root_link" default=""/>
+    
+
+    # join fixed links before displaying URDF
+    <arg name="join_fixed_links" default="true"/>
+
+    # rotate all axes to z before displaying URDF
+    <arg name="rotate_axes_z" default="true"/>
+   
+    # true to display axes of local joint coordinate systems 
+    <arg name="display_axes" default="true"/>
+    <arg name="axes_radius" default="0.001"/>
+    <arg name="axes_length" default="0.015"/>
+
+    
+    # An axis and angle (degrees) can be specified which will transform *all*
+    # visuals (not links, but their visuals!) within their local coordinate system.
+    # This can be used to correct transformation errors which may have been 
+    # introduced in converting meshes from one format to the other, losing orientation information
+    # For example, .dae has an "up vector" definition which may have been ignored.
+    <arg name="visual_corr_axis_x" default="1"/>
+    <arg name="visual_corr_axis_y" default="0"/>
+    <arg name="visual_corr_axis_z" default="0"/>
+    <arg name="visual_corr_axis_angle" default="0"/>
+
+    <!-- /////////  private parameters ///////// -->
+
+    <arg if="$(arg use_root_link)" name="from_link" default="$(arg root_link)"/>
+    <arg unless="$(arg use_root_link)" name="from_link" default="root"/>
+	
+    <arg if="$(arg iv)" name="use_file" default="$(arg iv_file) --iv"/>
+    <arg unless="$(arg iv)" name="use_file" default="$(arg urdf_file) $(arg from_link)"/>
+
+    <!-- /////////  launch node /////////  -->
+
+	<node name="urdf_viewer" pkg="urdf2inventor" type="urdf_viewer" respawn="false"
+        output="screen" args="$(arg use_file)">
+        <param name="join_fixed_links" value="$(arg join_fixed_links)"/>
+        <param name="rotate_axes_z" value="$(arg rotate_axes_z)"/>
+        <param name="display_axes" value="$(arg display_axes)"/>
+        <param name="axes_radius" value="$(arg axes_radius)"/>
+        <param name="axes_length" value="$(arg axes_length)"/>
+        <param name="visual_corr_axis_x" value="$(arg visual_corr_axis_x)"/>
+        <param name="visual_corr_axis_y" value="$(arg visual_corr_axis_y)"/>
+        <param name="visual_corr_axis_z" value="$(arg visual_corr_axis_z)"/>
+        <param name="visual_corr_axis_angle" value="$(arg visual_corr_axis_angle)"/>
+    </node>
+</launch>
