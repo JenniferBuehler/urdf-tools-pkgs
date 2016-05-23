@@ -16,7 +16,6 @@
 #include <Inventor/SoInput.h>   // for file reading
 #include <Inventor/actions/SoWriteAction.h>
 
-//#include <ivcon/ivconv.h>
 #include <assimp/Importer.hpp>
 #include <assimp/scene.h>
 #include <assimp/Importer.hpp>

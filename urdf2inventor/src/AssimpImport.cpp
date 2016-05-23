@@ -22,7 +22,7 @@
 
 /* Author: Nestor Garcia Hidalgo */
 
-
+#include <ros/ros.h>
 #include <urdf2inventor/AssimpImport.h>
 
 #include <assimp/Importer.hpp>
@@ -461,9 +461,9 @@ void addNode(SoSeparator *const parent, const aiNode *const node,
 
 SoSeparator *Assimp2Inventor(const aiScene *const scene, const std::string& sceneDir) {
     SoSeparator *root(new SoSeparator);
-    std::cout << "I imported a scene with " << scene->mNumTextures << " embedded textures, "
+    ROS_INFO_STREAM("Imported a scene with " << scene->mNumTextures << " embedded textures, "
               << scene->mNumMaterials << " materials and "
-              << scene->mNumMeshes << " meshes." << std::endl;
+              << scene->mNumMeshes << " meshes.");
     if (scene->mNumTextures > 0) {
         std::cout << "Found a scene with embedded textures. They will be ignored." << std::endl;
         ///I don't know how they will be referenced inside the scene

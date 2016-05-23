@@ -82,16 +82,11 @@ int main(int argc, char *argv[])
     priv.param<float>("visual_corr_axis_angle", visCorrAxAngle, visCorrAxAngle);
     Urdf2Inventor::EigenTransform addVisualTrans(Eigen::AngleAxisd(visCorrAxAngle*M_PI/180, Eigen::Vector3d(visCorrAxX,visCorrAxY,visCorrAxZ)));
 
-    /**
-     * TODO: For some reason I haven't yet further investigated, view.init() has to be called after
-     * loadAndGetAsInventor(), or it won't work. Find out why, and fix it.
-     * It has probably to do with the calls of SoDB::init involved by ivcon as well.
-     */
-
     bool success = true;
     urdf2inventor::Urdf2Inventor::UrdfTraverserPtr traverser(new urdf_traverser::UrdfTraverser());
     Urdf2Inventor converter(traverser, 1, displayAxes, axRad, axLen);
     InventorViewer view;
+    view.init("WindowName");
     if (isURDF)
     {
         ROS_INFO_STREAM("Converting model from file "<<inputFile<<"...");
@@ -128,13 +123,11 @@ int main(int argc, char *argv[])
             success = false;
         }else{
             ROS_INFO_STREAM("Model converted, now loading into viewer...");
-            view.init("WindowName");
             view.loadModel(node);
         }
     }
     else
     {
-        view.init("WindowName");
         view.loadModel(inputFile);
     }
     if (success)  view.runViewer();
