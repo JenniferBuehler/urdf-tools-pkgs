@@ -1,18 +1,6 @@
 cmake_minimum_required(VERSION 2.8.3)
 project(urdf2inventor)
 
-# set this variable to true if you would like that cmake
-# downloads and builds the ivcon package
-# (https://github.com/JenniferBuehler/ivcon).
-# If this is set to false, it will search for the package
-# ivcon in your catkin workspace instead.
-# IMPORTANT: If you set this to false and are compiling
-# with catkin, uncomment the <*_depend> tags relating to
-# graspit in package.xml!
-if (NOT DEFINED BUILD_IVCON)
-    set (BUILD_IVCON true)
-endif (NOT DEFINED BUILD_IVCON)
-
 set (CATKIN_PKGS
   roscpp
   urdf
@@ -22,10 +10,6 @@ set (CATKIN_PKGS
   urdf_transform
   roslint
 )
-
-if (NOT BUILD_IVCON)
-    set (CATKIN_PKGS ${CATKIN_PKGS} ivcon)
-endif (NOT BUILD_IVCON)
 
 ## Find catkin macros and libraries
 ## if COMPONENTS list like find_package(catkin REQUIRED COMPONENTS xyz)
@@ -37,17 +21,10 @@ set(CMAKE_MODULE_PATH "${PROJECT_SOURCE_DIR}/CMakeMacros/")
 find_package(SoQt4 REQUIRED)
 find_package(Coin REQUIRED)
 find_package(Qt4 REQUIRED)
-
-# if the ivcon fork should be build with this package,
-# do this now.
-if (BUILD_IVCON)
-    set (GLOBAL_OUTPUT_PATH ${CMAKE_CURRENT_BINARY_DIR}/ivcon/install)
-    include(CMakeLists-external-ivcon.txt)
-endif (BUILD_IVCON)
-
+find_package(assimp REQUIRED)
 
 ## System dependencies are found with CMake's conventions
-# find_package(Boost REQUIRED COMPONENTS system)
+find_package(Boost REQUIRED COMPONENTS filesystem)
 
 ## Uncomment this if the package has a setup.py. This macro ensures
 ## modules and global scripts declared therein get installed
@@ -59,15 +36,14 @@ endif (BUILD_IVCON)
 ###################################
 
 set (CATKIN_DEPEND_PKGS roscpp urdf eigen_conversions baselib_binding urdf_traverser urdf_transform)
-if (NOT BUILD_IVCON)
-    set (CATKIN_DEPEND_PKGS ${CATKIN_DEPEND_PKGS} ivcon)
-endif (NOT BUILD_IVCON)
 
-set (CATKIN_DEPENDS_LIBS libsoqt4-dev libqt4-dev libcoin80-dev git)
+set (CATKIN_DEPENDS_LIBS libsoqt4-dev libqt4-dev libcoin80-dev assimp)
 
 # directories to include and to export with catkin_package
 set (URDF_VIEWER_INCLUDE_DIRS
   include
+  ${Boost_INCLUDE_DIRS}
+  ${assimp_INCLUDE_DIRS}
   ${SOQt_INCLUDE_DIRS}
   ${QT_INCLUDE_DIR}
   ${QT_INCLUDE_DIR}/Qt
@@ -97,7 +73,7 @@ catkin_package(
 include_directories(
   include
   ${catkin_INCLUDE_DIRS}
-  ${IVCON_INCLUDE_DIRS}
+  ${ASSIMP_INCLUDE_DIRS}
   ${URDF_VIEWER_INCLUDE_DIRS}
 )
 
@@ -107,6 +83,7 @@ add_library(urdf2inventor
   src/Helpers.cpp
   src/IVHelpers.cpp
   src/ConvertMesh.cpp
+  src/AssimpImport.cpp
 )
 
 ## Add cmake target dependencies of the library
@@ -121,24 +98,16 @@ add_executable(urdf2inventor_node src/urdf2inventor_node.cpp)
 ## same as for the library above
 add_dependencies(urdf2inventor_node ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
 
-if (BUILD_IVCON)
-    add_dependencies(urdf2inventor ivcon_external)
-endif (BUILD_IVCON)
-
 include (cmake/urdf2inventor_definitions.cmake)
 
 set (DEPEND_LIBRARIES
-   ${catkin_LIBRARIES}
-   ${SOQT_LIBRARY}
-   ${QT_LIBRARIES}
+    ${catkin_LIBRARIES}
+    ${SOQT_LIBRARY}
+    ${QT_LIBRARIES}
+    ${ASSIMP_LIBRARY}
+    ${ASSIMP_LIBRARIES}
+    ${Boost_LIBRARIES}
 )
-
-if (BUILD_IVCON)
-    set (DEPEND_LIBRARIES
-       ${DEPEND_LIBRARIES}
-       ${IVCON_LIBRARY}
-    )
-endif (BUILD_IVCON)
 
 ## Specify libraries to link a library or executable target against
 target_link_libraries(urdf2inventor ${DEPEND_LIBRARIES})

@@ -6,6 +6,9 @@
 #include <urdf2inventor/ConvertMesh.h>
 #include <urdf2inventor/MeshConvertRecursionParams.h>
 
+#include <urdf2inventor/AssimpImport.h>
+#include <boost/filesystem.hpp>
+
 #include <Inventor/nodes/SoTransform.h>
 #include <Inventor/nodes/SoSelection.h>
 #include <Inventor/nodekits/SoNodeKit.h>
@@ -13,7 +16,13 @@
 #include <Inventor/SoInput.h>   // for file reading
 #include <Inventor/actions/SoWriteAction.h>
 
-#include <ivcon/ivconv.h>
+//#include <ivcon/ivconv.h>
+#include <assimp/Importer.hpp>
+#include <assimp/scene.h>
+#include <assimp/Importer.hpp>
+#include <assimp/importerdesc.h>
+#include <assimp/postprocess.h>
+
 
 using urdf_traverser::UrdfTraverser;
 using urdf_traverser::RecursionParams;
@@ -27,107 +36,46 @@ typedef urdf_traverser::CylinderPtr CylinderPtr;
 typedef urdf_traverser::BoxPtr BoxPtr;
 //typedef urdf_traverser::Ptr Ptr;
 
-#define REDIRECT_STDOUT
-
-// Filename for temporary output file
-#define TEMP_STDOUT "/tmp/redirectedStdOut"
-
-
-void cleanupRedirectStdOut()
-{
-    if (urdf_traverser::helpers::fileExists(TEMP_STDOUT))
-    {
-        urdf_traverser::helpers::deleteFile(TEMP_STDOUT);
-    }
-}
 /**
- * Uses the ivcon package to conver to inventor file.
- */
-SoNode * convertMeshFileIvcon(const std::string& filename, double scale_factor)
-{
-    // int ssize=10000;
-    // char bigOutBuf[ssize];
-    //ROS_INFO_STREAM("IVCONV reading "<<filename);
-#ifdef REDIRECT_STDOUT
-    urdf2inventor::helpers::redirectStdOut(TEMP_STDOUT);
-#endif
-    // first, convert file to inventor. ivconv writes to file only so we have to
-    // temporarily write it to file and then read it again
-    IVCONV::SCALE_FACTOR = scale_factor;
-    IVCONV ivconv;
-    if (!ivconv.read(filename))
-    {
-        ROS_ERROR("Can't read mesh file %s", filename.c_str());
-        return NULL;
-    }
-    ROS_INFO_STREAM("IVCONV writing "<<filename);
-
-    if (!ivconv.write(TMP_FILE_IV))
-    {
-        ROS_ERROR("Can't write mesh file %s", TMP_FILE_IV);
-        return NULL;
-    }
-
-    SoInput in;
-    SoNode  *scene = NULL;
-    if (!in.openFile(TMP_FILE_IV)) return NULL;
-    SoDB::read(&in, scene);
-
-    in.closeFile();
-
-#ifdef REDIRECT_STDOUT
-    urdf2inventor::helpers::resetStdOut();
-    // ROS_INFO("We got %s",bigOutBuf);
-#endif
-    //ROS_INFO_STREAM("IVCONV finished reading "<<filename);
-    return scene;
-}
-
-
-
-/**
- * Converts a mesh file (given in filename) to an Inventor structure, to which the root is returned.
- * The model may be scaled at the same time using scale_factor.
+ * Converts the mesh in this file to the inventor format.
  */
 SoNode * convertMeshFile(const std::string& filename, double scale_factor)
 {
-    std::string fileExt = urdf_traverser::helpers::fileExtension(filename.c_str());
-//    ROS_INFO_STREAM("Filename extension: "<<fileExt);
-    SoNode * result=NULL;
-    std::string fileExtLow=fileExt;
-    boost::to_lower(fileExtLow);
-    if ((fileExtLow != "stl") && (fileExtLow != "obj"))
+    Assimp::Importer importer;
+    const aiScene* scene = importer.ReadFile(filename, 0);
+                /*aiProcess_Triangulate |
+                aiProcess_OptimizeMeshes | 
+                /aiProcess_CalcTangentSpace             | 
+                aiProcess_Triangulate                        |
+                aiProcess_JoinIdenticalVertices    |
+                aiProcess_SortByPType);*/
+    if( !scene || !scene->mRootNode)
     {
-        ROS_INFO_STREAM("Need to convert mesh file "<<filename<<" to temporary obj/stl first!");
-        ROS_ERROR("This still needs to be implemented! See a possibility in package assimp_mesh_converter");
-        // could write temporary meshes to TEMP_MESH_DIR
-        // after conversion, we need to 
-/*
-        SoInput in;
-        SoNode  *scene = NULL;
-        if (!in.openFile(filename.c_str()))
-        {
-            ROS_ERROR_STREAM("Could not open file "<<filename);
-            return NULL;
-        }
-        scene = SoDB::readAll(&in);
-        if (!scene)
-        {
-            ROS_ERROR_STREAM("Could not read file "<<filename);
-            return NULL;
-
-        }
-        in.closeFile();
-        return scene;*/
+        ROS_ERROR_STREAM("Could not import file "<<filename);
+        return NULL;
     }
-    else
+
+    // scale the meshes if required
+    if (fabs(scale_factor - 1.0) > 1e-06)
     {
-        // ROS_INFO_STREAM("Converting mesh "<<filename);
-        result = convertMeshFileIvcon(filename,scale_factor);
-        // ROS_INFO("Converted.");
-    } 
-    return result;
+        ROS_INFO_STREAM("Scaling the mesh "<<filename);
+        // get the scaling matrix
+        aiMatrix4x4 scaleTransform;
+        aiMatrix4x4::Scaling(aiVector3D(scale_factor, scale_factor, scale_factor), scaleTransform);
+        // apply the scaling matrix
+        scene->mRootNode->mTransformation *= scaleTransform;
+    }
+
+    std::string sceneDir = boost::filesystem::path(filename).parent_path().string();
+    SoSeparator * ivScene = Assimp2Inventor(scene, sceneDir);
+    if (!ivScene)
+    {
+        ROS_ERROR("Could not convert scene");
+        return NULL;
+    }
+    return ivScene; 
 }
+
 
 
 SoNode * urdf2inventor::getAllVisuals(const urdf_traverser::LinkPtr link, double scale_factor,
@@ -167,8 +115,9 @@ SoNode * urdf2inventor::getAllVisuals(const urdf_traverser::LinkPtr link, double
                 }
                 std::string meshFilename = urdf_traverser::helpers::packagePathToAbsolute(mesh->filename);
 
-                // ROS_INFO_STREAM("Converting mesh file "<<meshFilename);
-                SoNode * somesh = convertMeshFile(meshFilename, scale_factor);
+                ROS_INFO_STREAM("Converting mesh file "<<meshFilename<<" with factor "<<scale_factor);
+                SoNode * somesh = convertMeshFile(meshFilename,scale_factor);
+                // ROS_INFO("Converted.");
                 if (!somesh)
                 {
                     ROS_ERROR("Mesh could not be read");
@@ -340,8 +289,6 @@ bool urdf2inventor::convertMeshes(urdf_traverser::UrdfTraverser& traverser,
 
     meshes = meshParams->resultMeshes;
     
-    // can delete output file because it was successful
-    cleanupRedirectStdOut();
     return true;
 }
 
