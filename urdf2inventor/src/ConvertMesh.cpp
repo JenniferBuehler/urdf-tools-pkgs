@@ -44,6 +44,7 @@ typedef urdf_traverser::BoxPtr BoxPtr;
  */
 SoNode * convertMeshFile(const std::string& filename, double scale_factor, double r=0.5, double g=0.5, double b=0.5, double a=1)
 {
+//    ROS_INFO("Reading file...");
     Assimp::Importer importer;
     const aiScene* scene = importer.ReadFile(filename, aiProcess_OptimizeGraph |
                 aiProcess_FindInvalidData);
@@ -76,6 +77,7 @@ SoNode * convertMeshFile(const std::string& filename, double scale_factor, doubl
     overrideMaterial->diffuseColor.setValue(r,g,b);
     overrideMaterial->transparency.setValue(1.0-a);
 
+//    ROS_INFO("Converting to inventor...");
     SoSeparator * ivScene = Assimp2Inventor(scene, sceneDir, overrideMaterial);
     if (!ivScene)
     {
@@ -127,10 +129,17 @@ SoNode * urdf2inventor::getAllVisuals(const urdf_traverser::LinkPtr link, double
                 std::string meshFilename = urdf_traverser::helpers::packagePathToAbsolute(mesh->filename);
 
                 ROS_INFO_STREAM("Converting mesh file "<<meshFilename<<" with factor "<<scale_factor);
-                float r=mat->color.r;
-                float g=mat->color.g;
-                float b=mat->color.b;
-                float a=mat->color.a;
+                float r = 0.5;
+                float g = 0.5;
+                float b = 0.5;
+                float a = 1.0;
+                if (mat)
+                {
+                    r=mat->color.r;
+                    g=mat->color.g;
+                    b=mat->color.b;
+                    a=mat->color.a;
+                }
                 SoNode * somesh = convertMeshFile(meshFilename,scale_factor,r,g,b,a);
                 // ROS_INFO("Converted.");
                 if (!somesh)

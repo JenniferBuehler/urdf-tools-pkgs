@@ -193,10 +193,21 @@ SoTexture *getTexture(const aiMaterial *const material, const std::string &scene
     SoTexture2 *texture(new SoTexture2);
 
     //Load image
-    std::string filename = boost::filesystem::canonical(path.C_Str()).string();
+    boost::filesystem::path relFilePath(path.C_Str());
+    boost::filesystem::path absPath = relFilePath;
+    if (relFilePath.is_relative()) {
+        boost::filesystem::path sceneDirPath(sceneDir);
+        absPath = boost::filesystem::canonical(relFilePath, sceneDirPath);
+        // ROS_INFO_STREAM("Absolute file path: "<<absPath.string());
+    }
     
+    // ROS_INFO_STREAM("Clean absolute file path: "<<absPath.string());
+    std::string filename = absPath.string();
+    // ROS_INFO_STREAM("Filename: "<<filename);
+
     texture->filename.setValue(filename.c_str());///How to check if image was loaded?
-    texture->setName(getName(boost::filesystem::path(filename).filename().string()));
+    // texture->setName(getName(boost::filesystem::path(filename).filename().string()));
+    texture->setName(getName(filename));
 
     //Set model
     texture->model.setValue(SoTexture2::DECAL);
