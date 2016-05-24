@@ -9,12 +9,15 @@
 #include <urdf2inventor/AssimpImport.h>
 #include <boost/filesystem.hpp>
 
+#include <Inventor/nodes/SoGroup.h>
 #include <Inventor/nodes/SoTransform.h>
 #include <Inventor/nodes/SoSelection.h>
 #include <Inventor/nodekits/SoNodeKit.h>
-#include <Inventor/SoDB.h>      // for file reading
-#include <Inventor/SoInput.h>   // for file reading
 #include <Inventor/actions/SoWriteAction.h>
+
+#include <Inventor/VRMLnodes/SoVRMLGroup.h>
+#include <Inventor/actions/SoToVRML2Action.h>
+#include <Inventor/actions/SoToVRMLAction.h>
 
 #include <assimp/Importer.hpp>
 #include <assimp/scene.h>
@@ -41,7 +44,8 @@ typedef urdf_traverser::BoxPtr BoxPtr;
 SoNode * convertMeshFile(const std::string& filename, double scale_factor)
 {
     Assimp::Importer importer;
-    const aiScene* scene = importer.ReadFile(filename, 0);
+    const aiScene* scene = importer.ReadFile(filename, aiProcess_OptimizeGraph |
+                aiProcess_FindInvalidData);
                 /*aiProcess_Triangulate |
                 aiProcess_OptimizeMeshes | 
                 /aiProcess_CalcTangentSpace             | 
@@ -57,7 +61,7 @@ SoNode * convertMeshFile(const std::string& filename, double scale_factor)
     // scale the meshes if required
     if (fabs(scale_factor - 1.0) > 1e-06)
     {
-        ROS_INFO_STREAM("Scaling the mesh "<<filename);
+        ROS_INFO_STREAM("Scaling the mesh "<<filename<< " with factor "<<scale_factor);
         // get the scaling matrix
         aiMatrix4x4 scaleTransform;
         aiMatrix4x4::Scaling(aiVector3D(scale_factor, scale_factor, scale_factor), scaleTransform);
@@ -141,7 +145,7 @@ SoNode * urdf2inventor::getAllVisuals(const urdf_traverser::LinkPtr link, double
 
                 SoSeparator * sphereNode = new SoSeparator();
                 sphereNode->ref();
-                urdf2inventor::addSphere(allVisuals, vTransform.translation(), sphere->radius, 1,0,0);
+                urdf2inventor::addSphere(allVisuals, vTransform.translation(), sphere->radius * scale_factor, 1,0,0);
                 break; 
             }
             case urdf::Geometry::BOX:
@@ -156,7 +160,7 @@ SoNode * urdf2inventor::getAllVisuals(const urdf_traverser::LinkPtr link, double
 
                 SoSeparator * boxNode = new SoSeparator();
                 boxNode->ref();
-                urdf2inventor::addBox(allVisuals, vTransform, box->dim.x, box->dim.y, box->dim.z, 1,0,0,0);
+                urdf2inventor::addBox(allVisuals, vTransform, box->dim.x * scale_factor, box->dim.y * scale_factor, box->dim.z * scale_factor, 1,0,0,0);
                 break; 
             }
             default:
@@ -212,7 +216,7 @@ bool writeInventorFileString(SoNode * node, std::string& result)
  * Callback function to be called during recursion incurred in convertMeshes().
  * Only supports string mesh formats with MeshConvertRecursionParams<std::string>.
  */
-int convertStringMesh(urdf_traverser::RecursionParamsPtr& p)
+int convertMeshToFileString(urdf_traverser::RecursionParamsPtr& p)
 {
     typedef urdf2inventor::MeshConvertRecursionParams<std::string> MeshConvertRecursionParamsT;
     typename MeshConvertRecursionParamsT::Ptr param = baselib_binding_ns::dynamic_pointer_cast<MeshConvertRecursionParamsT>(p);
@@ -226,7 +230,7 @@ int convertStringMesh(urdf_traverser::RecursionParamsPtr& p)
     
     ROS_INFO("Convert mesh for link '%s'",link->name.c_str());
 
-    SoNode * allVisuals = urdf2inventor::getAllVisuals(link, param->factor, param->addVisualTransform);
+    SoNode * allVisuals = urdf2inventor::getAllVisuals(link, param->factor, param->addVisualTransform, false);
 
     if (!allVisuals)
     {
@@ -280,7 +284,7 @@ bool urdf2inventor::convertMeshes(urdf_traverser::UrdfTraverser& traverser,
     urdf_traverser::RecursionParamsPtr p(meshParams);
 
     // go through entire tree
-    if (traverser.traverseTreeTopDown(startLinkName, boost::bind(&convertStringMesh, _1), p, true) <= 0)
+    if (traverser.traverseTreeTopDown(startLinkName, boost::bind(&convertMeshToFileString, _1), p, true) <= 0)
     {
         ROS_ERROR("Could nto convert meshes.");
         return false;

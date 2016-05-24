@@ -14,3 +14,5 @@ I have not fully tested this code with various models so please report if there 
 - removed importScene() from .h and .cpp and made the method 
     SoSeparator *Assimp2Inventor(const aiScene *const scene, const std::string& sceneDir)
   public in the header instead
+- changed addNode() such that the aiNode::mTransformation is also considered if the node parent is NULL.
+  This is requiered to apply a scale (and any other possible global transformations) at the root.

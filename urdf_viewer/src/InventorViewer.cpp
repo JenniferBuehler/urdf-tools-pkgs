@@ -30,6 +30,8 @@
 #include <Inventor/nodes/SoCone.h>
 #include <Inventor/nodes/SoSphere.h>
 #include <Inventor/nodes/SoCoordinate3.h>
+#include <Inventor/nodes/SoVertexShape.h>
+#include <Inventor/nodes/SoVertexProperty.h>
 #include <Inventor/actions/SoSearchAction.h>
 #include <Inventor/details/SoFaceDetail.h>
 
@@ -92,9 +94,12 @@ bool InventorViewer::loadModel(const std::string& filename)
     if (!in.openFile(filename.c_str()))
         return false;
     if (!SoDB::read(&in, model) || model == NULL)
+    /*model = SoDB::readAll(&in);
+    if (!model)*/
         return false;
 
     root->addChild(model);
+    in.closeFile();
     return true;
 }
 
@@ -120,6 +125,29 @@ bool InventorViewer::computeCorrectFaceNormal(const SoPickedPoint * pick, bool c
             return false;
         }
 
+        // face index is always 0 with triangle strips
+        // ROS_INFO_STREAM("Face index: "<<fd->getFaceIndex());
+
+        SbVec3f pickNormal=pick->getNormal();
+        //SbVec3f _normalObj=pick->getObjectNormal();
+        float _x, _y, _z;
+        pickNormal.getValue(_x, _y, _z);
+        Eigen::Vector3d normalDef = Eigen::Vector3d(_x, _y, _z);
+        normal = normalDef;
+        
+        // ROS_INFO_STREAM("Clicked on face with "<<fd->getNumPoints()<<" points.");
+
+        if (fd->getNumPoints() < 3)
+        {
+            ROS_ERROR("Clicked on degenerate face, can't compute normal");
+            return false;
+        }
+        int p1 = fd->getPoint(0)->getCoordinateIndex();
+        int p2 = fd->getPoint(1)->getCoordinateIndex();
+        int p3 = fd->getPoint(2)->getCoordinateIndex();
+
+        // ROS_INFO_STREAM("First 3 coord indices: "<<p1<<", "<<p2<<", "<<p3);
+
         // Find the coordinate node that is used for the faces.
         // Assume that it's the last SoCoordinate3 node traversed
         // before the picked shape.
@@ -128,31 +156,57 @@ bool InventorViewer::computeCorrectFaceNormal(const SoPickedPoint * pick, bool c
         searchCoords.setInterest(SoSearchAction::LAST);
         searchCoords.apply(pick->getPath());
 
+        SbVec3f coord1, coord2, coord3;
+
         if (searchCoords.getPath() == NULL)
         {
-            ROS_ERROR("If we picked a face, we need a node which stores the coordinates!");
-            return false;
+            // try to find SoVertexShape instead
+            //ROS_INFO("No SoCoordinate3 node found, looking for SoVertexShape...");
+            
+            searchCoords.setType(SoVertexShape::getClassTypeId());
+            searchCoords.setInterest(SoSearchAction::LAST);
+            searchCoords.apply(pick->getPath());
+        
+            if (searchCoords.getPath() == NULL)
+            {
+                ROS_ERROR("Failed to find coordinate node for the picked face. Returning default normal.");
+                return false;
+            }
+            SoVertexShape * vShapeNode = dynamic_cast<SoVertexShape*>(searchCoords.getPath()->getTail());
+            if (!vShapeNode)
+            {
+                ROS_ERROR("Could not cast SoVertexShape");
+                return false;
+            }
+            SoVertexProperty * vProp = dynamic_cast<SoVertexProperty*>(vShapeNode->vertexProperty.getValue());
+            if (!vProp)
+            {
+                ROS_ERROR_STREAM("Could not cast SoVertexProperty.");
+                return false;
+            }
+            coord1 = vProp->vertex[p1]; 
+            coord2 = vProp->vertex[p2]; 
+            coord3 = vProp->vertex[p3]; 
         }
-
-        SoCoordinate3 * coordNode = dynamic_cast<SoCoordinate3*>(searchCoords.getPath()->getTail());
-        if (!coordNode)
+        else
         {
-            ROS_ERROR("Could not cast SoCoordinate3");
-            return false;
+            SoCoordinate3 * coordNode = dynamic_cast<SoCoordinate3*>(searchCoords.getPath()->getTail());
+            if (!coordNode)
+            {
+                ROS_ERROR("Could not cast SoCoordinate3");
+                return false;
+            }
+            coord1 = coordNode->point[p1];
+            coord2 = coordNode->point[p2];
+            coord3 = coordNode->point[p3];
         }
 
-        if (fd->getNumPoints() != 3)
+        if (fd->getNumPoints() > 3)
         {
-            ROS_INFO_STREAM("Face with " << fd->getNumPoints() <<
-                            " points can't be used for normal calculation, only triangles supported.");
+            ROS_WARN_STREAM("Face with " << fd->getNumPoints() <<
+                            " points is not a triangle and may lead to wrong normal calculations.");
         }
 
-        int p1 = fd->getPoint(0)->getCoordinateIndex();
-        SbVec3f coord1 = coordNode->point[p1];
-        int p2 = fd->getPoint(1)->getCoordinateIndex();
-        SbVec3f coord2 = coordNode->point[p2];
-        int p3 = fd->getPoint(2)->getCoordinateIndex();
-        SbVec3f coord3 = coordNode->point[p3];
 
         SbVec3f diff1(coord2.getValue());
         diff1 -= coord1;

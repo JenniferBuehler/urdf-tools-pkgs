@@ -64,6 +64,34 @@ SbName getName(const std::string &name) {
     return SbName(strs.str().c_str());
 }
 
+void printTransform(const aiMatrix4x4 &matrix) {
+    aiVector3D scaling;
+    aiQuaternion rotation;
+    aiVector3D position;
+    matrix.Decompose(scaling,rotation,position);
+
+    SoTransform *transform(new SoTransform);
+    transform->translation.setValue(position.x,
+                                    position.y,
+                                    position.z);
+    transform->rotation.setValue(rotation.x,
+                                 rotation.y,
+                                 rotation.z,
+                                 rotation.w);
+    transform->scaleFactor.setValue(scaling.x,
+                                    scaling.y,
+                                    scaling.z);
+
+    ROS_INFO("Rotation: %lf %lf %lf %lf, scale = %lf %lf %lf",rotation.x,
+            rotation.y,
+            rotation.z,
+            rotation.w,
+            scaling.x,
+            scaling.y,
+            scaling.z);
+}
+
+
 
 SoTransform *getTransform(const aiMatrix4x4 &matrix) {
     aiVector3D scaling;
@@ -425,7 +453,7 @@ void addNode(SoSeparator *const parent, const aiNode *const node,
              const aiTexture *const *const textures, const std::string& sceneDir) {
     if (hasMesh(node)) {
         SoSeparator *nodeSep;
-        if ((!node->mParent || node->mTransformation.IsIdentity()) &&
+        if (node->mTransformation.IsIdentity() &&
                 node->mNumMeshes == 0) {
             nodeSep = parent;
         } else {
@@ -435,7 +463,7 @@ void addNode(SoSeparator *const parent, const aiNode *const node,
             parent->addChild(nodeSep);
 
             //Add transform
-            if (node->mParent && !node->mTransformation.IsIdentity())
+            if (!node->mTransformation.IsIdentity())
                 nodeSep->addChild(getTransform(node->mTransformation));
 
             //Add meshes
