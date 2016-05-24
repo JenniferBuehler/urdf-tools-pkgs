@@ -241,6 +241,17 @@ SoTexture *getTexture(const aiMaterial *const material, const std::string &scene
     return texture;
 }
 
+SoMaterial *cloneMaterial(const SoMaterial& m)
+{
+    SoMaterial * ret = new SoMaterial();
+    ret->ambientColor=m.ambientColor;
+    ret->diffuseColor=m.diffuseColor;
+    ret->emissiveColor=m.emissiveColor;
+    ret->shininess=m.shininess;
+    ret->specularColor=m.specularColor;
+    ret->transparency=m.transparency;
+    return ret;
+}
 
 SoMaterial *getMaterial(const aiMaterial *const material) {
     SoMaterial *soMat(new SoMaterial);
@@ -417,7 +428,7 @@ SoIndexedShape *getShape(const aiMesh *const mesh) {
 
 
 SoSeparator *getMesh(const aiMesh *const mesh, const aiMaterial *const material,
-                     const std::string& sceneDir, SoSeparator *meshSep = NULL) {
+                     const std::string& sceneDir, SoSeparator *meshSep = NULL, const SoMaterial * materialOverride=NULL) {
     SoIndexedShape *shape(getShape(mesh));
     if (shape) {
         if (!meshSep) meshSep = new SoSeparator;
@@ -427,7 +438,8 @@ SoSeparator *getMesh(const aiMesh *const mesh, const aiMaterial *const material,
         if (texture) meshSep->addChild(texture);
 
         //Add material
-        meshSep->addChild(getMaterial(material));
+        if (!materialOverride) meshSep->addChild(getMaterial(material));
+        else meshSep->addChild(cloneMaterial(*materialOverride));
 
         //Add shape
         meshSep->addChild(shape);
@@ -447,10 +459,14 @@ bool hasMesh(const aiNode *node) {
     return false;
 }
 
-
+/**
+ * \param materialOverride can be used to override material properties.
+ */
 void addNode(SoSeparator *const parent, const aiNode *const node,
              const aiMaterial *const *const materials, const aiMesh *const *const meshes,
-             const aiTexture *const *const textures, const std::string& sceneDir) {
+             const aiTexture *const *const textures, const std::string& sceneDir,
+             const SoMaterial * materialOverride)
+{
     if (hasMesh(node)) {
         SoSeparator *nodeSep;
         if (node->mTransformation.IsIdentity() &&
@@ -470,11 +486,16 @@ void addNode(SoSeparator *const parent, const aiNode *const node,
             if (node->mNumMeshes == 1 && node->mNumChildren == 0) {
                 getMesh(meshes[node->mMeshes[0]],
                         materials[meshes[node->mMeshes[0]]->mMaterialIndex],
-                        sceneDir,nodeSep);
+                        sceneDir, nodeSep,
+                        materialOverride);
             } else {
                 for (std::size_t i(0); i < node->mNumMeshes; ++i) {
                     SoNode *child(getMesh(meshes[node->mMeshes[i]],
-                                  materials[meshes[node->mMeshes[i]]->mMaterialIndex],sceneDir));
+                                  //useMaterial,
+                                  materials[meshes[node->mMeshes[i]]->mMaterialIndex],
+                                  sceneDir, NULL,
+                                  materialOverride));
+                    //delete useMaterial; // delete because this was a temporary copy
                     if (child) nodeSep->addChild(child);
                 }
             }
@@ -482,12 +503,17 @@ void addNode(SoSeparator *const parent, const aiNode *const node,
 
         //Add children nodes
         for (std::size_t i(0); i < node->mNumChildren; ++i) {
-            addNode(nodeSep,node->mChildren[i],materials,meshes,textures,sceneDir);
+            addNode(nodeSep,node->mChildren[i],materials,meshes,textures,sceneDir, materialOverride);
         }
     }
 }
 
-SoSeparator *Assimp2Inventor(const aiScene *const scene, const std::string& sceneDir) {
+/**
+ * \param materialOverride can be used to override ALL NODES material properties to given values.
+ */
+SoSeparator *Assimp2Inventor(const aiScene *const scene, const std::string& sceneDir,
+        const SoMaterial * materialOverride)
+{
     SoSeparator *root(new SoSeparator);
     ROS_INFO_STREAM("Imported a scene with " << scene->mNumTextures << " embedded textures, "
               << scene->mNumMaterials << " materials and "
@@ -497,7 +523,7 @@ SoSeparator *Assimp2Inventor(const aiScene *const scene, const std::string& scen
         ///I don't know how they will be referenced inside the scene
     }
     addNode(root,scene->mRootNode,scene->mMaterials,
-            scene->mMeshes,scene->mTextures,sceneDir);
+            scene->mMeshes,scene->mTextures,sceneDir, materialOverride);
     return root;
 }
 

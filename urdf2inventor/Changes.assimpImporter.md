@@ -16,3 +16,4 @@ I have not fully tested this code with various models so please report if there 
   public in the header instead
 - changed addNode() such that the aiNode::mTransformation is also considered if the node parent is NULL.
   This is requiered to apply a scale (and any other possible global transformations) at the root.
+- added option to override material colour (to use the one specified in the URDF).

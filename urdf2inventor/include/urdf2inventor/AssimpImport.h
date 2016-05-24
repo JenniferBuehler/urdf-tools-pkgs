@@ -26,12 +26,15 @@
 #define ASSIMP_IMPORT_H
 
 #include <Inventor/nodes/SoSeparator.h>
+#include <Inventor/nodes/SoMaterial.h>
 #include <assimp/scene.h>
 #include <string>
 #include <vector>
 
-
-SoSeparator *Assimp2Inventor(const aiScene *const scene, const std::string& sceneDir);
+/**
+ * \param materialOverride can be used to override ALL NODES material properties to given values.
+ */
+SoSeparator *Assimp2Inventor(const aiScene *const scene, const std::string& sceneDir, const SoMaterial * materialOverride);
 
 std::vector<std::string> assimpImportedExtensions();
 

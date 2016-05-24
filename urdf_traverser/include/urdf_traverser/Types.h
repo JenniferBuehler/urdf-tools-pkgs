@@ -28,6 +28,7 @@ typedef boost::shared_ptr<urdf::Box> BoxPtr;
 typedef boost::shared_ptr<urdf::Cylinder> CylinderPtr;
 typedef boost::shared_ptr<urdf::Collision> CollisionPtr;
 typedef boost::shared_ptr<urdf::Inertial> InertialPtr;
+typedef boost::shared_ptr<urdf::Material> MaterialPtr;
 
 typedef boost::shared_ptr<urdf::Model> ModelPtr;
 typedef boost::shared_ptr<const urdf::Model> ModelConstPtr;

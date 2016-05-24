@@ -32,6 +32,7 @@ using urdf_traverser::LinkRecursionParams;
 
 typedef urdf_traverser::VisualPtr VisualPtr;
 typedef urdf_traverser::GeometryPtr GeometryPtr;
+typedef urdf_traverser::MaterialPtr MaterialPtr;
 typedef urdf_traverser::MeshPtr MeshPtr;
 typedef urdf_traverser::SpherePtr SpherePtr;
 typedef urdf_traverser::CylinderPtr CylinderPtr;
@@ -41,7 +42,7 @@ typedef urdf_traverser::BoxPtr BoxPtr;
 /**
  * Converts the mesh in this file to the inventor format.
  */
-SoNode * convertMeshFile(const std::string& filename, double scale_factor)
+SoNode * convertMeshFile(const std::string& filename, double scale_factor, double r=0.5, double g=0.5, double b=0.5, double a=1)
 {
     Assimp::Importer importer;
     const aiScene* scene = importer.ReadFile(filename, aiProcess_OptimizeGraph |
@@ -70,7 +71,12 @@ SoNode * convertMeshFile(const std::string& filename, double scale_factor)
     }
 
     std::string sceneDir = boost::filesystem::path(filename).parent_path().string();
-    SoSeparator * ivScene = Assimp2Inventor(scene, sceneDir);
+
+    SoMaterial * overrideMaterial = new SoMaterial();
+    overrideMaterial->diffuseColor.setValue(r,g,b);
+    overrideMaterial->transparency.setValue(1.0-a);
+
+    SoSeparator * ivScene = Assimp2Inventor(scene, sceneDir, overrideMaterial);
     if (!ivScene)
     {
         ROS_ERROR("Could not convert scene");
@@ -95,8 +101,10 @@ SoNode * urdf2inventor::getAllVisuals(const urdf_traverser::LinkPtr link, double
     {
         VisualPtr visual = (*vit);
         GeometryPtr geom = visual->geometry;
-        
-        // ROS_INFO_STREAM("Visual "<<visual->group_name);
+        MaterialPtr mat = visual->material;
+
+        ROS_INFO_STREAM("Visual "<<visual->group_name);
+        if (mat) ROS_INFO_STREAM("Material "<<mat->color.r<<", "<<mat->color.g<<", "<<mat->color.b<<", "<<mat->color.a);
 
         urdf_traverser::EigenTransform vTransform = urdf_traverser::getTransform(visual->origin);
         ROS_INFO_STREAM("Visual "<<i<<" of link "<<link->name<<" transform: "<<visual->origin);
@@ -119,7 +127,11 @@ SoNode * urdf2inventor::getAllVisuals(const urdf_traverser::LinkPtr link, double
                 std::string meshFilename = urdf_traverser::helpers::packagePathToAbsolute(mesh->filename);
 
                 ROS_INFO_STREAM("Converting mesh file "<<meshFilename<<" with factor "<<scale_factor);
-                SoNode * somesh = convertMeshFile(meshFilename,scale_factor);
+                float r=mat->color.r;
+                float g=mat->color.g;
+                float b=mat->color.b;
+                float a=mat->color.a;
+                SoNode * somesh = convertMeshFile(meshFilename,scale_factor,r,g,b,a);
                 // ROS_INFO("Converted.");
                 if (!somesh)
                 {
