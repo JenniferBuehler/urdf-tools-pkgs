@@ -3,7 +3,7 @@
     <arg name="urdf_file" default="$(find jaco_description)/urdf/jaco_robot.urdf"/>
 
     # factor to scale the model by 
-    <arg name="scale_factor"/>
+    <arg name="scale_factor" default="1"/>
     
     # The output material to assign to the output GraspIt model.
 	<arg name="output_material" default="plastic"/>

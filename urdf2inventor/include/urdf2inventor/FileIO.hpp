@@ -15,8 +15,8 @@
     along with this program; if not, write to the Free Software Foundation,
     Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301  USA
 **/
-
 #include <urdf2inventor/Helpers.h>
+#include <boost/filesystem.hpp>
 
 template<typename MeshFormat>
 bool urdf2inventor::FileIO<MeshFormat>::initOutputDir(const std::string& robotName) const
@@ -66,6 +66,7 @@ bool urdf2inventor::FileIO<MeshFormat>::writeMeshFiles(const std::map<std::strin
 }
 
 
+
 template<typename MeshFormat>
 bool urdf2inventor::FileIO<MeshFormat>::write(const ConversionResultPtr& data) const
 {
@@ -81,6 +82,7 @@ bool urdf2inventor::FileIO<MeshFormat>::write(const ConversionResultPtr& data) c
         ROS_ERROR("Could not write mesh files");
         return false;
     }
-
+       
+    urdf2inventor::helpers::writeTextures(data->textureFiles, outputDir); 
     return writeImpl(data);
 }

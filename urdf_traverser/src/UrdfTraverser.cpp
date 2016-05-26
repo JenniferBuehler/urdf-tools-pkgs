@@ -23,6 +23,8 @@
 #include <urdf_traverser/JointNames.h>
 #include <urdf_traverser/DependencyOrderedJoints.h>
 
+#include <boost/filesystem.hpp>
+
 #include <string>
 #include <ros/ros.h>
 #include <ros/package.h>
@@ -344,6 +346,10 @@ bool UrdfTraverser::loadModelFromFile(const std::string& urdfFilename)
         return false;
     }
 
+    boost::filesystem::path filePath(urdfFilename);
+    setModelDirectory(filePath.parent_path().string());
+    ROS_INFO_STREAM("Setting base model directory to "<<modelDir);
+
     if (!loadModelFromXMLString(xml_file))
     {
         ROS_ERROR("Could not load file");
@@ -387,10 +393,8 @@ bool UrdfTraverser::getModelFromFile(const std::string& filename, std::string& x
         xml_file.close();
         return true;
     }
-    else
-    {
-        ROS_ERROR("Could not open file [%s] for parsing.", filename.c_str());
-    }
+
+    ROS_ERROR("Could not open file [%s] for parsing.", filename.c_str());
     return false;
 }
 

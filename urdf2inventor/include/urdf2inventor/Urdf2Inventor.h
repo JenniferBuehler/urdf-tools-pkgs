@@ -83,6 +83,9 @@ public:
     // within the output directory specified in the node, another directory is going to be created
     // to contain the mesh files. The name of this directory can be specified here.
     static std::string MESH_OUTPUT_DIRECTORY_NAME;
+    // within the output directory specified in the node, another directory is going to be created
+    // to contain the texture files. The name of this directory can be specified here.
+    static std::string TEX_OUTPUT_DIRECTORY_NAME;
 
     /**
      * \param traverser the URDF traverser. Does not need to have a loaded URDF, as method loadAndConvert() will load the URDF into it. 
@@ -151,9 +154,12 @@ public:
      *      transform (their "origin"). This can be used to correct transformation errors which may have been 
      *      introduced in converting meshes from one format to the other, losing orientation information
      *      (for example, .dae has an "up vector" definition which may have been ignored)
+     * \param textureFiles if not NULL, a list of all texture files (absolute paths) in use are returned here.
      */
     SoNode * getAsInventor(const std::string& fromLink, bool useScaleFactor,
-        bool addAxes, float axesRadius, float axesLength, const EigenTransform& addVisualTransform);
+        bool addAxes, float axesRadius, float axesLength,
+        const EigenTransform& addVisualTransform,
+        std::set<std::string> * textureFiles);
 
     /**
      * writes all elements down from \e fromLink to files in inventor format.
@@ -184,17 +190,15 @@ public:
     bool loadModelFromFile(const std::string& urdfFilename);
 
     /**
+     * Constructs a new ConversionParameters object with basic parameters.
      * \param rootLink if empty string, the root link in the URDF is going to be used. Otherwise, a link
      *      name can be set here which will convert the model starting from this link name.
-     * \param addVisualTransform this transform will be post-multiplied on all links' **visuals** (not links!) local
-     *      transform (their "origin"). This can be used to correct transformation errors which may have been 
-     *      introduced in converting meshes from one format to the other, losing orientation information
-     *      (for example, .dae has an "up vector" definition which may have been ignored)
      */
-    ConversionParametersPtr getBasicConversionParams(const std::string& rootLink/*=""*/,
-        const std::string& material/*="plastic"*/, const EigenTransform& addVisualTransform)
+    ConversionParametersPtr getBasicConversionParams(const std::string& rootLink,
+        const std::string& material,
+        const EigenTransform& addVisualTransform)
     {
-        return ConversionParametersPtr(new ConversionParameters(rootLink,material, addVisualTransform));
+        return ConversionParametersPtr(new ConversionParameters(rootLink, material, addVisualTransform));
     }
 
     /**
@@ -293,7 +297,9 @@ private:
      * See other getAsInventor() function.
      */
     SoNode * getAsInventor(const LinkPtr& from_link, bool useScaleFactor, 
-        bool _addAxes, float _axesRadius, float _axesLength, const EigenTransform& addTransform);
+        bool _addAxes, float _axesRadius, float _axesLength,
+        const EigenTransform& addTransform,
+        std::set<std::string> * textureFiles);
 
     /**
      * Writes the contents of SoNode into the file of given name.

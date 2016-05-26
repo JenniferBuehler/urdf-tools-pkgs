@@ -526,9 +526,9 @@ SoSeparator *Assimp2Inventor(const aiScene *const scene, const std::string& scen
         const SoMaterial * materialOverride)
 {
     SoSeparator *root(new SoSeparator);
-    ROS_INFO_STREAM("Imported a scene with " << scene->mNumTextures << " embedded textures, "
+/*    ROS_INFO_STREAM("Imported a scene with " << scene->mNumTextures << " embedded textures, "
               << scene->mNumMaterials << " materials and "
-              << scene->mNumMeshes << " meshes.");
+              << scene->mNumMeshes << " meshes.");*/
     if (scene->mNumTextures > 0) {
         std::cout << "Found a scene with embedded textures. They will be ignored." << std::endl;
         ///I don't know how they will be referenced inside the scene

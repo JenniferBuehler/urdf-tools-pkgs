@@ -28,6 +28,7 @@
 #include <map>
 #include <vector>
 
+#include <boost/filesystem.hpp>
 
 #include <urdf_traverser/Types.h>
 #include <urdf_traverser/RecursionParams.h>
@@ -63,7 +64,7 @@ public:
 
     /**
      * Reads the URDF file from the filename into \e xml_string. Does not change
-     * anything in the UrdfTraverser object.
+     * anything in the UrdfTraverser object. Result can be used with loadModelFromXMLString().
      */
     bool getModelFromFile(const std::string& urdfFilename, std::string& xml_string) const;
    
@@ -76,6 +77,26 @@ public:
      * Loads the URDF from a file
      */
     bool loadModelFromXMLString(const std::string& xmlString);
+
+    /**
+     * Set the directory which is considered the base of all
+     * mesh and texture files. When loading the model URDF from file,
+     * this directory is automatically set to the directory in which
+     * the URDF file resides. However if other files referenced from
+     * the URDF don't share this same base directory, use this function
+     * to override this.
+     */
+    inline void setModelDirectory(const std::string& dir)
+    {
+        // make sure this is an absolute canonical path
+        boost::filesystem::path _dir(dir);
+        boost::filesystem::path _absDir=boost::filesystem::canonical(_dir);
+        modelDir=_absDir.string();
+    }
+    inline std::string getModelDirectory() const
+    {
+        return modelDir;
+    }
 
     /**
      * Loads the URDF from parameter server
@@ -204,8 +225,13 @@ private:
      */
     int printLink(RecursionParamsPtr& p);
 
-
     ModelPtr model;
+
+    /**
+     * The directory which is considered the base of all
+     * mesh and texture files of the model
+     */
+    std::string modelDir;
 };
 
 }  //  namespace urdf_traverser

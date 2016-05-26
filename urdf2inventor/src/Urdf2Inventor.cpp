@@ -51,7 +51,8 @@
 using urdf2inventor::Urdf2Inventor;
 
 std::string Urdf2Inventor::OUTPUT_EXTENSION = ".iv";
-std::string Urdf2Inventor::MESH_OUTPUT_DIRECTORY_NAME = "iv";
+std::string Urdf2Inventor::MESH_OUTPUT_DIRECTORY_NAME = "iv/";
+std::string Urdf2Inventor::TEX_OUTPUT_DIRECTORY_NAME = "iv/textures/";
 
 bool Urdf2Inventor::joinFixedLinks(const std::string& fromLink)
 {
@@ -139,7 +140,7 @@ urdf_traverser::EigenTransform Urdf2Inventor::getTransform(const LinkPtr& from_l
 
 Urdf2Inventor::ConversionResultPtr Urdf2Inventor::preConvert(const ConversionParametersPtr& params)
 {
-    ConversionResultPtr res(new ConversionResultT(OUTPUT_EXTENSION, MESH_OUTPUT_DIRECTORY_NAME));
+    ConversionResultPtr res(new ConversionResultT(OUTPUT_EXTENSION, MESH_OUTPUT_DIRECTORY_NAME, TEX_OUTPUT_DIRECTORY_NAME));
     res->success=false;
     return res;
 }
@@ -166,15 +167,35 @@ Urdf2Inventor::ConversionResultPtr Urdf2Inventor::convert(const ConversionParame
         ROS_ERROR("Failed to scale model");
     }
 
-    ROS_INFO("############### Converting meshes");
+    ROS_INFO_STREAM("############### Converting meshes"); //, base dir " << params->baseDir);
 
+    std::map<std::string, std::set<std::string> > textureFiles;
     if (!urdf2inventor::convertMeshes(*urdf_traverser, params->rootLinkName,
-                scaleFactor, params->material, OUTPUT_EXTENSION,
-                params->addVisualTransform, res->meshes))
+                scaleFactor,
+                params->material,
+                OUTPUT_EXTENSION,
+                params->addVisualTransform,
+                res->meshes, textureFiles))
     {
         ROS_ERROR("Could not convert meshes");
         return res;
     }
+
+    if (!urdf2inventor::fixTextureReferences(
+                res->meshOutputDirectoryName,
+                res->texOutputDirectoryName,
+                textureFiles,
+                res->meshes, res->textureFiles))
+    {
+        ROS_ERROR("Could not fix texture references");
+        return res;
+    }
+
+/*    for (std::map<std::string, std::set<std::string> >::iterator mit=res->textureFiles.begin(); mit!=res->textureFiles.end(); ++mit)
+    {
+        for (std::set<std::string>::iterator tit=mit->second.begin(); tit!=mit->second.end(); ++tit)
+            ROS_INFO_STREAM("Required: cp "<<*tit<<" "<<mit->first);
+    }*/
 
     return postConvert(params, res);
 }
@@ -306,7 +327,10 @@ void Urdf2Inventor::addLocalAxes(const LinkConstPtr& link, SoSeparator * addToNo
 
 
 SoNode * Urdf2Inventor::getAsInventor(const LinkPtr& from_link, bool useScaleFactor,
-    bool _addAxes, float _axesRadius, float _axesLength, const EigenTransform& addVisualTransform)
+    bool _addAxes, float _axesRadius, float _axesLength,
+    const EigenTransform& addVisualTransform,
+    std::set<std::string> * textureFiles
+    )
 {
     if (!from_link.get())
     {
@@ -322,6 +346,13 @@ SoNode * Urdf2Inventor::getAsInventor(const LinkPtr& from_link, bool useScaleFac
     {
         ROS_ERROR("Could not get visuals");
         return NULL;
+    }
+
+    if (textureFiles)
+    {
+        // collect all relative texture filenames from the absolute texture paths. 
+        std::set<std::string> allFiles =  urdf2inventor::getAllTexturePaths(allVisuals);
+        textureFiles->insert(allFiles.begin(), allFiles.end());
     }
 
     if (_addAxes) 
@@ -349,7 +380,7 @@ SoNode * Urdf2Inventor::getAsInventor(const LinkPtr& from_link, bool useScaleFac
             return NULL;
         }
         SoNode * childNode = getAsInventor(childLink, useScaleFactor,
-            _addAxes, _axesRadius, _axesLength, addVisualTransform);
+            _addAxes, _axesRadius, _axesLength, addVisualTransform, textureFiles);
         if (!childNode)
         {
             ROS_ERROR_STREAM("Could not get child node for "<<childLink->name);
@@ -369,7 +400,9 @@ SoNode * Urdf2Inventor::getAsInventor(const LinkPtr& from_link, bool useScaleFac
 
 
 SoNode * Urdf2Inventor::getAsInventor(const std::string& fromLink, bool useScaleFactor,
-    bool _addAxes, float _axesRadius, float _axesLength, const EigenTransform& addVisualTransform)
+    bool _addAxes, float _axesRadius, float _axesLength, const EigenTransform& addVisualTransform,
+    std::set<std::string> * textureFiles
+    )
 {
     std::string startLinkName=fromLink;
     if (startLinkName.empty()){
@@ -382,12 +415,16 @@ SoNode * Urdf2Inventor::getAsInventor(const std::string& fromLink, bool useScale
         ROS_ERROR_STREAM("No link named '"<<startLink<<"'");
         return NULL;
     }
-    return getAsInventor(startLink, useScaleFactor, _addAxes, _axesRadius, _axesLength, addVisualTransform);
+    SoNode * root = getAsInventor(startLink, useScaleFactor, _addAxes, _axesRadius, _axesLength,
+            addVisualTransform, textureFiles);
+    urdf2inventor::removeTextureCopies(root);
+    return root;
 }
 
 
 bool Urdf2Inventor::writeAsInventor(const std::string& ivFilename,
-    const std::string& fromLink, bool useScaleFactor, const EigenTransform& addVisualTransform)
+    const std::string& fromLink,
+    bool useScaleFactor, const EigenTransform& addVisualTransform)
 {
     std::string startLinkName=fromLink;
     if (startLinkName.empty()){
@@ -408,7 +445,9 @@ bool Urdf2Inventor::writeAsInventor(const std::string& ivFilename,
 bool Urdf2Inventor::writeAsInventor(const std::string& ivFilename, const LinkPtr& from_link,
     bool useScaleFactor, const EigenTransform& addVisualTransform)
 {
-    SoNode * inv = getAsInventor(from_link, useScaleFactor, addAxes, axesRadius, axesLength, addVisualTransform);
+    std::set<std::string> textureFiles;
+    SoNode * inv = getAsInventor(from_link, useScaleFactor, addAxes, axesRadius, axesLength,
+                                 addVisualTransform, &textureFiles);
     if (!inv)
     {
         ROS_ERROR("could not generate overall inventor file");
@@ -421,7 +460,7 @@ Urdf2Inventor::ConversionResultPtr Urdf2Inventor::loadAndConvert(const std::stri
         bool joinFixed,
         const ConversionParametersPtr& params)
 {
-    ConversionResultPtr failResult(new ConversionResultT(OUTPUT_EXTENSION, MESH_OUTPUT_DIRECTORY_NAME));
+    ConversionResultPtr failResult(new ConversionResultT(OUTPUT_EXTENSION, MESH_OUTPUT_DIRECTORY_NAME, TEX_OUTPUT_DIRECTORY_NAME));
     failResult->success = false;
 
     ROS_INFO_STREAM("Loading model from file "<<urdfFilename);

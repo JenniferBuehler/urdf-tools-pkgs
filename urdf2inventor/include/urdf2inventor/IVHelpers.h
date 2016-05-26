@@ -7,6 +7,7 @@
 
 #include <Eigen/Core>
 #include <Eigen/Geometry>
+#include <set>
 
 namespace urdf2inventor
 {
@@ -47,6 +48,20 @@ extern void addCylinder(SoSeparator * addToNode, const Eigen::Vector3d& pos,
     float r, float g, float b, float a=0);
 
 extern void addLocalAxes(SoSeparator * addToNode, float axesRadius, float axesLength);
+
+/**
+ * Searches through all nodes and returns a set of absolute paths to textures
+ * which are in use.
+ */
+extern std::set<std::string> getAllTexturePaths(SoNode * root);
+
+/**
+ * writes the contents of SoNode into the inventor (*.iv) format and returns the file
+ * content as a string.
+ */
+extern bool writeInventorFileString(SoNode * node, std::string& result);
+
+
 
 }
 #endif  // URDF2INVENTOR_IVHELPERS_H

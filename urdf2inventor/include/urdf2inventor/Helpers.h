@@ -53,6 +53,18 @@ extern void resetStdOut();
 // see http://homepage.ntlworld.com/jonathan.deboynepollard/FGA/redirecting-standard-io.html
 extern void redirectStdOut(const char * toFile);
 
+/**
+ * Copies all texture files as given in \e textureFiles to the target directory \e outputDir
+ * \param textureFiles The texture file names to copy to target directories:
+ *      Key is the *relative* path to the texture directory, which will be located in the output directory.
+ *      Value is a list of *absolute* filenames of textures to copy into this directory.
+ *      So copying all files i {mapIterator->second[i]} to {output-dir}/{mapIterator->first} will be required when installing
+ *      the mesh file to {output-dir}/{file.extension}.
+ */
+extern bool writeTextures(const std::map<std::string, std::set<std::string> >& textureFiles, const std::string& outputDir);
+
+
+
 }  //  namespace helpers
 }  //  namespace urdf2inventor
 

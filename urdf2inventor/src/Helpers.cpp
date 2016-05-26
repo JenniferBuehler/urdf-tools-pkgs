@@ -80,4 +80,45 @@ void urdf2inventor::helpers::redirectStdOut(const char * toFile)
 
 
 
+bool urdf2inventor::helpers::writeTextures(const std::map<std::string, std::set<std::string> >& textureFiles, const std::string& outputDir) 
+{
+    bool ret = true;
+    boost::filesystem::path _outputDir(boost::filesystem::absolute(outputDir));
+
+    for (std::map<std::string, std::set<std::string> >::const_iterator mit=textureFiles.begin(); mit!=textureFiles.end(); ++mit)
+    {
+        for (std::set<std::string>::const_iterator tit=mit->second.begin(); tit!=mit->second.end(); ++tit)
+        {
+            boost::filesystem::path fullPath(_outputDir);
+            fullPath/=mit->first;
+            
+            ROS_INFO_STREAM("cp "<<*tit<<" "<<fullPath.string());
+
+            // first, create directory if needed
+            std::string targetTexDir = urdf_traverser::helpers::getDirectory(fullPath.string());
+            if (!urdf_traverser::helpers::makeDirectoryIfNeeded(targetTexDir.c_str()))
+            {
+                ROS_ERROR_STREAM("Could not create directory "<<targetTexDir);
+                ret = false;
+                continue;
+            }
+
+            try
+            {
+                // copy the file
+                // copy_option::fail_if_exists would be proper but annoying to debug
+                boost::filesystem::copy_file(*tit, fullPath, boost::filesystem::copy_option::overwrite_if_exists);
+            }
+            catch (const boost::filesystem::filesystem_error& ex)
+            {
+                ROS_ERROR_STREAM("Could not copy file: "<<ex.what());
+                ret = false;
+                continue;
+            }
+        }
+    }
+
+    return ret;
+}
+
 

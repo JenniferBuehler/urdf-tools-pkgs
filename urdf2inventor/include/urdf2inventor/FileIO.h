@@ -80,7 +80,6 @@ protected:
     bool writeMeshFiles(const std::map<std::string, MeshFormat>& meshes,
                         const std::string& MESH_OUTPUT_EXTENSION,
                         const std::string& MESH_OUTPUT_DIRECTORY_NAME) const;
-
     /**
      * Called from initOutputDir(), can be used by subclassees
      * Will be called after creating the directory \e outputDir.

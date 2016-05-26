@@ -1,10 +1,79 @@
 #include <urdf2inventor/Helpers.h>
 #include <urdf2inventor/IVHelpers.h>
 #include <Inventor/nodes/SoMatrixTransform.h>
+#include <Inventor/nodes/SoNode.h>
 #include <Inventor/nodes/SoSphere.h>
 #include <Inventor/nodes/SoCube.h>
 #include <Inventor/nodes/SoCylinder.h>
+#include <Inventor/nodes/SoTexture2.h>
+
+
+#include <Inventor/actions/SoWriteAction.h>
+#include <Inventor/actions/SoSearchAction.h>
+
+#include <boost/filesystem.hpp>
+
 #include <iostream>
+
+bool urdf2inventor::writeInventorFileString(SoNode * node, std::string& result)
+{
+    SoOutput out;
+    out.setBinary(false);
+    size_t initBufSize = 100;
+    void * buffer = malloc(initBufSize * sizeof(char));
+    out.setBuffer(buffer, initBufSize, std::realloc);
+    SoWriteAction write(&out);
+    write.apply(node);
+
+    void * resBuf = NULL;
+    size_t resBufSize = 0;
+
+    if (!out.getBuffer(resBuf, resBufSize) || (resBufSize == 0))
+    {
+        return false;
+    }
+
+    result = std::string(static_cast<char*>(resBuf), resBufSize);  // buffer will be copied
+
+    free(resBuf);
+
+    return true;
+}
+
+
+
+
+/**
+ * Searches through all nodes and returns a set of absolute paths to textures
+ * which are in use.
+ */
+std::set<std::string> urdf2inventor::getAllTexturePaths(SoNode * root)
+{
+    std::set<std::string> allFiles;
+    SoSearchAction sa;
+    sa.setType(SoTexture2::getClassTypeId());
+    sa.setInterest(SoSearchAction::ALL);
+    sa.setSearchingAll(TRUE);
+    sa.apply(root);
+    SoPathList & pl = sa.getPaths();
+
+    for (int i = 0; i < pl.getLength(); i++)
+    {
+        SoFullPath * p = (SoFullPath*) pl[i];
+        if (!p->getTail()->isOfType(SoTexture2::getClassTypeId())) continue;
+
+        SoTexture2 * tex = (SoTexture2*) p->getTail();
+        if (tex->filename.getValue().getLength() == 0) continue;
+        
+        std::string name(tex->filename.getValue().getString());
+        boost::filesystem::path absPath(boost::filesystem::absolute(name));
+        allFiles.insert(absPath.string());
+    }
+    sa.reset();
+    return allFiles;
+}
+
+
 
 SoTransform * urdf2inventor::getTransform(const urdf2inventor::EigenTransform& eTrans)
 {

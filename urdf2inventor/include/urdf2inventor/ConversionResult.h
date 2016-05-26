@@ -24,6 +24,7 @@
 #include <Eigen/Geometry>
 #include <string>
 #include <map>
+#include <set>
 
 namespace urdf2inventor
 {
@@ -39,7 +40,8 @@ class ConversionParameters
 public:
     typedef Eigen::Transform<double, 3, Eigen::Affine> EigenTransform;
     explicit ConversionParameters(const std::string& _rootLinkName,
-        const std::string& _material, const EigenTransform& _addVisualTransform):
+        const std::string& _material,
+        const EigenTransform& _addVisualTransform):
         rootLinkName(_rootLinkName),
         material(_material),
         addVisualTransform(_addVisualTransform){}
@@ -79,15 +81,19 @@ template<typename MeshFormat>
 class ConversionResult
 {
 public:
-    explicit ConversionResult(const std::string& _meshOutputExtension, const std::string& _meshOutputDirectoryName):
+    explicit ConversionResult(const std::string& _meshOutputExtension,
+            const std::string& _meshOutputDirectoryName,
+            const std::string& _texOutputDirectoryName):
         meshOutputExtension(_meshOutputExtension),
         meshOutputDirectoryName(_meshOutputDirectoryName),
+        texOutputDirectoryName(_texOutputDirectoryName),
         success(false) {}
     ConversionResult(const ConversionResult& o):
         robotName(o.robotName),
         meshes(o.meshes),
         meshOutputExtension(o.meshOutputExtension),
         meshOutputDirectoryName(o.meshOutputDirectoryName),
+        texOutputDirectoryName(o.texOutputDirectoryName),
         success(o.success) {}
 
     virtual ~ConversionResult() {}
@@ -96,11 +102,25 @@ public:
 
     // the resulting meshes (inventor files), indexed by the link name
     std::map<std::string, MeshFormat> meshes;
+    
+    /**
+     * The texture file names to copy to target directory:
+     * The key is the *relative* path to a target texture directory (relative to the
+     * global output directory).
+     * Value is a list of *absolute* filenames of textures to copy into this directory.
+     * So copying all files i {mapIterator->second[i]} to {output-dir}/{mapIterator->first} will be required when installing
+     * the mesh file to {output-dir}/{file.extension}.
+     */
+    std::map<std::string, std::set<std::string> > textureFiles;
 
     // the extension to use for mesh files (e.g. ".iv" for inventor)
     std::string meshOutputExtension;
 
+    // output directory for all meshes
     std::string meshOutputDirectoryName;
+    
+    // output directory for all textures 
+    std::string texOutputDirectoryName;
     
     bool success;
 

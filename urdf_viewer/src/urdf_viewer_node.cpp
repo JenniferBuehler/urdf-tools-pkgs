@@ -116,7 +116,7 @@ int main(int argc, char *argv[])
         }
     
         ROS_INFO("Getting inventor node...");
-        SoNode * node = converter.getAsInventor(fromLink, false, displayAxes, axRad, axLen, addVisualTrans);
+        SoNode * node = converter.getAsInventor(fromLink, false, displayAxes, axRad, axLen, addVisualTrans, NULL);
         if (!node)
         {
             ROS_INFO_STREAM("ERROR: Could not get inventor node");

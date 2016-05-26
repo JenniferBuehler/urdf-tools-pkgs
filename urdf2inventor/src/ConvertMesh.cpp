@@ -7,17 +7,16 @@
 #include <urdf2inventor/MeshConvertRecursionParams.h>
 
 #include <urdf2inventor/AssimpImport.h>
+#include <urdf2inventor/Helpers.h>
 #include <boost/filesystem.hpp>
 
 #include <Inventor/nodes/SoGroup.h>
 #include <Inventor/nodes/SoTransform.h>
 #include <Inventor/nodes/SoSelection.h>
+#include <Inventor/nodes/SoTexture2.h>
 #include <Inventor/nodekits/SoNodeKit.h>
 #include <Inventor/actions/SoWriteAction.h>
-
-#include <Inventor/VRMLnodes/SoVRMLGroup.h>
-#include <Inventor/actions/SoToVRML2Action.h>
-#include <Inventor/actions/SoToVRMLAction.h>
+#include <Inventor/actions/SoSearchAction.h>
 
 #include <assimp/Importer.hpp>
 #include <assimp/scene.h>
@@ -42,7 +41,7 @@ typedef urdf_traverser::BoxPtr BoxPtr;
 /**
  * Converts the mesh in this file to the inventor format.
  */
-SoNode * convertMeshFile(const std::string& filename, double scale_factor, double r=0.5, double g=0.5, double b=0.5, double a=1)
+SoNode * convertMeshFile(const std::string& filename, double scale_factor, bool setExplicitMaterial = false, double r=0.5, double g=0.5, double b=0.5, double a=1)
 {
 //    ROS_INFO("Reading file...");
     Assimp::Importer importer;
@@ -73,10 +72,13 @@ SoNode * convertMeshFile(const std::string& filename, double scale_factor, doubl
 
     std::string sceneDir = boost::filesystem::path(filename).parent_path().string();
 
-    SoMaterial * overrideMaterial = new SoMaterial();
-    overrideMaterial->diffuseColor.setValue(r,g,b);
-    overrideMaterial->transparency.setValue(1.0-a);
-
+    SoMaterial * overrideMaterial = NULL;
+    if (setExplicitMaterial)
+    {
+        overrideMaterial = new SoMaterial();
+        overrideMaterial->diffuseColor.setValue(r,g,b);
+        overrideMaterial->transparency.setValue(1.0-a);
+    }
 //    ROS_INFO("Converting to inventor...");
     SoSeparator * ivScene = Assimp2Inventor(scene, sceneDir, overrideMaterial);
     if (!ivScene)
@@ -86,6 +88,95 @@ SoNode * convertMeshFile(const std::string& filename, double scale_factor, doubl
     }
     return ivScene; 
 }
+
+
+/**
+ * Code from https://grey.colorado.edu/coin3d/classSoTexture2.html
+ */
+void urdf2inventor::removeTextureCopies(SoNode * root)
+{
+    ROS_INFO("Removing texture copies in the model");
+
+    SoSearchAction sa;
+    sa.setType(SoTexture2::getClassTypeId());
+    sa.setInterest(SoSearchAction::ALL);
+    sa.setSearchingAll(TRUE);
+    sa.apply(root);
+    SoPathList & pl = sa.getPaths();
+    SbDict namedict;
+
+    for (int i = 0; i < pl.getLength(); i++) {
+      SoFullPath * p = (SoFullPath*) pl[i];
+      if (p->getTail()->isOfType(SoTexture2::getClassTypeId())) {
+        SoTexture2 * tex = (SoTexture2*) p->getTail();
+        if (tex->filename.getValue().getLength()) {
+          SbName name = tex->filename.getValue().getString();
+          // ROS_INFO_STREAM("Texture file "<<tex->filename.getValue().getString());
+          unsigned long key = (unsigned long) ((void*) name.getString());
+          void * tmp;
+          if (!namedict.find(key, tmp)) {
+            // new texture. just insert into list
+            (void) namedict.enter(key, tex);
+          }
+          else if (tmp != (void*) tex) { // replace with node found in dict
+            SoGroup * parent = (SoGroup*) p->getNodeFromTail(1);
+            int idx = p->getIndexFromTail(0);
+            parent->replaceChild(idx, (SoNode*) tmp);
+          }
+        }
+      }
+    }
+    sa.reset();
+}
+
+/**
+ * Make all texture paths relative to \e basePath. This assumes that
+ * when the IV file is written to file, all textures will be saved
+ * relative to the directory of the IV file.
+ * \return a list of all filenames (*absolute* paths) which were made relative to
+ *      \e basePath.
+ */
+/*std::set<std::string> replaceAbsoluteTexturePaths(SoNode * root, const std::string& basePath)
+{
+    std::set<std::string> allFiles;
+    SoSearchAction sa;
+    sa.setType(SoTexture2::getClassTypeId());
+    sa.setInterest(SoSearchAction::ALL);
+    sa.setSearchingAll(TRUE);
+    sa.apply(root);
+    SoPathList & pl = sa.getPaths();
+
+    for (int i = 0; i < pl.getLength(); i++)
+    {
+        SoFullPath * p = (SoFullPath*) pl[i];
+        if (!p->getTail()->isOfType(SoTexture2::getClassTypeId())) continue;
+
+        SoTexture2 * tex = (SoTexture2*) p->getTail();
+        if (tex->filename.getValue().getLength() == 0) continue;
+        
+        std::string _name(tex->filename.getValue().getString());
+        SbName name(_name.c_str());
+
+        // ROS_WARN_STREAM("Abs texture file "<<_name<<" relative to "<<basePath);
+        boost::filesystem::path absPath(boost::filesystem::absolute(_name));
+        std::string cParentPath=urdf_traverser::helpers::getCommonParentPath(basePath,_name);
+        // ROS_INFO_STREAM("Parent path :"<<cParentPath);
+
+        std::string relPath;
+        if (!urdf_traverser::helpers::getSubdirPath(cParentPath,_name, relPath))
+        {
+            ROS_ERROR_STREAM("File "<<_name<<" is not a subdirectory of "<<basePath);
+            continue;
+        }
+        ROS_INFO_STREAM("Relative file: "<<relPath);
+
+        tex->filename.setValue(relPath.c_str());
+        ROS_INFO("filename set");
+        allFiles.insert(absPath.string());
+    }
+    sa.reset();
+    return allFiles;
+}*/
 
 
 
@@ -105,11 +196,11 @@ SoNode * urdf2inventor::getAllVisuals(const urdf_traverser::LinkPtr link, double
         GeometryPtr geom = visual->geometry;
         MaterialPtr mat = visual->material;
 
-        ROS_INFO_STREAM("Visual "<<visual->group_name);
+        // ROS_INFO_STREAM("Visual "<<visual->group_name);
         if (mat) ROS_INFO_STREAM("Material "<<mat->color.r<<", "<<mat->color.g<<", "<<mat->color.b<<", "<<mat->color.a);
 
         urdf_traverser::EigenTransform vTransform = urdf_traverser::getTransform(visual->origin);
-        ROS_INFO_STREAM("Visual "<<i<<" of link "<<link->name<<" transform: "<<visual->origin);
+        // ROS_INFO_STREAM("Visual "<<i<<" of link "<<link->name<<" transform: "<<visual->origin);
 
         vTransform=vTransform*addVisualTransform;
         
@@ -140,7 +231,7 @@ SoNode * urdf2inventor::getAllVisuals(const urdf_traverser::LinkPtr link, double
                     b=mat->color.b;
                     a=mat->color.a;
                 }
-                SoNode * somesh = convertMeshFile(meshFilename,scale_factor,r,g,b,a);
+                SoNode * somesh = convertMeshFile(meshFilename,scale_factor,mat!=NULL,r,g,b,a);
                 // ROS_INFO("Converted.");
                 if (!somesh)
                 {
@@ -203,32 +294,41 @@ SoNode * urdf2inventor::getAllVisuals(const urdf_traverser::LinkPtr link, double
 
 
 /**
- * writes the contents of SoNode into the inventor (*.iv) format and returns the file
- * content as a string.
+ * Helper function which gets all visuals from \e link, converts it to
+ * IV format and writes it to \e resultIV (after scaling meshes by \e scale_factor,
+ * and optionally also the transforms if \e scaleUrdfTransforms is true).
+ * It also returns all \e textureFiles (absolute paths to files) in use
+ * by the link.
  */
-bool writeInventorFileString(SoNode * node, std::string& result)
+bool convertMeshToIVString(urdf_traverser::LinkPtr& link,
+        const float scale_factor, 
+        const urdf_traverser::EigenTransform& addVisualTransform,
+        const bool scaleUrdfTransforms,
+        std::string& resultIV,
+        std::set<std::string>& textureFiles)
 {
-    SoOutput out;
-    out.setBinary(false);
-    size_t initBufSize = 100;
-    void * buffer = malloc(initBufSize * sizeof(char));
-    out.setBuffer(buffer, initBufSize, std::realloc);
-    SoWriteAction write(&out);
-    write.apply(node);
+    ROS_INFO("Convert mesh for link '%s'",link->name.c_str());
 
-    void * resBuf = NULL;
-    size_t resBufSize = 0;
-
-    if (!out.getBuffer(resBuf, resBufSize) || (resBufSize == 0))
+    SoNode * allVisuals = urdf2inventor::getAllVisuals(link, scale_factor, addVisualTransform, scaleUrdfTransforms);
+    if (!allVisuals)
     {
-        ROS_ERROR("Failed to write file string to buffer.");
+        ROS_ERROR("Could not get visuals");
         return false;
     }
 
-    result = std::string(static_cast<char*>(resBuf), resBufSize);  // buffer will be copied
+    // write the node to IV XML format
+    std::string resultFileContent;
+    if (!urdf2inventor::writeInventorFileString(allVisuals, resultIV))
+    {
+        ROS_ERROR("Could not get the mesh file content");
+        return false;
+    }
 
-    free(resBuf);
-
+    //ROS_INFO_STREAM("Result file content: "<<resultIV);
+  
+    // collect all relative texture filenames from the absolute texture paths. 
+    std::set<std::string> allFiles =  urdf2inventor::getAllTexturePaths(allVisuals);
+    textureFiles.insert(allFiles.begin(), allFiles.end());
     return true;
 }
 
@@ -237,7 +337,7 @@ bool writeInventorFileString(SoNode * node, std::string& result)
  * Callback function to be called during recursion incurred in convertMeshes().
  * Only supports string mesh formats with MeshConvertRecursionParams<std::string>.
  */
-int convertMeshToFileString(urdf_traverser::RecursionParamsPtr& p)
+int convertMeshToIVString(urdf_traverser::RecursionParamsPtr& p)
 {
     typedef urdf2inventor::MeshConvertRecursionParams<std::string> MeshConvertRecursionParamsT;
     typename MeshConvertRecursionParamsT::Ptr param = baselib_binding_ns::dynamic_pointer_cast<MeshConvertRecursionParamsT>(p);
@@ -248,31 +348,19 @@ int convertMeshToFileString(urdf_traverser::RecursionParamsPtr& p)
     }
 
     urdf_traverser::LinkPtr link = param->getLink();
-    
-    ROS_INFO("Convert mesh for link '%s'",link->name.c_str());
-
-    SoNode * allVisuals = urdf2inventor::getAllVisuals(link, param->factor, param->addVisualTransform, false);
-
-    if (!allVisuals)
-    {
-        ROS_ERROR("Could not get visuals");
-        return -1;
-    }
-
     std::string resultFileContent;
-    if (!writeInventorFileString(allVisuals, resultFileContent))
-    {
-        ROS_ERROR("Could not get the mesh file content");
+    std::set<std::string> textureFiles;
+    if (!convertMeshToIVString(link, param->factor, param->addVisualTransform, false, resultFileContent, textureFiles))
         return -1;
-    }
 
-    // ROS_INFO_STREAM("Result file content: "<<resultFileContent);
-
+    //ROS_INFO_STREAM("Result file content: "<<resultFileContent);
     if (!param->resultMeshes.insert(std::make_pair(link->name, resultFileContent)).second)
     {
         ROS_ERROR("Could not insert the resulting mesh file for link %s to the map", link->name.c_str());
         return -1;
     }
+
+    param->textureFiles[link->name].insert(textureFiles.begin(), textureFiles.end());
     return 1;
 }
 
@@ -283,13 +371,14 @@ bool urdf2inventor::convertMeshes(urdf_traverser::UrdfTraverser& traverser,
                                  const std::string& material,
                                  const std::string& file_extension,
                                  const urdf_traverser::EigenTransform& addVisualTransform,
-                                 std::map<std::string, MeshFormat>& meshes)
+                                 std::map<std::string, MeshFormat>& meshes,
+                                 std::map<std::string, std::set<std::string> >& textureFiles)
 {
     std::string startLinkName=fromLink;
     if (startLinkName.empty()){
         startLinkName = traverser.getRootLinkName();
     }
-    
+
     urdf_traverser::LinkPtr startLink = traverser.getLink(startLinkName);
     if (!startLink.get())
     {
@@ -305,16 +394,108 @@ bool urdf2inventor::convertMeshes(urdf_traverser::UrdfTraverser& traverser,
     urdf_traverser::RecursionParamsPtr p(meshParams);
 
     // go through entire tree
-    if (traverser.traverseTreeTopDown(startLinkName, boost::bind(&convertMeshToFileString, _1), p, true) <= 0)
+    if (traverser.traverseTreeTopDown(startLinkName, boost::bind(&convertMeshToIVString, _1), p, true) <= 0)
     {
         ROS_ERROR("Could nto convert meshes.");
         return false;
     }
-
     meshes = meshParams->resultMeshes;
-    
+    textureFiles = meshParams->textureFiles;
+
     return true;
 }
+
+
+
+bool urdf2inventor::fixTextureReferences(
+                             const std::string& relMeshDir,
+                             const std::string& relTexDir,
+                             const std::map<std::string, std::set<std::string> >& textureFiles,
+                             std::map<std::string, std::string>& meshes,
+                             std::map<std::string, std::set<std::string> >& texturesToCopy)
+{
+    // determine common parent path of all textures. First, remove texture duplicates
+    std::set<std::string> allTextures;
+    for (std::map<std::string, std::set<std::string> >::const_iterator it=textureFiles.begin(); it!=textureFiles.end(); ++it)
+        allTextures.insert(it->second.begin(), it->second.end());
+
+    ROS_INFO_STREAM("Fixing texture references to point from "<<relMeshDir<<" files to textures in "<<relTexDir);
+    std::string _relMeshDir(relMeshDir);
+    std::string _relTexDir(relTexDir);
+    urdf_traverser::helpers::enforceDirectory(_relMeshDir, true);
+    urdf_traverser::helpers::enforceDirectory(_relTexDir, true);
+
+    std::string commonParent;
+    if (!urdf_traverser::helpers::getCommonParentPath(allTextures, commonParent))
+    {
+        ROS_ERROR_STREAM("Could not find common parent path of all textures");
+        return false;
+    }
+
+    ROS_INFO_STREAM("Common parent path for all textures: "<<commonParent);
+
+    for (std::map<std::string, std::set<std::string> >::const_iterator it=textureFiles.begin(); it!=textureFiles.end(); ++it)
+    {
+        std::string meshFile = it->first;
+        std::string meshDirectory = urdf_traverser::helpers::getDirectory(meshFile);
+        
+        std::stringstream relMeshInstallFile;
+        relMeshInstallFile << _relMeshDir << meshDirectory;
+        
+        for (std::set<std::string>::iterator itTex=it->second.begin(); itTex!=it->second.end(); ++itTex)
+        {
+            std::string absTexFile = *itTex;
+            std::string relTexFile;
+            if (!urdf_traverser::helpers::getSubdirPath(commonParent, absTexFile, relTexFile))
+            {
+                ROS_ERROR_STREAM("File "<<absTexFile<<" is not in a subdirectory of "<<commonParent);
+                continue;
+            }
+            // ROS_INFO_STREAM("Relative file: "<<relTexFile);
+            // ROS_INFO_STREAM("Mesh file: "<<meshFile<<" tex file: "<<absTexFile);
+            
+            std::stringstream relTexInstallFile;
+            relTexInstallFile << _relTexDir << relTexFile;
+        
+            std::string newTexReference;
+            if (!urdf_traverser::helpers::getRelativeDirectory(relTexInstallFile.str(), relMeshInstallFile.str(), newTexReference))
+            {
+                ROS_ERROR_STREAM("Could not determine relative directory between "<<relTexInstallFile.str()
+                        <<" and "<<relMeshInstallFile.str()<<".");
+                continue;
+            }
+
+            // replace all occurrences in mesh string
+            ROS_INFO_STREAM("Replacing new texture reference: "<<newTexReference);
+            typename std::map<std::string, std::string>::iterator meshString = meshes.find(meshFile);
+            if (meshString == meshes.end())
+            {
+                ROS_ERROR_STREAM("Consistency: Mesh "<<meshFile<<" should have been in meshes map");
+                return false;
+            }
+           
+            // first, replace all full filenames with paths 
+            meshString->second = urdf_traverser::helpers::replaceAll(meshString->second,
+                    absTexFile, newTexReference);
+
+            // now, replace all remaining occurrences of the path with a version without
+            // path separators (this is only in case there is left-over names made up of the path)
+            boost::filesystem::path _absTexMod(absTexFile);
+            _absTexMod.replace_extension("");
+            boost::filesystem::path _texRefMod(newTexReference);
+            _texRefMod.replace_extension("");
+            std::string texRefMod = urdf_traverser::helpers::replaceAll(_texRefMod.string(), "/", "_");
+            texRefMod = urdf_traverser::helpers::replaceAll(texRefMod, ".", "_");
+            meshString->second = urdf_traverser::helpers::replaceAll(meshString->second,
+                    _absTexMod.string(), texRefMod);
+            
+            // add this texture to the result set
+            texturesToCopy[relTexInstallFile.str()].insert(absTexFile);
+        }
+    }
+    return true;
+}
+
 
 // instantiation for string meshes
 template bool urdf2inventor::convertMeshes<std::string>(urdf_traverser::UrdfTraverser& traverser,
@@ -323,4 +504,6 @@ template bool urdf2inventor::convertMeshes<std::string>(urdf_traverser::UrdfTrav
                                  const std::string& material,
                                  const std::string& file_extension,
                                  const urdf_traverser::EigenTransform& addVisualTransform,
-                                 std::map<std::string, std::string>& meshes);
+                                 std::map<std::string, std::string>& meshes,
+                                 std::map<std::string, std::set<std::string> >& textureFiles);
+
