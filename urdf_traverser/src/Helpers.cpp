@@ -227,12 +227,26 @@ int numDirectories(const std::string& path)
 
 std::string urdf_traverser::helpers::getDirectory(const std::string& path)
 {
-    if (urdf_traverser::helpers::isDirectoryPath(path)) return path;
+    if (urdf_traverser::helpers::isDirectoryPath(path)) return path; // already ends with '/'
+    // does not end with '/' so it must be a file: get the parent
     boost::filesystem::path _path(path);
     std::string ret = _path.parent_path().string();
+    // enforce notation to be a directory as we now know it is one
     urdf_traverser::helpers::enforceDirectory(ret, false);
     return ret;
 }
+
+std::string urdf_traverser::helpers::getDirectoryName(const std::string& path)
+{
+    std::string dir = getDirectory(path);
+    // dir will now be a directory (enforced to end with / by getDirectory()).
+    // So parent_path will return path to the parent directory where it looks
+    // like it was a file.
+    boost::filesystem::path ret(dir);
+    return ret.parent_path().filename().string();
+}
+
+
 
 bool urdf_traverser::helpers::getCommonParentPath(const std::string& p1, const std::string& p2, std::string& result)
 {
@@ -392,6 +406,12 @@ bool urdf_traverser::helpers::getRelativeDirectory(const std::string& path, cons
 
 bool urdf_traverser::helpers::writeToFile(const std::string& content, const std::string& filename)
 {
+    std::string dir = getDirectory(filename);
+    if (!urdf_traverser::helpers::makeDirectoryIfNeeded(dir.c_str()))
+    {
+        return false;
+    }
+
     std::ofstream outf(filename.c_str());
     if (!outf)
     {

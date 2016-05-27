@@ -52,7 +52,7 @@ using urdf2inventor::Urdf2Inventor;
 
 std::string Urdf2Inventor::OUTPUT_EXTENSION = ".iv";
 std::string Urdf2Inventor::MESH_OUTPUT_DIRECTORY_NAME = "iv/";
-std::string Urdf2Inventor::TEX_OUTPUT_DIRECTORY_NAME = "iv/textures/";
+std::string Urdf2Inventor::TEX_OUTPUT_DIRECTORY_NAME = "textures/";
 
 bool Urdf2Inventor::joinFixedLinks(const std::string& fromLink)
 {
@@ -434,17 +434,19 @@ bool Urdf2Inventor::writeAsInventor(const std::string& ivFilename,
     LinkPtr startLink = urdf_traverser->getLink(startLinkName);
     if (!startLink.get())
     {
-        ROS_ERROR_STREAM("No link named '"<<startLink<<"'");
+        ROS_ERROR_STREAM("No link named '"<<startLinkName<<"'");
         return false;
     }
 
-    ROS_INFO_STREAM("Writing from link '"<<startLink<<"' to file "<<ivFilename);
+    ROS_INFO_STREAM("Writing from link '"<<startLinkName<<"' to file "<<ivFilename);
     return writeAsInventor(ivFilename, startLink, useScaleFactor, addVisualTransform);
 }
 
 bool Urdf2Inventor::writeAsInventor(const std::string& ivFilename, const LinkPtr& from_link,
     bool useScaleFactor, const EigenTransform& addVisualTransform)
 {
+    ROS_INFO("Converting model...");
+
     std::set<std::string> textureFiles;
     SoNode * inv = getAsInventor(from_link, useScaleFactor, addAxes, axesRadius, axesLength,
                                  addVisualTransform, &textureFiles);
@@ -453,7 +455,69 @@ bool Urdf2Inventor::writeAsInventor(const std::string& ivFilename, const LinkPtr
         ROS_ERROR("could not generate overall inventor file");
         return false;
     }
-    return writeInventorFile(inv, ivFilename);
+
+    // get the node to IV XML format
+    std::string resultFileContent;
+    if (!urdf2inventor::writeInventorFileString(inv, resultFileContent))
+    {
+        ROS_ERROR("Could not get the mesh file content");
+        return false;
+    }
+   
+    // handle textures: adjust file references, if required.
+    if (!textureFiles.empty())
+    {
+    
+        // get common parent path of all textures
+        std::string commonParent;
+        if (!urdf_traverser::helpers::getCommonParentPath(textureFiles, commonParent))
+        {
+            ROS_ERROR_STREAM("Could not find common parent path of all files");
+            return false;
+        }
+
+        // ROS_INFO_STREAM("Common parent path for all textures: "<<commonParent);
+        
+        std::string fileDir = urdf_traverser::helpers::getDirectory(ivFilename);
+        //std::string fileDir = urdf_traverser::helpers::getDirectoryName(ivFilename);
+
+        // ROS_INFO_STREAM("Directory name: "<<fileDir);
+
+        std::map<std::string, std::set<std::string> > texToCopy;
+
+        ROS_INFO("Fixing texture file references...");
+        if (!urdf2inventor::helpers::fixFileReferences(
+                    fileDir,
+                    fileDir+TEX_OUTPUT_DIRECTORY_NAME,
+                    commonParent,
+                    textureFiles,
+                    resultFileContent, texToCopy))
+        {
+            ROS_ERROR("Could not fix texture references");
+            return false;
+        }
+
+        ROS_INFO("Copying texture files...");
+        if (!urdf2inventor::helpers::writeFiles(texToCopy, fileDir))
+        {
+            ROS_ERROR("Could not write textures");
+            return false;
+        }
+    }
+
+    ROS_INFO("Writing model...");
+
+    // write content to file
+    if (!urdf_traverser::helpers::writeToFile(resultFileContent, ivFilename))
+    {
+        ROS_ERROR_STREAM("Could not write file " <<ivFilename);
+        return false;
+    }
+    
+    ROS_INFO_STREAM("Whole robot model written to "<<ivFilename);
+ 
+
+    return true;
 }
 
 Urdf2Inventor::ConversionResultPtr Urdf2Inventor::loadAndConvert(const std::string& urdfFilename,

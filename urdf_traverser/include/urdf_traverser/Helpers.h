@@ -73,14 +73,6 @@ extern bool makeDirectoryIfNeeded(const char * dPath);
 extern void enforceDirectory(std::string& path, bool printWarn);
 
 /**
- * Checks if the path references a directory, ie. it must
- * end with a separator. Does not actually check if the directory
- * or file exists, so this can be used to check paths which
- * are to be created.
- */
-extern bool isDirectoryPath(const std::string& path);
-
-/**
  * When \e to is a subdirectory of \e from, the relative path from \e from to \e to
  * is returned. If \e to is not a subdirectory of \e from, false is returned and
  * the result is undefined.
@@ -125,6 +117,21 @@ extern bool getRelativeDirectory(const std::string& path, const std::string& rel
  * and if \e path is a directory, returns the \e path itself
  */
 extern std::string getDirectory(const std::string& path);
+
+/**
+ * Checks if the path references a directory, ie. it must
+ * end with a separator. Does not actually check if the directory
+ * or file exists, so this can be used to check paths which
+ * are to be created.
+ */
+extern bool isDirectoryPath(const std::string& path);
+
+/**
+ * Returns the name of the directory at the lowest 
+ * level (eg. name of the directory a file is in, not
+ * the whole path - only the directory name).
+ */
+extern std::string getDirectoryName(const std::string& path);
 
 
 /**

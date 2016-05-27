@@ -108,7 +108,7 @@ int main(int argc, char** argv)
     }
 
     std::stringstream wholeFile;
-    wholeFile<<outputDir<<"/"<<traverser->getModelName()<<".iv";
+    wholeFile<<outputDir<<"/robot/"<<traverser->getModelName()<<".iv";
     ROS_INFO_STREAM("Now writing whole robot to "<<wholeFile.str());
     if (!converter.writeAsInventor(wholeFile.str(),"",true, addTrans))
     {

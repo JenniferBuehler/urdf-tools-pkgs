@@ -44,40 +44,37 @@ namespace urdf2inventor
                        std::map<std::string, std::set<std::string> >& textureFiles);
 
     /**
+     * Changes the texture references (absolute paths) in the model string descriptions so they reference the
+     * file in the output directory with a *relative* path.
+     * This is achieved by calling \e urdf2inventor::helpers::fixFileReferences() for each entry of \e textureFiles and \e models
+     * respectively. For documentation of parameters, please refer to this method.
      *
-     * Changes the texture references (absolute paths) 
-     * in the mesh string descriptions so they reference the
-     * file in the actual output directory with a relative path.
+     * The common parent directory will be determined to be the one which is parent to *all* textures used
+     * for *all* models.
      *
-     * Texture output directory is the relative directory \e relTexDir, e.g. "tex", which is created as {install-prefix}/{relTexDir}.
-     * The mesh output directory \e relMeshDir is also relative, e.g. "iv", which is then installed to {install-prefix}/{relMeshDir}.
-     * Each mesh can be stored in its own subdirectory, {install-prefix}/{relMeshDir}/{mesh-path-i}. This subdirectory is detemined
-     * by the key name in \e meshes.
+     * Texture output directory is the relative directory \e relTexDir, e.g. "tex/", which is created as ``<install-prefix>/<relTexDir>``.
+     * The model output directory \e relModelDir is also relative, e.g. "iv/", which is then installed to ``<install-prefix>/<relModelDir>``.
+     * Each model can be stored in its own subdirectory, ``<install-prefix>/<relModelDir>/<model-path-i>``. This subdirectory ``<model-path-i>
+     * is detemined by its *key* name in the map \e models.
      *
-     * What is done by this method:
-     * All textures have a common parent directory {common-tex} (worst case it's the root).
-     * So all texture paths i are of the form {common-tex}/{tex-path-i}.
-     * All textures are installed in {install-prefix}/{relTexDir}/{tex-path-i}.
-     * The relative distance between {mesh-path-i} and {tex-path-i} is used to reference textures
-     * from within the mesh files, e.g. "../tex/texture.png".
+     * Implementation background:    
+     * All textures have a common parent directory ``<common-tex>`` (worst case it's the root).
+     * So all texture paths i are of the form ``<common-tex>/<tex-path-i>``.
+     * All textures are installed in ``<install-prefix>/<relTexDir>/<tex-path-i>``.
+     * The relative distance between ``<model-path-i>`` and ``<tex-path-i>`` is used to reference textures
+     * from within the model files, e.g. "../tex/texture.png".
      *
-     * \param relTargetMeshDir when writing the mesh files to disk, and the installation destination is {install-prefix},
-     *      all mesh files will be put in {install-prefix}/relTargetMeshDir. This string can be empty.
-     * \param relTargetTexDir when writing the mesh files to disk, and the installation destination is {install-prefix},
-     *      all texture files will be put in {install-prefix}/relTargetTexDir. This string can be empty.
      * \param textureFiles the texture files, as returned by convertMehes().
-     * \param meshes the meshes (inventor files) to fix, as resulted from convertMeshes(). Only works for string mesh format.
-     * \param texturesToCopy The texture file names to copy to target directories:
-     *      Key is the *relative* path to the texture directory, which will be located in the output directory.
-     *      Value is a list of *absolute* filenames of textures into copy in this directory.
-     *      So copying all files i {mapIterator->second[i]} to {output-dir}/{mapIterator->first} will be required when installing
-     *      the inventor file {output-dir}/{file.iv}.
+     * \param models the models incl. meshes (inventor files) to fix, as returned by convertMeshes().
+     *      This method only works for the string model format (eg. XML representation of model).
+     * \param texturesToCopy The texture file names to copy to target directories. See also urdf2inventor::helpers::fixFileReferences().
+     * \param texturesToCopy as output \e filesToCopy in urdf2inventor::helpers::fixFileReferences().
      * \return false if no common parent directory could be determined for all of the texture files
      */
-    bool fixTextureReferences(const std::string& relMeshDir,
+    bool fixTextureReferences(const std::string& relModelDir,
                        const std::string& relTexDir,
                        const std::map<std::string, std::set<std::string> >& textureFiles,
-                       std::map<std::string, std::string>& meshes,
+                       std::map<std::string, std::string>& models,
                        std::map<std::string, std::set<std::string> >& texturesToCopy);
 
 

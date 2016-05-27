@@ -80,19 +80,32 @@ void urdf2inventor::helpers::redirectStdOut(const char * toFile)
 
 
 
-bool urdf2inventor::helpers::writeTextures(const std::map<std::string, std::set<std::string> >& textureFiles, const std::string& outputDir) 
+bool urdf2inventor::helpers::writeFiles(const std::map<std::string, std::set<std::string> >& files, const std::string& outputDir) 
 {
     bool ret = true;
     boost::filesystem::path _outputDir(boost::filesystem::absolute(outputDir));
 
-    for (std::map<std::string, std::set<std::string> >::const_iterator mit=textureFiles.begin(); mit!=textureFiles.end(); ++mit)
+    for (std::map<std::string, std::set<std::string> >::const_iterator mit=files.begin(); mit!=files.end(); ++mit)
     {
         for (std::set<std::string>::const_iterator tit=mit->second.begin(); tit!=mit->second.end(); ++tit)
         {
-            boost::filesystem::path fullPath(_outputDir);
-            fullPath/=mit->first;
-            
-            ROS_INFO_STREAM("cp "<<*tit<<" "<<fullPath.string());
+            boost::filesystem::path fullPath;
+            boost::filesystem::path tFile(mit->first);
+            if (tFile.is_relative())
+            {
+                fullPath = _outputDir;
+            }
+            else
+            {   
+                // outputDir should be a superdirectory of tFile, or print a warning
+                std::string testRelParent;
+                if (!urdf_traverser::helpers::getSubdirPath(outputDir, tFile.string(), testRelParent))
+                {
+                    ROS_WARN_STREAM("File "<<tFile.string()<<" given as absolute path, but it is not in a subdirectory of "<<outputDir);
+                }
+            }
+            fullPath/=tFile;
+            // ROS_INFO_STREAM("cp "<<*tit<<" "<<fullPath.string());
 
             // first, create directory if needed
             std::string targetTexDir = urdf_traverser::helpers::getDirectory(fullPath.string());
@@ -121,4 +134,81 @@ bool urdf2inventor::helpers::writeTextures(const std::map<std::string, std::set<
     return ret;
 }
 
+
+bool urdf2inventor::helpers::fixFileReferences(
+                             const std::string& modelDir,
+                             const std::string& fileDir, 
+                             const std::string& fileRootDir,
+                             const std::set<std::string>& filesInUse,
+                             std::string& modelString,
+                             std::map<std::string, std::set<std::string> >& filesToCopy)
+{
+    if (filesInUse.empty()) return true;
+
+    std::string _fileDir(fileDir);
+    urdf_traverser::helpers::enforceDirectory(_fileDir, false);
+
+    // do error checking first
+    std::string testCommonParent;
+    if (!urdf_traverser::helpers::getCommonParentPath(filesInUse, testCommonParent))
+    {
+        ROS_ERROR_STREAM("Could not find common parent path of all files");
+        return false;
+    }
+    // test: testCommonParent must be a subdirectory to fileRootDir, or the same directory.
+    std::string testRelParent;
+    if (!urdf_traverser::helpers::getSubdirPath(fileRootDir, testCommonParent, testRelParent))
+    {
+        ROS_ERROR_STREAM("File "<<testCommonParent<<" is not in a subdirectory of "<<fileRootDir);
+        return false;
+    }
+    // end error checking
+
+    // now iterate through all file files and change references in \e modelString 
+    for (std::set<std::string>::iterator itFile=filesInUse.begin(); itFile!=filesInUse.end(); ++itFile)
+    {
+        std::string absFile = *itFile;
+        std::string file;
+        if (!urdf_traverser::helpers::getSubdirPath(fileRootDir, absFile, file))
+        {
+            ROS_ERROR_STREAM("File "<<absFile<<" is not in a subdirectory of "<<fileRootDir);
+            continue;
+        }
+        // ROS_INFO_STREAM("Relative file: "<<file);
+        
+        std::stringstream filePath;  // the absolute path the the file
+        filePath << _fileDir << file;
+    
+        std::string newFileReference;
+        if (!urdf_traverser::helpers::getRelativeDirectory(filePath.str(), modelDir, newFileReference))
+        {
+            ROS_ERROR_STREAM("Could not determine relative directory between "<<filePath.str()
+                    <<" and "<<modelDir<<".");
+            continue;
+        }
+
+        // replace all occurrences in mesh string
+        // ROS_INFO_STREAM("Replacing new file reference: "<<newFileReference);
+       
+        // first, replace all full filenames with paths 
+        modelString = urdf_traverser::helpers::replaceAll(modelString,
+                absFile, newFileReference);
+
+        // now, replace all remaining occurrences of the path with a version without
+        // path separators (this is only in case there is left-over names made up of the path)
+        boost::filesystem::path _absFileMod(absFile);
+        _absFileMod.replace_extension("");
+        boost::filesystem::path _texRefMod(newFileReference);
+        _texRefMod.replace_extension("");
+        std::string texRefMod = urdf_traverser::helpers::replaceAll(_texRefMod.string(), "/", "_");
+        texRefMod = urdf_traverser::helpers::replaceAll(texRefMod, ".", "_");
+        modelString = urdf_traverser::helpers::replaceAll(modelString,
+                _absFileMod.string(), texRefMod);
+       
+        // ROS_INFO_STREAM("File to copy to "<<filePath.str()<<" : "<<absFile); 
+        // add this file to the result set
+        filesToCopy[filePath.str()].insert(absFile);
+    }
+    return true;
+}
 

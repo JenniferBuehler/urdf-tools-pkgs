@@ -83,6 +83,6 @@ bool urdf2inventor::FileIO<MeshFormat>::write(const ConversionResultPtr& data) c
         return false;
     }
        
-    urdf2inventor::helpers::writeTextures(data->textureFiles, outputDir); 
+    urdf2inventor::helpers::writeFiles(data->textureFiles, outputDir); 
     return writeImpl(data);
 }

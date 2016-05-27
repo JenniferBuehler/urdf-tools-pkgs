@@ -197,7 +197,7 @@ SoNode * urdf2inventor::getAllVisuals(const urdf_traverser::LinkPtr link, double
         MaterialPtr mat = visual->material;
 
         // ROS_INFO_STREAM("Visual "<<visual->group_name);
-        if (mat) ROS_INFO_STREAM("Material "<<mat->color.r<<", "<<mat->color.g<<", "<<mat->color.b<<", "<<mat->color.a);
+        // if (mat) ROS_INFO_STREAM("Material "<<mat->color.r<<", "<<mat->color.g<<", "<<mat->color.b<<", "<<mat->color.a);
 
         urdf_traverser::EigenTransform vTransform = urdf_traverser::getTransform(visual->origin);
         // ROS_INFO_STREAM("Visual "<<i<<" of link "<<link->name<<" transform: "<<visual->origin);
@@ -317,7 +317,6 @@ bool convertMeshToIVString(urdf_traverser::LinkPtr& link,
     }
 
     // write the node to IV XML format
-    std::string resultFileContent;
     if (!urdf2inventor::writeInventorFileString(allVisuals, resultIV))
     {
         ROS_ERROR("Could not get the mesh file content");
@@ -327,8 +326,7 @@ bool convertMeshToIVString(urdf_traverser::LinkPtr& link,
     //ROS_INFO_STREAM("Result file content: "<<resultIV);
   
     // collect all relative texture filenames from the absolute texture paths. 
-    std::set<std::string> allFiles =  urdf2inventor::getAllTexturePaths(allVisuals);
-    textureFiles.insert(allFiles.begin(), allFiles.end());
+    textureFiles =  urdf2inventor::getAllTexturePaths(allVisuals);
     return true;
 }
 
@@ -406,7 +404,6 @@ bool urdf2inventor::convertMeshes(urdf_traverser::UrdfTraverser& traverser,
 }
 
 
-
 bool urdf2inventor::fixTextureReferences(
                              const std::string& relMeshDir,
                              const std::string& relTexDir,
@@ -441,56 +438,20 @@ bool urdf2inventor::fixTextureReferences(
         
         std::stringstream relMeshInstallFile;
         relMeshInstallFile << _relMeshDir << meshDirectory;
-        
-        for (std::set<std::string>::iterator itTex=it->second.begin(); itTex!=it->second.end(); ++itTex)
+
+
+        typename std::map<std::string, std::string>::iterator meshString = meshes.find(meshFile);
+        if (meshString == meshes.end())
         {
-            std::string absTexFile = *itTex;
-            std::string relTexFile;
-            if (!urdf_traverser::helpers::getSubdirPath(commonParent, absTexFile, relTexFile))
-            {
-                ROS_ERROR_STREAM("File "<<absTexFile<<" is not in a subdirectory of "<<commonParent);
-                continue;
-            }
-            // ROS_INFO_STREAM("Relative file: "<<relTexFile);
-            // ROS_INFO_STREAM("Mesh file: "<<meshFile<<" tex file: "<<absTexFile);
-            
-            std::stringstream relTexInstallFile;
-            relTexInstallFile << _relTexDir << relTexFile;
-        
-            std::string newTexReference;
-            if (!urdf_traverser::helpers::getRelativeDirectory(relTexInstallFile.str(), relMeshInstallFile.str(), newTexReference))
-            {
-                ROS_ERROR_STREAM("Could not determine relative directory between "<<relTexInstallFile.str()
-                        <<" and "<<relMeshInstallFile.str()<<".");
-                continue;
-            }
+            ROS_ERROR_STREAM("Consistency: Mesh "<<meshFile<<" should have been in meshes map");
+            return false;
+        }
 
-            // replace all occurrences in mesh string
-            ROS_INFO_STREAM("Replacing new texture reference: "<<newTexReference);
-            typename std::map<std::string, std::string>::iterator meshString = meshes.find(meshFile);
-            if (meshString == meshes.end())
-            {
-                ROS_ERROR_STREAM("Consistency: Mesh "<<meshFile<<" should have been in meshes map");
-                return false;
-            }
-           
-            // first, replace all full filenames with paths 
-            meshString->second = urdf_traverser::helpers::replaceAll(meshString->second,
-                    absTexFile, newTexReference);
-
-            // now, replace all remaining occurrences of the path with a version without
-            // path separators (this is only in case there is left-over names made up of the path)
-            boost::filesystem::path _absTexMod(absTexFile);
-            _absTexMod.replace_extension("");
-            boost::filesystem::path _texRefMod(newTexReference);
-            _texRefMod.replace_extension("");
-            std::string texRefMod = urdf_traverser::helpers::replaceAll(_texRefMod.string(), "/", "_");
-            texRefMod = urdf_traverser::helpers::replaceAll(texRefMod, ".", "_");
-            meshString->second = urdf_traverser::helpers::replaceAll(meshString->second,
-                    _absTexMod.string(), texRefMod);
-            
-            // add this texture to the result set
-            texturesToCopy[relTexInstallFile.str()].insert(absTexFile);
+        if (!urdf2inventor::helpers::fixFileReferences(relMeshInstallFile.str(), _relTexDir, commonParent, it->second,
+                              meshString->second, texturesToCopy))
+        {
+            ROS_ERROR_STREAM("Could not fix file references");
+            return false;
         }
     }
     return true;

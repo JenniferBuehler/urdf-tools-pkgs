@@ -105,11 +105,12 @@ public:
     
     /**
      * The texture file names to copy to target directory:
-     * The key is the *relative* path to a target texture directory (relative to the
-     * global output directory).
+     * The key is the path to a target texture directory. It is either absolute,
+     * or if it's relative, it is relative to a global output directory ``<output-dir>``.
      * Value is a list of *absolute* filenames of textures to copy into this directory.
-     * So copying all files i {mapIterator->second[i]} to {output-dir}/{mapIterator->first} will be required when installing
-     * the mesh file to {output-dir}/{file.extension}.
+     * So copying all files i ``<mapIterator->second[i]>`` to 
+     * ``[<output-dir>/]<mapIterator->first>`` will be required when installing
+     * the mesh file which is meant to go in ``<output-dir>``/``<file.extension>``.
      */
     std::map<std::string, std::set<std::string> > textureFiles;
 
