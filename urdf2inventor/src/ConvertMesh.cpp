@@ -416,6 +416,9 @@ bool urdf2inventor::fixTextureReferences(
     for (std::map<std::string, std::set<std::string> >::const_iterator it=textureFiles.begin(); it!=textureFiles.end(); ++it)
         allTextures.insert(it->second.begin(), it->second.end());
 
+    // no textures to process
+    if (allTextures.empty()) return true;
+
     ROS_INFO_STREAM("Fixing texture references to point from "<<relMeshDir<<" files to textures in "<<relTexDir);
     std::string _relMeshDir(relMeshDir);
     std::string _relTexDir(relTexDir);
