@@ -55,11 +55,7 @@ int main(int argc, char** argv)
         ROS_INFO("Root %s", argv[3]);
     }
 
-    std::string outputMaterial = "plastic";
     double scaleFactor = 1;
-    
-    priv.param<std::string>("output_material", outputMaterial, outputMaterial);
-    ROS_INFO("output_material: <%s>", outputMaterial.c_str());
 
     priv.param<double>("scale_factor", scaleFactor, scaleFactor);
     ROS_INFO("scale_factor: <%f>", scaleFactor);
@@ -84,7 +80,8 @@ int main(int argc, char** argv)
     urdf2inventor::Urdf2Inventor converter(traverser, scaleFactor);
 
     ROS_INFO("Starting model conversion...");
-        
+       
+    std::string outputMaterial = "plastic";  // output material does not really matter for only conversion to IV
     urdf2inventor::Urdf2Inventor::ConversionParametersPtr params
         = converter.getBasicConversionParams(rootLinkName, outputMaterial, addTrans);
 

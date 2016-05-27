@@ -179,7 +179,8 @@ void urdf2inventor::removeTextureCopies(SoNode * root)
 }*/
 
 
-
+// XXX TODO could specify material as parameter to override any possibly already
+// existing materials. Propagate this to other functions using getAllVisuals().
 SoNode * urdf2inventor::getAllVisuals(const urdf_traverser::LinkPtr link, double scale_factor,
     const urdf_traverser::EigenTransform& addVisualTransform,
     bool scaleUrdfTransforms)

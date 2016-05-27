@@ -31,11 +31,7 @@
 #include <Eigen/Core>
 #include <Eigen/Geometry>
 
-#include <Inventor/nodes/SoTransform.h>
 #include <Inventor/nodes/SoSeparator.h>
-#include <Inventor/nodes/SoMaterial.h>
-#include <Inventor/nodes/SoSphere.h>
-#include <Inventor/nodes/SoCylinder.h>
 
 #include <baselib_binding/SharedPtr.h>
 #include <urdf2inventor/ConversionResult.h>

@@ -4,9 +4,6 @@
 
     # factor to scale the model by 
     <arg name="scale_factor" default="1"/>
-    
-    # The output material to assign to the output GraspIt model.
-	<arg name="output_material" default="plastic"/>
 
     # An axis and angle (degrees) can be specified which will transform *all*
     # visuals (not links, but their visuals!) within their local coordinate system.
@@ -20,7 +17,6 @@
 
 	<node name="urdf2inventor" pkg="urdf2inventor" type="urdf2inventor_node" respawn="false"
         output="screen" args="$(arg urdf_file) $(arg output_dir)">
-		<param name="output_material" value="$(arg output_material)"/>
 		<param name="scale_factor" value="$(arg scale_factor)"/>
         <param name="visual_corr_axis_x" value="$(arg visual_corr_axis_x)"/>
         <param name="visual_corr_axis_y" value="$(arg visual_corr_axis_y)"/>

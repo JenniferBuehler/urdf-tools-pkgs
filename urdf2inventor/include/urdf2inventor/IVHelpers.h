@@ -29,7 +29,7 @@ extern SoSeparator * addSubNode(SoNode * addAsChild, SoNode* parent,
  */
 extern SoSeparator * addSubNode(SoNode * addAsChild, SoNode* parent, SoTransform * trans);
 
-extern void addSubNode(SoSeparator * addToNode, SoNode * visual,
+extern void addSubNode(SoNode * addAsChild, SoSeparator * parent,
     const EigenTransform& transform, SoMaterial * mat);
 
 extern void addSphere(SoSeparator * addToNode, const Eigen::Vector3d& pos, float radius,
