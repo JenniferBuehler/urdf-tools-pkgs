@@ -32,7 +32,7 @@ catkin_package(
   LIBRARIES urdf_traverser
   CATKIN_DEPENDS ${CATKIN_DEPEND_PKGS} 
   #DEPENDS ${CATKIN_DEPENDS_LIBS}
-  #  CFG_EXTRAS export_definitions.cmake
+  CFG_EXTRAS export_definitions.cmake
 )
 
 ###########

@@ -10,6 +10,11 @@ See also [this wiki page](https://github.com/JenniferBuehler/urdf-tools-pkgs/wik
 - Qt4 libs (ubuntu libqt4-dev)
 - SoQt and Coin (ubuntu packages libsoqt4-deva and libcoin80-dev)
 
+Note:
+
+Depending catkin packages CMakeLists.txt must:
+
+``add_definitions(${urdf2inventor_DEFINITIONS})``
 
 ### Important notes
 
