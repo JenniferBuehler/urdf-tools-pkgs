@@ -73,7 +73,7 @@ public:
     void loadModel(SoNode * model);
 
     /**
-     * Load a model from an inventor file 
+     * Load a model from an inventor file
      */
     bool loadModel(const std::string& filename);
 
@@ -100,14 +100,23 @@ protected:
      */
     static SoNode * getLinkDesc(const SoPath * path, std::string& linkName, int& visualNum);
 
-    SoQtExaminerViewer * getViewer() { return viewer; }
-   
-    SoSelection * getRoot() { return root; }
+    SoQtExaminerViewer * getViewer()
+    {
+        return viewer;
+    }
 
-    bool isFacesCCW() const { return faces_ccw; }   
+    SoSelection * getRoot()
+    {
+        return root;
+    }
+
+    bool isFacesCCW() const
+    {
+        return faces_ccw;
+    }
 
 private:
-    
+
     static void mouseBtnCB(void *userData, SoEventCallback *pNode);
 
     QWidget * viewWindow;

@@ -86,9 +86,9 @@ int addJointLink(urdf_traverser::RecursionParamsPtr& p)
 
 
 bool urdf_traverser::getDependencyOrderedJoints(UrdfTraverser& traverser,
-                                std::vector<urdf_traverser::JointPtr>& result,
-                                const urdf_traverser::JointPtr& fromJoint,
-                                bool allowSplits, bool onlyActive)
+        std::vector<urdf_traverser::JointPtr>& result,
+        const urdf_traverser::JointPtr& fromJoint,
+        bool allowSplits, bool onlyActive)
 {
     urdf_traverser::LinkPtr childLink = traverser.getChildLink(fromJoint);
     if (!childLink)
@@ -110,13 +110,13 @@ bool urdf_traverser::getDependencyOrderedJoints(UrdfTraverser& traverser,
 
 
 bool urdf_traverser::getDependencyOrderedJoints(UrdfTraverser& traverser,
-                                std::vector<JointPtr>& result, const std::string& fromLink,
-                                bool allowSplits, bool onlyActive)
+        std::vector<JointPtr>& result, const std::string& fromLink,
+        bool allowSplits, bool onlyActive)
 {
     urdf_traverser::LinkPtr _fromLink = traverser.getLink(fromLink);
     if (!_fromLink)
     {
-        ROS_ERROR_STREAM("No link named "<<fromLink<<" in URDF.");
+        ROS_ERROR_STREAM("No link named " << fromLink << " in URDF.");
         return false;
     }
     if (!allowSplits && (_fromLink->child_joints.size() > 1))
@@ -126,7 +126,7 @@ bool urdf_traverser::getDependencyOrderedJoints(UrdfTraverser& traverser,
     }
     OrderedJointsRecursionParams * p = new OrderedJointsRecursionParams(allowSplits, onlyActive);
     RecursionParamsPtr rp(p);
-    int travRet=traverser.traverseTreeTopDown(fromLink, boost::bind(&addJointLink, _1), rp, false);
+    int travRet = traverser.traverseTreeTopDown(fromLink, boost::bind(&addJointLink, _1), rp, false);
     if (travRet < 0)
     {
         ROS_ERROR("Could not add depenency order");

@@ -21,7 +21,7 @@ extern SoTransform * getTransform(const EigenTransform& trans);
  * and returns the SoSeparator containing parent with the child.
  */
 extern SoSeparator * addSubNode(SoNode * addAsChild, SoNode* parent,
-    const urdf2inventor::EigenTransform& eTrans);
+                                const urdf2inventor::EigenTransform& eTrans);
 
 /**
  * Adds a SoNode (addAsChild) as a child (to parent), transformed by the given transform (eTrans) and
@@ -30,22 +30,22 @@ extern SoSeparator * addSubNode(SoNode * addAsChild, SoNode* parent,
 extern SoSeparator * addSubNode(SoNode * addAsChild, SoNode* parent, SoTransform * trans);
 
 extern void addSubNode(SoNode * addAsChild, SoSeparator * parent,
-    const EigenTransform& transform, SoMaterial * mat);
+                       const EigenTransform& transform, SoMaterial * mat);
 
 extern void addSphere(SoSeparator * addToNode, const Eigen::Vector3d& pos, float radius,
-    float r, float g, float b, float a=0);
+                      float r, float g, float b, float a = 0);
 
 extern void addBox(SoSeparator * addToNode, const EigenTransform& trans,
-    float width, float height, float depth,
-    float r, float g, float b, float a=0);
+                   float width, float height, float depth,
+                   float r, float g, float b, float a = 0);
 
 /**
  * Add a cylinder oriented around z axis, pointed along +z, originating at \e pos
  */
 extern void addCylinder(SoSeparator * addToNode, const Eigen::Vector3d& pos,
-    const Eigen::Quaterniond& rot,
-    float radius, float height,
-    float r, float g, float b, float a=0);
+                        const Eigen::Quaterniond& rot,
+                        float radius, float height,
+                        float r, float g, float b, float a = 0);
 
 extern void addLocalAxes(SoSeparator * addToNode, float axesRadius, float axesLength);
 

@@ -67,10 +67,10 @@ public:
      * anything in the UrdfTraverser object. Result can be used with loadModelFromXMLString().
      */
     bool getModelFromFile(const std::string& urdfFilename, std::string& xml_string) const;
-   
+
     /**
      * Loads the URDF model from file
-     */ 
+     */
     bool loadModelFromFile(const std::string& urdfFilename);
 
     /**
@@ -90,8 +90,8 @@ public:
     {
         // make sure this is an absolute canonical path
         boost::filesystem::path _dir(dir);
-        boost::filesystem::path _absDir=boost::filesystem::canonical(_dir);
-        modelDir=_absDir.string();
+        boost::filesystem::path _absDir = boost::filesystem::canonical(_dir);
+        modelDir = _absDir.string();
     }
     inline std::string getModelDirectory() const
     {
@@ -103,7 +103,7 @@ public:
      * TODO: still need to re-activate this by also reading the
      * urdf into field \e robot_urdf
      */
-    //bool loadModelFromParameterServer(); 
+    //bool loadModelFromParameterServer();
 
     /**
      * Prints the joint names. Can't be const in this version because
@@ -113,9 +113,9 @@ public:
     void printJointNames(const std::string& fromLink);
 
     std::string getRootLinkName() const;
-   
+
     std::string getModelName() const
-    { 
+    {
         return this->model->getName();
     }
 
@@ -133,7 +133,7 @@ public:
      * \return the last return value of the callback
      */
     int traverseTreeTopDown(const std::string& linkName, boost::function< int(RecursionParamsPtr&)> link_cb,
-                            RecursionParamsPtr& params, bool includeLink=true);
+                            RecursionParamsPtr& params, bool includeLink = true);
     /**
      * Similar to traverseTreeTopDown(), but traverses bottom-up and is allows to re-link tree (by traversing it safely such
      * that changes in structure won't matter).
@@ -144,7 +144,7 @@ public:
      * \return the last return value of the callback
      */
     int traverseTreeBottomUp(const std::string& linkName, boost::function< int(RecursionParamsPtr&)> link_cb,
-                            RecursionParamsPtr& params, bool includeLink=true);
+                             RecursionParamsPtr& params, bool includeLink = true);
 
 
     JointPtr getJoint(const std::string& name);
@@ -154,10 +154,10 @@ public:
 
     LinkPtr getChildLink(const JointConstPtr& joint);
     LinkConstPtr readChildLink(const JointConstPtr& joint) const;
-    
+
     JointPtr getParentJoint(const JointConstPtr& joint);
     JointConstPtr readParentJoint(const JointConstPtr& joint) const;
- 
+
 
     ModelPtr getModel()
     {
@@ -173,7 +173,7 @@ public:
      * \e fromLink is empty). Only joints *after* the given link are returned.
      */
     bool getJointNames(const std::string& fromLink,
-            const bool skipFixed, std::vector<std::string>& result);
+                       const bool skipFixed, std::vector<std::string>& result);
 
 
 protected:
@@ -201,19 +201,19 @@ protected:
     int getChildJoint(const JointPtr& joint, JointPtr& child);
 
     /**
-     * Main recursive top-down traversal method, called from other traverseTreeTopDown(). 
+     * Main recursive top-down traversal method, called from other traverseTreeTopDown().
      */
     int traverseTreeTopDown(const LinkPtr& link, boost::function< int(RecursionParamsPtr&)> link_cb,
-                            RecursionParamsPtr& params, bool includeLink=true, unsigned int level=0);
+                            RecursionParamsPtr& params, bool includeLink = true, unsigned int level = 0);
 
     /**
-     * Main recursive bottom-up traversal method, called from other traverseTreeBottomUp(). 
+     * Main recursive bottom-up traversal method, called from other traverseTreeBottomUp().
      */
     int traverseTreeBottomUp(const LinkPtr& link, boost::function<int(RecursionParamsPtr&)> link_cb,
-                              RecursionParamsPtr& params, bool includeLink=true, unsigned int level=0);
+                             RecursionParamsPtr& params, bool includeLink = true, unsigned int level = 0);
 
     bool hasChildLink(const LinkConstPtr& link, const std::string& childName) const;
-   
+
 
     EigenTransform getTransform(const LinkPtr& from_link,  const JointPtr& to_joint);
 

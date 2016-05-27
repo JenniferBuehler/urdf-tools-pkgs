@@ -31,58 +31,58 @@ int main(int argc, char **argv)
 
     if (argc < 2)
     {
-        ROS_INFO_STREAM("Usage: " << argv[0] << " <input-file> [<from-link>]" );
-        ROS_INFO_STREAM("If <from-link> is specified, the URDF is processed from this link down instead of the root link." );
+        ROS_INFO_STREAM("Usage: " << argv[0] << " <input-file> [<from-link>]");
+        ROS_INFO_STREAM("If <from-link> is specified, the URDF is processed from this link down instead of the root link.");
         return 0;
     }
 
     std::string inputFile = argv[1];
     std::string fromLink;
- 
+
     if (argc > 2)
     {
         fromLink = argv[2];
-    } 
-    
-    ROS_INFO_STREAM("Traversing model from file "<<inputFile<<"...");
-    if (!fromLink.empty()) ROS_INFO_STREAM("Starting from link "<<fromLink);
+    }
+
+    ROS_INFO_STREAM("Traversing model from file " << inputFile << "...");
+    if (!fromLink.empty()) ROS_INFO_STREAM("Starting from link " << fromLink);
 
 
     ROS_INFO("Loading file...");
     UrdfTraverser traverser;
     if (!traverser.loadModelFromFile(inputFile))
     {
-        ROS_ERROR_STREAM("Could not load file "<<inputFile);
+        ROS_ERROR_STREAM("Could not load file " << inputFile);
         return 0;
     }
-    
-    bool verbose=true;
+
+    bool verbose = true;
 
     /*
     ROS_INFO("###### MODEL #####");
     traverser.printModel(verbose);
-*/
+    */
     ROS_INFO("###### MODEL #####");
     traverser.printModel(verbose);
-    
+
     ROS_INFO("###### JOINT NAMES #####");
     traverser.printJointNames(fromLink);
 
-/*    std::vector<urdf_traverser::JointPtr> depOrdered;
-    if (!urdf_traverser::getDependencyOrderedJoints(traverser,depOrdered, fromLink, true, false))
-    {
-        ROS_ERROR("Could not get dependency ordered joints");
-    }
-    else
-    {
-        ROS_INFO("Dependency ordered joints:");
-    }
-    for (std::vector<urdf_traverser::JointPtr>::iterator it=depOrdered.begin(); it!=depOrdered.end(); ++it)
-    {
-        urdf_traverser::JointPtr j=*it;
-        std::cout<<j->name<<std::endl;
-    }
-*/
+    /*    std::vector<urdf_traverser::JointPtr> depOrdered;
+        if (!urdf_traverser::getDependencyOrderedJoints(traverser,depOrdered, fromLink, true, false))
+        {
+            ROS_ERROR("Could not get dependency ordered joints");
+        }
+        else
+        {
+            ROS_INFO("Dependency ordered joints:");
+        }
+        for (std::vector<urdf_traverser::JointPtr>::iterator it=depOrdered.begin(); it!=depOrdered.end(); ++it)
+        {
+            urdf_traverser::JointPtr j=*it;
+            std::cout<<j->name<<std::endl;
+        }
+    */
     return 0;
 }
 

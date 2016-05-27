@@ -55,9 +55,10 @@ InventorViewer::InventorViewer(bool _faces_ccw):
 InventorViewer::InventorViewer(const InventorViewer& o):
     root(o.root), viewWindow(o.viewWindow), viewer(o.viewer),
     faces_ccw(o.faces_ccw) {}
-InventorViewer::~InventorViewer() {
+InventorViewer::~InventorViewer()
+{
 //    SoQt::done();
-   if (viewer)
+    if (viewer)
     {
         delete viewer;
     }
@@ -94,8 +95,8 @@ bool InventorViewer::loadModel(const std::string& filename)
     if (!in.openFile(filename.c_str()))
         return false;
     if (!SoDB::read(&in, model) || model == NULL)
-    /*model = SoDB::readAll(&in);
-    if (!model)*/
+        /*model = SoDB::readAll(&in);
+        if (!model)*/
         return false;
 
     root->addChild(model);
@@ -128,13 +129,13 @@ bool InventorViewer::computeCorrectFaceNormal(const SoPickedPoint * pick, bool c
         // face index is always 0 with triangle strips
         // ROS_INFO_STREAM("Face index: "<<fd->getFaceIndex());
 
-        SbVec3f pickNormal=pick->getNormal();
+        SbVec3f pickNormal = pick->getNormal();
         //SbVec3f _normalObj=pick->getObjectNormal();
         float _x, _y, _z;
         pickNormal.getValue(_x, _y, _z);
         Eigen::Vector3d normalDef = Eigen::Vector3d(_x, _y, _z);
         normal = normalDef;
-        
+
         // ROS_INFO_STREAM("Clicked on face with "<<fd->getNumPoints()<<" points.");
 
         if (fd->getNumPoints() < 3)
@@ -162,11 +163,11 @@ bool InventorViewer::computeCorrectFaceNormal(const SoPickedPoint * pick, bool c
         {
             // try to find SoVertexShape instead
             //ROS_INFO("No SoCoordinate3 node found, looking for SoVertexShape...");
-            
+
             searchCoords.setType(SoVertexShape::getClassTypeId());
             searchCoords.setInterest(SoSearchAction::LAST);
             searchCoords.apply(pick->getPath());
-        
+
             if (searchCoords.getPath() == NULL)
             {
                 ROS_ERROR("Failed to find coordinate node for the picked face. Returning default normal.");
@@ -184,9 +185,9 @@ bool InventorViewer::computeCorrectFaceNormal(const SoPickedPoint * pick, bool c
                 ROS_ERROR_STREAM("Could not cast SoVertexProperty.");
                 return false;
             }
-            coord1 = vProp->vertex[p1]; 
-            coord2 = vProp->vertex[p2]; 
-            coord3 = vProp->vertex[p3]; 
+            coord1 = vProp->vertex[p1];
+            coord2 = vProp->vertex[p2];
+            coord3 = vProp->vertex[p3];
         }
         else
         {
@@ -268,10 +269,10 @@ void InventorViewer::mouseBtnCB(void *userData, SoEventCallback *_pEvent)
         ROS_ERROR("Invalid UseData passed into mouseBtnCB");
         return;
     }
-    
+
     const SoEvent  *pEvent  = _pEvent->getEvent();
 
-    // general callback:    
+    // general callback:
     obj->onMouseBtnClick(_pEvent);
 
     // also see whether part of the model was clicked:
@@ -301,7 +302,7 @@ void InventorViewer::mouseBtnCB(void *userData, SoEventCallback *_pEvent)
             }
             float x, y, z;
             pPickedPt->getObjectPoint(linkNode).getValue(x, y, z);
-            ROS_INFO_STREAM("Clicked on "<<linkName<<", at pos "<<x<<", "<<y<<", "<<z); 
+            ROS_INFO_STREAM("Clicked on " << linkName << ", at pos " << x << ", " << y << ", " << z);
         }
     }
 }

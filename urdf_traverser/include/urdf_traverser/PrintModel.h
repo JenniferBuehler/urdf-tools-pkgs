@@ -3,7 +3,7 @@
 
 namespace urdf_traverser
 {
-    class UrdfTraverser;
+class UrdfTraverser;
 }
 
 namespace urdf_traverser

@@ -41,28 +41,28 @@ typedef urdf_traverser::BoxPtr BoxPtr;
 /**
  * Converts the mesh in this file to the inventor format.
  */
-SoNode * convertMeshFile(const std::string& filename, double scale_factor, bool setExplicitMaterial = false, double r=0.5, double g=0.5, double b=0.5, double a=1)
+SoNode * convertMeshFile(const std::string& filename, double scale_factor, bool setExplicitMaterial = false, double r = 0.5, double g = 0.5, double b = 0.5, double a = 1)
 {
 //    ROS_INFO("Reading file...");
     Assimp::Importer importer;
     const aiScene* scene = importer.ReadFile(filename, aiProcess_OptimizeGraph |
-                aiProcess_FindInvalidData);
-                /*aiProcess_Triangulate |
-                aiProcess_OptimizeMeshes | 
-                /aiProcess_CalcTangentSpace             | 
-                aiProcess_Triangulate                        |
-                aiProcess_JoinIdenticalVertices    |
-                aiProcess_SortByPType);*/
-    if( !scene || !scene->mRootNode)
+                           aiProcess_FindInvalidData);
+    /*aiProcess_Triangulate |
+    aiProcess_OptimizeMeshes |
+    /aiProcess_CalcTangentSpace             |
+    aiProcess_Triangulate                        |
+    aiProcess_JoinIdenticalVertices    |
+    aiProcess_SortByPType);*/
+    if (!scene || !scene->mRootNode)
     {
-        ROS_ERROR_STREAM("Could not import file "<<filename);
+        ROS_ERROR_STREAM("Could not import file " << filename);
         return NULL;
     }
 
     // scale the meshes if required
     if (fabs(scale_factor - 1.0) > 1e-06)
     {
-        ROS_INFO_STREAM("Scaling the mesh "<<filename<< " with factor "<<scale_factor);
+        ROS_INFO_STREAM("Scaling the mesh " << filename << " with factor " << scale_factor);
         // get the scaling matrix
         aiMatrix4x4 scaleTransform;
         aiMatrix4x4::Scaling(aiVector3D(scale_factor, scale_factor, scale_factor), scaleTransform);
@@ -76,8 +76,8 @@ SoNode * convertMeshFile(const std::string& filename, double scale_factor, bool 
     if (setExplicitMaterial)
     {
         overrideMaterial = new SoMaterial();
-        overrideMaterial->diffuseColor.setValue(r,g,b);
-        overrideMaterial->transparency.setValue(1.0-a);
+        overrideMaterial->diffuseColor.setValue(r, g, b);
+        overrideMaterial->transparency.setValue(1.0 - a);
     }
 //    ROS_INFO("Converting to inventor...");
     SoSeparator * ivScene = Assimp2Inventor(scene, sceneDir, overrideMaterial);
@@ -86,7 +86,7 @@ SoNode * convertMeshFile(const std::string& filename, double scale_factor, bool 
         ROS_ERROR("Could not convert scene");
         return NULL;
     }
-    return ivScene; 
+    return ivScene;
 }
 
 
@@ -105,26 +105,31 @@ void urdf2inventor::removeTextureCopies(SoNode * root)
     SoPathList & pl = sa.getPaths();
     SbDict namedict;
 
-    for (int i = 0; i < pl.getLength(); i++) {
-      SoFullPath * p = (SoFullPath*) pl[i];
-      if (p->getTail()->isOfType(SoTexture2::getClassTypeId())) {
-        SoTexture2 * tex = (SoTexture2*) p->getTail();
-        if (tex->filename.getValue().getLength()) {
-          SbName name = tex->filename.getValue().getString();
-          // ROS_INFO_STREAM("Texture file "<<tex->filename.getValue().getString());
-          unsigned long key = (unsigned long) ((void*) name.getString());
-          void * tmp;
-          if (!namedict.find(key, tmp)) {
-            // new texture. just insert into list
-            (void) namedict.enter(key, tex);
-          }
-          else if (tmp != (void*) tex) { // replace with node found in dict
-            SoGroup * parent = (SoGroup*) p->getNodeFromTail(1);
-            int idx = p->getIndexFromTail(0);
-            parent->replaceChild(idx, (SoNode*) tmp);
-          }
+    for (int i = 0; i < pl.getLength(); i++)
+    {
+        SoFullPath * p = (SoFullPath*) pl[i];
+        if (p->getTail()->isOfType(SoTexture2::getClassTypeId()))
+        {
+            SoTexture2 * tex = (SoTexture2*) p->getTail();
+            if (tex->filename.getValue().getLength())
+            {
+                SbName name = tex->filename.getValue().getString();
+                // ROS_INFO_STREAM("Texture file "<<tex->filename.getValue().getString());
+                unsigned long key = (unsigned long)((void*) name.getString());
+                void * tmp;
+                if (!namedict.find(key, tmp))
+                {
+                    // new texture. just insert into list
+                    (void) namedict.enter(key, tex);
+                }
+                else if (tmp != (void*) tex)   // replace with node found in dict
+                {
+                    SoGroup * parent = (SoGroup*) p->getNodeFromTail(1);
+                    int idx = p->getIndexFromTail(0);
+                    parent->replaceChild(idx, (SoNode*) tmp);
+                }
+            }
         }
-      }
     }
     sa.reset();
 }
@@ -153,7 +158,7 @@ void urdf2inventor::removeTextureCopies(SoNode * root)
 
         SoTexture2 * tex = (SoTexture2*) p->getTail();
         if (tex->filename.getValue().getLength() == 0) continue;
-        
+
         std::string _name(tex->filename.getValue().getString());
         SbName name(_name.c_str());
 
@@ -182,8 +187,8 @@ void urdf2inventor::removeTextureCopies(SoNode * root)
 // XXX TODO could specify material as parameter to override any possibly already
 // existing materials. Propagate this to other functions using getAllVisuals().
 SoNode * urdf2inventor::getAllVisuals(const urdf_traverser::LinkPtr link, double scale_factor,
-    const urdf_traverser::EigenTransform& addVisualTransform,
-    bool scaleUrdfTransforms)
+                                      const urdf_traverser::EigenTransform& addVisualTransform,
+                                      bool scaleUrdfTransforms)
 {
     SoNodeKit::init();
     SoSeparator * allVisuals = new SoSeparator();
@@ -203,84 +208,84 @@ SoNode * urdf2inventor::getAllVisuals(const urdf_traverser::LinkPtr link, double
         urdf_traverser::EigenTransform vTransform = urdf_traverser::getTransform(visual->origin);
         // ROS_INFO_STREAM("Visual "<<i<<" of link "<<link->name<<" transform: "<<visual->origin);
 
-        vTransform=vTransform*addVisualTransform;
-        
+        vTransform = vTransform * addVisualTransform;
+
         if (scaleUrdfTransforms) urdf_traverser::scaleTranslation(vTransform, scale_factor);
 
-        switch(geom->type)
+        switch (geom->type)
         {
-            case urdf::Geometry::MESH:
+        case urdf::Geometry::MESH:
+        {
+            // ROS_INFO_STREAM("Mesh for "<<visual->group_name);
+            MeshPtr mesh = baselib_binding_ns::dynamic_pointer_cast<urdf::Mesh>(geom);
+            if (!mesh.get())
             {
-                // ROS_INFO_STREAM("Mesh for "<<visual->group_name);
-                MeshPtr mesh = baselib_binding_ns::dynamic_pointer_cast<urdf::Mesh>(geom);
-                if (!mesh.get())
-                {
-                    ROS_ERROR("Mesh cast error");
-                    return NULL;
-                }
-                std::string meshFilename = urdf_traverser::helpers::packagePathToAbsolute(mesh->filename);
-
-                ROS_INFO_STREAM("Converting mesh file "<<meshFilename<<" with factor "<<scale_factor);
-                float r = 0.5;
-                float g = 0.5;
-                float b = 0.5;
-                float a = 1.0;
-                if (mat)
-                {
-                    r=mat->color.r;
-                    g=mat->color.g;
-                    b=mat->color.b;
-                    a=mat->color.a;
-                }
-                SoNode * somesh = convertMeshFile(meshFilename,scale_factor,mat!=NULL,r,g,b,a);
-                // ROS_INFO("Converted.");
-                if (!somesh)
-                {
-                    ROS_ERROR("Mesh could not be read");
-                    return NULL;
-                }
-                std::stringstream str;
-                str << "_visual_" << i << "_" << linkName;
-                // ROS_INFO_STREAM("Visual name "<<str.str());
-                somesh->setName(str.str().c_str());
-                allVisuals = urdf2inventor::addSubNode(somesh, allVisuals, vTransform);
-                break;
-            }
-            case urdf::Geometry::SPHERE:
-            {
-                ROS_INFO("Urdf2Inventor debug: Model has a Sphere");
-                SpherePtr sphere = baselib_binding_ns::dynamic_pointer_cast<urdf::Sphere>(geom);
-                if (!sphere.get())
-                {
-                    ROS_ERROR("Sphere cast error");
-                    return NULL;
-                }
-
-                SoSeparator * sphereNode = new SoSeparator();
-                sphereNode->ref();
-                urdf2inventor::addSphere(allVisuals, vTransform.translation(), sphere->radius * scale_factor, 1,0,0);
-                break; 
-            }
-            case urdf::Geometry::BOX:
-            {
-                ROS_INFO("Urdf2Inventor debug: Model has a box");
-                BoxPtr box = baselib_binding_ns::dynamic_pointer_cast<urdf::Box>(geom);
-                if (!box.get())
-                {
-                    ROS_ERROR("Box cast error");
-                    return NULL;
-                }
-
-                SoSeparator * boxNode = new SoSeparator();
-                boxNode->ref();
-                urdf2inventor::addBox(allVisuals, vTransform, box->dim.x * scale_factor, box->dim.y * scale_factor, box->dim.z * scale_factor, 1,0,0,0);
-                break; 
-            }
-            default:
-            {
-                ROS_ERROR_STREAM("This geometry type not supported so far: "<<geom->type);
+                ROS_ERROR("Mesh cast error");
                 return NULL;
             }
+            std::string meshFilename = urdf_traverser::helpers::packagePathToAbsolute(mesh->filename);
+
+            ROS_INFO_STREAM("Converting mesh file " << meshFilename << " with factor " << scale_factor);
+            float r = 0.5;
+            float g = 0.5;
+            float b = 0.5;
+            float a = 1.0;
+            if (mat)
+            {
+                r = mat->color.r;
+                g = mat->color.g;
+                b = mat->color.b;
+                a = mat->color.a;
+            }
+            SoNode * somesh = convertMeshFile(meshFilename, scale_factor, mat != NULL, r, g, b, a);
+            // ROS_INFO("Converted.");
+            if (!somesh)
+            {
+                ROS_ERROR("Mesh could not be read");
+                return NULL;
+            }
+            std::stringstream str;
+            str << "_visual_" << i << "_" << linkName;
+            // ROS_INFO_STREAM("Visual name "<<str.str());
+            somesh->setName(str.str().c_str());
+            allVisuals = urdf2inventor::addSubNode(somesh, allVisuals, vTransform);
+            break;
+        }
+        case urdf::Geometry::SPHERE:
+        {
+            ROS_INFO("Urdf2Inventor debug: Model has a Sphere");
+            SpherePtr sphere = baselib_binding_ns::dynamic_pointer_cast<urdf::Sphere>(geom);
+            if (!sphere.get())
+            {
+                ROS_ERROR("Sphere cast error");
+                return NULL;
+            }
+
+            SoSeparator * sphereNode = new SoSeparator();
+            sphereNode->ref();
+            urdf2inventor::addSphere(allVisuals, vTransform.translation(), sphere->radius * scale_factor, 1, 0, 0);
+            break;
+        }
+        case urdf::Geometry::BOX:
+        {
+            ROS_INFO("Urdf2Inventor debug: Model has a box");
+            BoxPtr box = baselib_binding_ns::dynamic_pointer_cast<urdf::Box>(geom);
+            if (!box.get())
+            {
+                ROS_ERROR("Box cast error");
+                return NULL;
+            }
+
+            SoSeparator * boxNode = new SoSeparator();
+            boxNode->ref();
+            urdf2inventor::addBox(allVisuals, vTransform, box->dim.x * scale_factor, box->dim.y * scale_factor, box->dim.z * scale_factor, 1, 0, 0, 0);
+            break;
+        }
+        default:
+        {
+            ROS_ERROR_STREAM("This geometry type not supported so far: " << geom->type);
+            return NULL;
+        }
         }
         ++i;
     }
@@ -302,13 +307,13 @@ SoNode * urdf2inventor::getAllVisuals(const urdf_traverser::LinkPtr link, double
  * by the link.
  */
 bool convertMeshToIVString(urdf_traverser::LinkPtr& link,
-        const float scale_factor, 
-        const urdf_traverser::EigenTransform& addVisualTransform,
-        const bool scaleUrdfTransforms,
-        std::string& resultIV,
-        std::set<std::string>& textureFiles)
+                           const float scale_factor,
+                           const urdf_traverser::EigenTransform& addVisualTransform,
+                           const bool scaleUrdfTransforms,
+                           std::string& resultIV,
+                           std::set<std::string>& textureFiles)
 {
-    ROS_INFO("Convert mesh for link '%s'",link->name.c_str());
+    ROS_INFO("Convert mesh for link '%s'", link->name.c_str());
 
     SoNode * allVisuals = urdf2inventor::getAllVisuals(link, scale_factor, addVisualTransform, scaleUrdfTransforms);
     if (!allVisuals)
@@ -325,8 +330,8 @@ bool convertMeshToIVString(urdf_traverser::LinkPtr& link,
     }
 
     //ROS_INFO_STREAM("Result file content: "<<resultIV);
-  
-    // collect all relative texture filenames from the absolute texture paths. 
+
+    // collect all relative texture filenames from the absolute texture paths.
     textureFiles =  urdf2inventor::getAllTexturePaths(allVisuals);
     return true;
 }
@@ -365,16 +370,17 @@ int convertMeshToIVString(urdf_traverser::RecursionParamsPtr& p)
 
 template <class MeshFormat>
 bool urdf2inventor::convertMeshes(urdf_traverser::UrdfTraverser& traverser,
-                                 const std::string& fromLink,
-                                 const float scaleFactor,
-                                 const std::string& material,
-                                 const std::string& file_extension,
-                                 const urdf_traverser::EigenTransform& addVisualTransform,
-                                 std::map<std::string, MeshFormat>& meshes,
-                                 std::map<std::string, std::set<std::string> >& textureFiles)
+                                  const std::string& fromLink,
+                                  const float scaleFactor,
+                                  const std::string& material,
+                                  const std::string& file_extension,
+                                  const urdf_traverser::EigenTransform& addVisualTransform,
+                                  std::map<std::string, MeshFormat>& meshes,
+                                  std::map<std::string, std::set<std::string> >& textureFiles)
 {
-    std::string startLinkName=fromLink;
-    if (startLinkName.empty()){
+    std::string startLinkName = fromLink;
+    if (startLinkName.empty())
+    {
         startLinkName = traverser.getRootLinkName();
     }
 
@@ -388,7 +394,7 @@ bool urdf2inventor::convertMeshes(urdf_traverser::UrdfTraverser& traverser,
     // do one call of convertMeshes
     typedef urdf2inventor::MeshConvertRecursionParams<MeshFormat> MeshConvertRecursionParamsT;
     typename MeshConvertRecursionParamsT::Ptr meshParams(
-            new MeshConvertRecursionParamsT(scaleFactor, material, file_extension, addVisualTransform));
+        new MeshConvertRecursionParamsT(scaleFactor, material, file_extension, addVisualTransform));
 
     urdf_traverser::RecursionParamsPtr p(meshParams);
 
@@ -406,21 +412,21 @@ bool urdf2inventor::convertMeshes(urdf_traverser::UrdfTraverser& traverser,
 
 
 bool urdf2inventor::fixTextureReferences(
-                             const std::string& relMeshDir,
-                             const std::string& relTexDir,
-                             const std::map<std::string, std::set<std::string> >& textureFiles,
-                             std::map<std::string, std::string>& meshes,
-                             std::map<std::string, std::set<std::string> >& texturesToCopy)
+    const std::string& relMeshDir,
+    const std::string& relTexDir,
+    const std::map<std::string, std::set<std::string> >& textureFiles,
+    std::map<std::string, std::string>& meshes,
+    std::map<std::string, std::set<std::string> >& texturesToCopy)
 {
     // determine common parent path of all textures. First, remove texture duplicates
     std::set<std::string> allTextures;
-    for (std::map<std::string, std::set<std::string> >::const_iterator it=textureFiles.begin(); it!=textureFiles.end(); ++it)
+    for (std::map<std::string, std::set<std::string> >::const_iterator it = textureFiles.begin(); it != textureFiles.end(); ++it)
         allTextures.insert(it->second.begin(), it->second.end());
 
     // no textures to process
     if (allTextures.empty()) return true;
 
-    ROS_INFO_STREAM("Fixing texture references to point from "<<relMeshDir<<" files to textures in "<<relTexDir);
+    ROS_INFO_STREAM("Fixing texture references to point from " << relMeshDir << " files to textures in " << relTexDir);
     std::string _relMeshDir(relMeshDir);
     std::string _relTexDir(relTexDir);
     urdf_traverser::helpers::enforceDirectory(_relMeshDir, true);
@@ -433,13 +439,13 @@ bool urdf2inventor::fixTextureReferences(
         return false;
     }
 
-    ROS_INFO_STREAM("Common parent path for all textures: "<<commonParent);
+    ROS_INFO_STREAM("Common parent path for all textures: " << commonParent);
 
-    for (std::map<std::string, std::set<std::string> >::const_iterator it=textureFiles.begin(); it!=textureFiles.end(); ++it)
+    for (std::map<std::string, std::set<std::string> >::const_iterator it = textureFiles.begin(); it != textureFiles.end(); ++it)
     {
         std::string meshFile = it->first;
         std::string meshDirectory = urdf_traverser::helpers::getDirectory(meshFile);
-        
+
         std::stringstream relMeshInstallFile;
         relMeshInstallFile << _relMeshDir << meshDirectory;
 
@@ -447,12 +453,12 @@ bool urdf2inventor::fixTextureReferences(
         typename std::map<std::string, std::string>::iterator meshString = meshes.find(meshFile);
         if (meshString == meshes.end())
         {
-            ROS_ERROR_STREAM("Consistency: Mesh "<<meshFile<<" should have been in meshes map");
+            ROS_ERROR_STREAM("Consistency: Mesh " << meshFile << " should have been in meshes map");
             return false;
         }
 
         if (!urdf2inventor::helpers::fixFileReferences(relMeshInstallFile.str(), _relTexDir, commonParent, it->second,
-                              meshString->second, texturesToCopy))
+                meshString->second, texturesToCopy))
         {
             ROS_ERROR_STREAM("Could not fix file references");
             return false;
@@ -464,11 +470,11 @@ bool urdf2inventor::fixTextureReferences(
 
 // instantiation for string meshes
 template bool urdf2inventor::convertMeshes<std::string>(urdf_traverser::UrdfTraverser& traverser,
-                                 const std::string& fromLink,
-                                 const float scaleFactor,
-                                 const std::string& material,
-                                 const std::string& file_extension,
-                                 const urdf_traverser::EigenTransform& addVisualTransform,
-                                 std::map<std::string, std::string>& meshes,
-                                 std::map<std::string, std::set<std::string> >& textureFiles);
+        const std::string& fromLink,
+        const float scaleFactor,
+        const std::string& material,
+        const std::string& file_extension,
+        const urdf_traverser::EigenTransform& addVisualTransform,
+        std::map<std::string, std::string>& meshes,
+        std::map<std::string, std::set<std::string> >& textureFiles);
 

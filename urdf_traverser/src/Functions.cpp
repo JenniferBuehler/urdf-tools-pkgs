@@ -79,13 +79,13 @@ void urdf_traverser::setTransform(const EigenTransform& t, urdf::Pose& p)
 
 void urdf_traverser::applyTransform(const EigenTransform& t, urdf::Vector3& v)
 {
-    Eigen::Vector3d _v(v.x,v.y,v.z);
+    Eigen::Vector3d _v(v.x, v.y, v.z);
     Eigen::Quaterniond rot(t.rotation());
     //ROS_INFO_STREAM("Rotation: "<<rot);
-    _v=rot*_v;
-    v.x=_v.x();
-    v.y=_v.y();
-    v.z=_v.z();
+    _v = rot * _v;
+    v.x = _v.x();
+    v.y = _v.y();
+    v.z = _v.z();
 }
 
 void urdf_traverser::setTransform(const EigenTransform& t, JointPtr& joint)
@@ -215,9 +215,9 @@ std::vector<urdf_traverser::JointPtr> urdf_traverser::getChain(const LinkConstPt
     }
     if (curr->name != from_link->name)
     {
-        ROS_ERROR_STREAM("UrdfTraverser: could not find link "<<
-            from_link->name<<" while traversing up the chain starting from "<<
-            to_link->name<<". Failed to find parent chain!");
+        ROS_ERROR_STREAM("UrdfTraverser: could not find link " <<
+                         from_link->name << " while traversing up the chain starting from " <<
+                         to_link->name << ". Failed to find parent chain!");
         return std::vector<JointPtr>();
     }
 
@@ -237,7 +237,7 @@ bool urdf_traverser::isChildOf(const LinkConstPtr& parent, const LinkConstPtr& c
     return false;
 }
 
-bool urdf_traverser::isChildJointOf(const LinkConstPtr& parent, const JointConstPtr& joint) 
+bool urdf_traverser::isChildJointOf(const LinkConstPtr& parent, const JointConstPtr& joint)
 {
     for (unsigned int i = 0; i < parent->child_joints.size(); ++i)
     {
@@ -249,8 +249,8 @@ bool urdf_traverser::isChildJointOf(const LinkConstPtr& parent, const JointConst
 
 bool equalAxes(const Eigen::Vector3d& z1, const Eigen::Vector3d& z2, double tolerance)
 {
-    Eigen::Vector3d _z1=z1;
-    Eigen::Vector3d _z2=z2;
+    Eigen::Vector3d _z1 = z1;
+    Eigen::Vector3d _z2 = z2;
     _z1.normalize();
     _z2.normalize();
     double dot = _z1.dot(_z2);

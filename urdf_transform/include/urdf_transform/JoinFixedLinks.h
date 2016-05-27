@@ -5,17 +5,17 @@
 
 namespace urdf_traverser
 {
-    class UrdfTraverser;
+class UrdfTraverser;
 }
 
 namespace urdf_transform
 {
-    /**
-     * Recursively removes all fixed links down the chain in the model by adding
-     * visuals and collision geometry to the first parent link which is
-     * attached to a non-fixed link.
-     */
-    bool joinFixedLinks(urdf_traverser::UrdfTraverser& traverser, const std::string& fromLink);
+/**
+ * Recursively removes all fixed links down the chain in the model by adding
+ * visuals and collision geometry to the first parent link which is
+ * attached to a non-fixed link.
+ */
+bool joinFixedLinks(urdf_traverser::UrdfTraverser& traverser, const std::string& fromLink);
 }
 
 #endif  // URDF_TRANSFORM_JOINFIXEDLINKS_H

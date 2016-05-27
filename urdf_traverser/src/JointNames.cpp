@@ -18,7 +18,7 @@ int getJointNamesCB(urdf_traverser::RecursionParamsPtr& p)
         ROS_ERROR("Wrong recursion parameter type");
         return -1;
     }
-    
+
     urdf_traverser::LinkPtr link = p->getLink();
     if (!link)
     {
@@ -46,17 +46,17 @@ int getJointNamesCB(urdf_traverser::RecursionParamsPtr& p)
 }
 
 bool urdf_traverser::getJointNames(UrdfTraverser& traverser, const std::string& fromLink,
-        const bool skipFixed, std::vector<std::string>& result)
+                                   const bool skipFixed, std::vector<std::string>& result)
 {
     ROS_INFO("Get joint names starting from link: %s", fromLink.c_str());
 
     // go through entire tree
-    StringVectorRecursionParams * stringParams=new StringVectorRecursionParams(skipFixed);
+    StringVectorRecursionParams * stringParams = new StringVectorRecursionParams(skipFixed);
     urdf_traverser::RecursionParamsPtr p(stringParams);
     bool success = (traverser.traverseTreeTopDown(fromLink, boost::bind(&getJointNamesCB, _1), p, false) >= 0);
     if (success)
     {
-        result=stringParams->names;
+        result = stringParams->names;
     }
     return success;
 }

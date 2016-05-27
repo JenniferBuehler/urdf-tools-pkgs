@@ -38,6 +38,6 @@ SoSeparator *Assimp2Inventor(const aiScene *const scene, const std::string& scen
 
 std::vector<std::string> assimpImportedExtensions();
 
-std::vector<std::pair<std::string,std::vector<std::string> > > assimpImportedFormats();
+std::vector<std::pair<std::string, std::vector<std::string> > > assimpImportedFormats();
 
 #endif // ASSIMP_IMPORT_H

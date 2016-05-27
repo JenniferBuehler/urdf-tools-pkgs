@@ -40,11 +40,11 @@ class ConversionParameters
 public:
     typedef Eigen::Transform<double, 3, Eigen::Affine> EigenTransform;
     explicit ConversionParameters(const std::string& _rootLinkName,
-        const std::string& _material,
-        const EigenTransform& _addVisualTransform):
+                                  const std::string& _material,
+                                  const EigenTransform& _addVisualTransform):
         rootLinkName(_rootLinkName),
         material(_material),
-        addVisualTransform(_addVisualTransform){}
+        addVisualTransform(_addVisualTransform) {}
     ConversionParameters(const ConversionParameters& o):
         rootLinkName(o.rootLinkName),
         material(o.material),
@@ -58,16 +58,16 @@ public:
     // material for the meshes
     std::string material;
 
-    /** 
+    /**
      * this transform will be post-multiplied on all links' **visuals** (not links!) local
-     * transform (their "origin"). This can be used to correct transformation errors which may have been 
+     * transform (their "origin"). This can be used to correct transformation errors which may have been
      * introduced in converting meshes from one format to the other, losing orientation information
      * (for example, .dae has an "up vector" definition which may have been ignored)
      */
     EigenTransform addVisualTransform;
 
 private:
-    ConversionParameters(){}
+    ConversionParameters() {}
 };
 
 
@@ -82,8 +82,8 @@ class ConversionResult
 {
 public:
     explicit ConversionResult(const std::string& _meshOutputExtension,
-            const std::string& _meshOutputDirectoryName,
-            const std::string& _texOutputDirectoryName):
+                              const std::string& _meshOutputDirectoryName,
+                              const std::string& _texOutputDirectoryName):
         meshOutputExtension(_meshOutputExtension),
         meshOutputDirectoryName(_meshOutputDirectoryName),
         texOutputDirectoryName(_texOutputDirectoryName),
@@ -102,13 +102,13 @@ public:
 
     // the resulting meshes (inventor files), indexed by the link name
     std::map<std::string, MeshFormat> meshes;
-    
+
     /**
      * The texture file names to copy to target directory:
      * The key is the path to a target texture directory. It is either absolute,
      * or if it's relative, it is relative to a global output directory ``<output-dir>``.
      * Value is a list of *absolute* filenames of textures to copy into this directory.
-     * So copying all files i ``<mapIterator->second[i]>`` to 
+     * So copying all files i ``<mapIterator->second[i]>`` to
      * ``[<output-dir>/]<mapIterator->first>`` will be required when installing
      * the mesh file which is meant to go in ``<output-dir>``/``<file.extension>``.
      */
@@ -119,10 +119,10 @@ public:
 
     // output directory for all meshes
     std::string meshOutputDirectoryName;
-    
-    // output directory for all textures 
+
+    // output directory for all textures
     std::string texOutputDirectoryName;
-    
+
     bool success;
 
 private:

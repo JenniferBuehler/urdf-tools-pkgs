@@ -40,12 +40,12 @@ namespace urdf2inventor
 
 /**
  * \brief Reads and writes URDF and GraspIt! files to disk.
- * 
+ *
  *  Parameter MeshFormat: Datatype to use for the meshes (e.g. a string for XML).
  * \author Jennifer Buehler
  * \date March 2016
  */
-template<typename MeshFormat=std::string>
+template<typename MeshFormat = std::string>
 class FileIO
 {
 public:
@@ -56,7 +56,7 @@ public:
      * \param _outputDir directory where to save the files.
      */
     explicit FileIO(const std::string& _outputDir):
-        outputDir(_outputDir){}
+        outputDir(_outputDir) {}
 
     virtual ~FileIO()
     {
@@ -64,7 +64,7 @@ public:
 
     /**
      * Initializes the directory, then writes the meshes.
-     */    
+     */
     bool write(const ConversionResultPtr& data) const;
 
     /**
@@ -84,14 +84,20 @@ protected:
      * Called from initOutputDir(), can be used by subclassees
      * Will be called after creating the directory \e outputDir.
      */
-    virtual bool initOutputDirImpl(const std::string& robotName) const { return true; };
-    
+    virtual bool initOutputDirImpl(const std::string& robotName) const
+    {
+        return true;
+    };
+
     /**
      * Called from write(ConversionResultPtr&), after initOutputDir() has been called and
      * the meshes (in base class of \e data) has been written with writeMeshFiles().
      * Can be used by subclasses to write other things belonging to the result.
      */
-    virtual bool writeImpl(const ConversionResultPtr& data) const { return true; }
+    virtual bool writeImpl(const ConversionResultPtr& data) const
+    {
+        return true;
+    }
 
     inline const std::string& getOutputDirectory() const
     {

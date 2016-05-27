@@ -64,7 +64,7 @@ std::set<std::string> urdf2inventor::getAllTexturePaths(SoNode * root)
 
         SoTexture2 * tex = (SoTexture2*) p->getTail();
         if (tex->filename.getValue().getLength() == 0) continue;
-        
+
         std::string name(tex->filename.getValue().getString());
         boost::filesystem::path absPath(boost::filesystem::absolute(name));
         allFiles.insert(absPath.string());
@@ -91,26 +91,26 @@ SoTransform * urdf2inventor::getTransform(const urdf2inventor::EigenTransform& e
 }
 
 SoSeparator * urdf2inventor::addSubNode(SoNode * addAsChild,
-        SoNode* parent, const urdf2inventor::EigenTransform& eTrans)
+                                        SoNode* parent, const urdf2inventor::EigenTransform& eTrans)
 {
     SoTransform * transform = getTransform(eTrans);
     return urdf2inventor::addSubNode(addAsChild, parent, transform);
 }
 
 SoSeparator * urdf2inventor::addSubNode(SoNode * addAsChild,
-        SoNode* parent, SoTransform * trans)
+                                        SoNode* parent, SoTransform * trans)
 {
     SoSeparator * sep = dynamic_cast<SoSeparator*>(parent);
     if (!sep)
     {
-        std::cerr<<"parent is not a separator"<<std::endl;
+        std::cerr << "parent is not a separator" << std::endl;
         return NULL;
     }
 
     SoSeparator * sepChild = dynamic_cast<SoSeparator*>(addAsChild);
     if (!sepChild)
     {
-        std::cerr<<"child is not a separator"<<std::endl;
+        std::cerr << "child is not a separator" << std::endl;
         return NULL;
     }
 
@@ -126,15 +126,15 @@ SoSeparator * urdf2inventor::addSubNode(SoNode * addAsChild,
 
 
 void urdf2inventor::addSubNode(SoNode * addAsChild, SoSeparator * parent,
-    const EigenTransform& transform,
-    SoMaterial * mat)
+                               const EigenTransform& transform,
+                               SoMaterial * mat)
 {
     SoMatrixTransform * trans = new SoMatrixTransform();
-    EigenTransform t=transform;//.inverse();
-    trans->matrix.setValue(t(0,0), t(1,0), t(2,0), t(3,0), 
-                t(0,1), t(1,1), t(2,1), t(3,1), 
-                t(0,2), t(1,2), t(2,2), t(3,2), 
-                t(0,3), t(1,3), t(2,3), t(3,3));
+    EigenTransform t = transform; //.inverse();
+    trans->matrix.setValue(t(0, 0), t(1, 0), t(2, 0), t(3, 0),
+                           t(0, 1), t(1, 1), t(2, 1), t(3, 1),
+                           t(0, 2), t(1, 2), t(2, 2), t(3, 2),
+                           t(0, 3), t(1, 3), t(2, 3), t(3, 3));
 
 
     SoSeparator * transSep = new SoSeparator();
@@ -146,15 +146,15 @@ void urdf2inventor::addSubNode(SoNode * addAsChild, SoSeparator * parent,
 
 
 void urdf2inventor::addBox(SoSeparator * addToNode, const EigenTransform& trans,
-    float width, float height, float depth,
-    float r, float g, float b, float a)
+                           float width, float height, float depth,
+                           float r, float g, float b, float a)
 {
     SoCube * cube = new SoCube();
     cube->width.setValue(width);
     cube->height.setValue(height);
     cube->depth.setValue(depth);
     SoMaterial * mat = new SoMaterial();
-    mat->diffuseColor.setValue(r,g,b);
+    mat->diffuseColor.setValue(r, g, b);
     mat->ambientColor.setValue(0.2, 0.2, 0.2);
     mat->transparency.setValue(a);
     addSubNode(cube, addToNode, trans, mat);
@@ -162,12 +162,12 @@ void urdf2inventor::addBox(SoSeparator * addToNode, const EigenTransform& trans,
 
 
 void urdf2inventor::addSphere(SoSeparator * addToNode, const Eigen::Vector3d& pos, float radius,
-    float r, float g, float b, float a)
+                              float r, float g, float b, float a)
 {
     SoSphere * s = new SoSphere();
     s->radius = radius;
     SoMaterial * mat = new SoMaterial();
-    mat->diffuseColor.setValue(r,g,b);
+    mat->diffuseColor.setValue(r, g, b);
     mat->ambientColor.setValue(0.2, 0.2, 0.2);
     mat->transparency.setValue(a);
     EigenTransform trans;
@@ -177,42 +177,42 @@ void urdf2inventor::addSphere(SoSeparator * addToNode, const Eigen::Vector3d& po
 }
 
 void urdf2inventor::addCylinder(SoSeparator * addToNode, const Eigen::Vector3d& pos,
-    const Eigen::Quaterniond& rot,
-    float radius, float height,
-    float r, float g, float b, float a)
+                                const Eigen::Quaterniond& rot,
+                                float radius, float height,
+                                float r, float g, float b, float a)
 {
     SoCylinder * c = new SoCylinder();
     c->radius = radius;
     c->height = height;
-    
+
     SoMaterial * mat = new SoMaterial();
-    mat->diffuseColor.setValue(r,g,b);
+    mat->diffuseColor.setValue(r, g, b);
     mat->ambientColor.setValue(0.2, 0.2, 0.2);
     mat->transparency.setValue(a);
 
     // SoCylinder is oriented along y axis, so change this to z axis
     // and also translate such that it extends along +z
-/*    Eigen::Quaterniond toZ = Eigen::Quaterniond::FromTwoVectors(Eigen::Vector3d(0,1,0), Eigen::Vector3d(0,0,1));
-    typedef Eigen::Transform<double, 3, Eigen::Affine> EigenTransform;
-    SoTransform * trans = new SoTransform();
-    trans->translation.setValue(0,0,height/2);
-    trans->rotation.setValue(toZ.x(), toZ.y(), toZ.z(), toZ.w());
-    SoSeparator * cylinder = new SoSeparator();
-    cylinder->addChild(trans);
-    cylinder->addChild(c);
-    EigenTransform trans;
-    trans.setIdentity();
-    trans.translate(pos);
-*/
+    /*    Eigen::Quaterniond toZ = Eigen::Quaterniond::FromTwoVectors(Eigen::Vector3d(0,1,0), Eigen::Vector3d(0,0,1));
+        typedef Eigen::Transform<double, 3, Eigen::Affine> EigenTransform;
+        SoTransform * trans = new SoTransform();
+        trans->translation.setValue(0,0,height/2);
+        trans->rotation.setValue(toZ.x(), toZ.y(), toZ.z(), toZ.w());
+        SoSeparator * cylinder = new SoSeparator();
+        cylinder->addChild(trans);
+        cylinder->addChild(c);
+        EigenTransform trans;
+        trans.setIdentity();
+        trans.translate(pos);
+    */
 
     // SoCylinder is oriented along y axis, so change this to z axis
     // and also translate such that it extends along +z
-    Eigen::Quaterniond toZ = Eigen::Quaterniond::FromTwoVectors(Eigen::Vector3d(0,1,0), Eigen::Vector3d(0,0,1));
+    Eigen::Quaterniond toZ = Eigen::Quaterniond::FromTwoVectors(Eigen::Vector3d(0, 1, 0), Eigen::Vector3d(0, 0, 1));
     EigenTransform trans;
     trans.setIdentity();
     trans.translate(pos);
     trans.rotate(rot);
-    trans.translate(Eigen::Vector3d(0,0,height/2.0));
+    trans.translate(Eigen::Vector3d(0, 0, height / 2.0));
     trans.rotate(toZ);
 
     addSubNode(c, addToNode, trans, mat);
@@ -229,17 +229,17 @@ void urdf2inventor::addLocalAxes(SoSeparator * addToNode, float axesRadius, floa
     Eigen::Quaterniond rot;
     rot.setIdentity();
     // z axis
-    addCylinder(addToNode,Eigen::Vector3d(0,0,0), rot, axesRadius, axesLength ,rz,gz,bz);
-    
-    Eigen::Vector3d x(1,0,0);
-    Eigen::Vector3d y(0,1,0);
-    Eigen::Vector3d z(0,0,1);
+    addCylinder(addToNode, Eigen::Vector3d(0, 0, 0), rot, axesRadius, axesLength , rz, gz, bz);
+
+    Eigen::Vector3d x(1, 0, 0);
+    Eigen::Vector3d y(0, 1, 0);
+    Eigen::Vector3d z(0, 0, 1);
 
     // y axis
     Eigen::Quaterniond q = Eigen::Quaterniond::FromTwoVectors(z, y);
-    addCylinder(addToNode,Eigen::Vector3d(0,0,0), q, axesRadius, axesLength, ry, gy, by);
-    
+    addCylinder(addToNode, Eigen::Vector3d(0, 0, 0), q, axesRadius, axesLength, ry, gy, by);
+
     // x axis
     q = Eigen::Quaterniond::FromTwoVectors(z, x);
-    addCylinder(addToNode,Eigen::Vector3d(0,0,0), q, axesRadius, axesLength, rx, gx, bx);
+    addCylinder(addToNode, Eigen::Vector3d(0, 0, 0), q, axesRadius, axesLength, rx, gx, bx);
 }

@@ -62,25 +62,25 @@ int main(int argc, char** argv)
 
     // An axis and angle (degrees) can be specified which will transform *all*
     // visuals (not links, but their visuals!) within their local coordinate system.
-    // This can be used to correct transformation errors which may have been 
+    // This can be used to correct transformation errors which may have been
     // introduced in converting meshes from one format to the other, losing orientation information
     // For example, .dae has an "up vector" definition which may have been ignored.
-    float visCorrAxX=0;
+    float visCorrAxX = 0;
     priv.param<float>("visual_corr_axis_x", visCorrAxX, visCorrAxX);
-    float visCorrAxY=0;
+    float visCorrAxY = 0;
     priv.param<float>("visual_corr_axis_y", visCorrAxY, visCorrAxY);
-    float visCorrAxZ=0;
+    float visCorrAxZ = 0;
     priv.param<float>("visual_corr_axis_z", visCorrAxZ, visCorrAxZ);
-    float visCorrAxAngle=0;
+    float visCorrAxAngle = 0;
     priv.param<float>("visual_corr_axis_angle", visCorrAxAngle, visCorrAxAngle);
-    urdf2inventor::Urdf2Inventor::EigenTransform addTrans(Eigen::AngleAxisd(visCorrAxAngle*M_PI/180, Eigen::Vector3d(visCorrAxX,visCorrAxY,visCorrAxZ)));
+    urdf2inventor::Urdf2Inventor::EigenTransform addTrans(Eigen::AngleAxisd(visCorrAxAngle * M_PI / 180, Eigen::Vector3d(visCorrAxX, visCorrAxY, visCorrAxZ)));
 
     urdf2inventor::Urdf2Inventor::UrdfTraverserPtr traverser(new urdf_traverser::UrdfTraverser());
 
     urdf2inventor::Urdf2Inventor converter(traverser, scaleFactor);
 
     ROS_INFO("Starting model conversion...");
-       
+
     std::string outputMaterial = "plastic";  // output material does not really matter for only conversion to IV
     urdf2inventor::Urdf2Inventor::ConversionParametersPtr params
         = converter.getBasicConversionParams(rootLinkName, outputMaterial, addTrans);
@@ -105,9 +105,9 @@ int main(int argc, char** argv)
     }
 
     std::stringstream wholeFile;
-    wholeFile<<outputDir<<"/robot/"<<traverser->getModelName()<<".iv";
-    ROS_INFO_STREAM("Now writing whole robot to "<<wholeFile.str());
-    if (!converter.writeAsInventor(wholeFile.str(),"",true, addTrans))
+    wholeFile << outputDir << "/robot/" << traverser->getModelName() << ".iv";
+    ROS_INFO_STREAM("Now writing whole robot to " << wholeFile.str());
+    if (!converter.writeAsInventor(wholeFile.str(), "", true, addTrans))
     {
         ROS_ERROR("Could not write whole robot file");
         return 0;

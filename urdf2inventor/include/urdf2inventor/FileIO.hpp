@@ -38,7 +38,7 @@ bool urdf2inventor::FileIO<MeshFormat>::writeMeshFiles(const std::map<std::strin
         return false;
     }
 
-    ROS_INFO_STREAM("urdf2inventor::FileIO::writeMeshFiles into "<<outputDir);
+    ROS_INFO_STREAM("urdf2inventor::FileIO::writeMeshFiles into " << outputDir);
 
     // write the mesh files
     typename std::map<std::string, MeshFormat>::const_iterator mit;
@@ -47,12 +47,12 @@ bool urdf2inventor::FileIO<MeshFormat>::writeMeshFiles(const std::map<std::strin
         std::stringstream outFilename;
         outFilename << outputMeshDir << "/" << mit->first << meshOutputExtension;
 
-        std::string pathToFile=urdf_traverser::helpers::getPath(outFilename.str().c_str()); 
+        std::string pathToFile = urdf_traverser::helpers::getPath(outFilename.str().c_str());
         //ROS_INFO_STREAM("Directory of path "<<outFilename.str()<<": "<<pathToFile);
         if (!pathToFile.empty() &&
-            !urdf_traverser::helpers::makeDirectoryIfNeeded(pathToFile.c_str()))
+                !urdf_traverser::helpers::makeDirectoryIfNeeded(pathToFile.c_str()))
         {
-            ROS_ERROR_STREAM("Could not make directory "<<pathToFile);
+            ROS_ERROR_STREAM("Could not make directory " << pathToFile);
         }
 
         if (!urdf_traverser::helpers::writeToFile(mit->second, outFilename.str()))
@@ -82,7 +82,7 @@ bool urdf2inventor::FileIO<MeshFormat>::write(const ConversionResultPtr& data) c
         ROS_ERROR("Could not write mesh files");
         return false;
     }
-       
-    urdf2inventor::helpers::writeFiles(data->textureFiles, outputDir); 
+
+    urdf2inventor::helpers::writeFiles(data->textureFiles, outputDir);
     return writeImpl(data);
 }

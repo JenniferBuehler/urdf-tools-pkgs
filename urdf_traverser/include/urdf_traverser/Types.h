@@ -11,9 +11,9 @@
 
 namespace urdf_traverser
 {
-   
+
 typedef Eigen::Transform<double, 3, Eigen::Affine> EigenTransform;
-    
+
 typedef boost::shared_ptr<urdf::Link> LinkPtr;
 typedef boost::shared_ptr<const urdf::Link> LinkConstPtr;
 

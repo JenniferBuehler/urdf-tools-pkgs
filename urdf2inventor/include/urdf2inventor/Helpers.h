@@ -94,7 +94,7 @@ extern bool writeFiles(const std::map<std::string, std::set<std::string> >& file
  * \param modelString the string representation (eg. XML) of the model which is to be adjusted (fixing file references).
  * \param filesToCopy The file names to copy to target directories:
  *      Map **key** is the path to the output file directory, which will be located in
- *      the global output directory (eg. ``<fileDir>/path/to/file``). So if \e fileDir was given as absolute path, this path 
+ *      the global output directory (eg. ``<fileDir>/path/to/file``). So if \e fileDir was given as absolute path, this path
  *      will be absolute too, otherwise it will be relative.
  *      Map **value** is a list of *absolute* filenames to copy into this directory.
  *      So copying *all* files i ``<mapIterator->second[i]>`` to ``<output-dir>/<mapIterator->first>`` will be
@@ -102,12 +102,12 @@ extern bool writeFiles(const std::map<std::string, std::set<std::string> >& file
  * \return false if no common parent directory could be determined for all of the files and/or the common parent is
  *      no subdirectory of \e fileRootDir.
  */
-extern bool fixFileReferences(const std::string& modelDir, 
-                             const std::string& fileDir,
-                             const std::string& fileRootDir,
-                             const std::set<std::string>& filesInUse,
-                             std::string& modelString,
-                             std::map<std::string, std::set<std::string> >& filesToCopy);
+extern bool fixFileReferences(const std::string& modelDir,
+                              const std::string& fileDir,
+                              const std::string& fileRootDir,
+                              const std::set<std::string>& filesInUse,
+                              std::string& modelString,
+                              std::map<std::string, std::set<std::string> >& filesToCopy);
 
 
 

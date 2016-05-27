@@ -43,7 +43,7 @@ bool urdf_transform::scaleModel(UrdfTraverser& traverser, const std::string& fro
 bool urdf_transform::scaleModel(UrdfTraverser& traverser, double scale_factor)
 {
     std::string root_link = traverser.getRootLinkName();
-    return scaleModel(traverser,root_link,scale_factor);
+    return scaleModel(traverser, root_link, scale_factor);
 }
 
 

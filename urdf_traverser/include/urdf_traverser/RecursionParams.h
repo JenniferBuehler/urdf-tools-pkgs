@@ -15,10 +15,10 @@
     along with this program; if not, write to the Free Software Foundation,
     Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301  USA
 **/
- /** 
-  * Base class for recursion parameters passed during traversal of a URDF tree, and
-  * a few subclasses of the base type which may be useful in various types of traversals.
-  */
+/**
+ * Base class for recursion parameters passed during traversal of a URDF tree, and
+ * a few subclasses of the base type which may be useful in various types of traversals.
+ */
 #ifndef URDF_TRAVERSER_RECURSIONPARAMS_H
 #define URDF_TRAVERSER_RECURSIONPARAMS_H
 // Copyright Jennifer Buehler
@@ -34,21 +34,21 @@ namespace urdf_traverser
  * Encapsulates data carried within a recursion. At each recursion, the
  * according fields \e link and \e level
  * are set. Any subclass can add their own recursion parameters to pass
- * through all recursions. A subclass of this type may for example 
+ * through all recursions. A subclass of this type may for example
  * be used to build the result of the traversal.
  *
  * \author Jennifer Buehler
  */
 class RecursionParams
 {
-friend class UrdfTraverser;
+    friend class UrdfTraverser;
 public:
     typedef baselib_binding::shared_ptr<RecursionParams>::type Ptr;
 
     explicit RecursionParams(): level(-1) {}
     explicit RecursionParams(const RecursionParams& o):
         link(o.link),
-        level(o.level){}
+        level(o.level) {}
     virtual ~RecursionParams() {}
 
     RecursionParams& operator=(const RecursionParams& o)
@@ -71,7 +71,7 @@ public:
         return level;
     }
 
- protected:
+protected:
     explicit RecursionParams(LinkPtr& _link, unsigned int _level):
         link(_link),
         level(_level) {}
@@ -86,7 +86,7 @@ public:
 
     // the link the recursion is applied on
     LinkPtr link;
-    
+
     // level in the tree (distance to link on which traversal was started)
     unsigned int level;
 };
@@ -204,7 +204,7 @@ public:
     bool skipFixed;
     std::vector<std::string> names;
 private:
-    explicit StringVectorRecursionParams(){}
+    explicit StringVectorRecursionParams() {}
 };
 typedef StringVectorRecursionParams::Ptr StringVectorRecursionParamsPtr;
 

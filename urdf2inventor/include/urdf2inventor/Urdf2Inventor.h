@@ -47,7 +47,7 @@ namespace urdf2inventor
  * So far, the best solution is to convert all meshes to .obj beforehand. Package assimp_mesh_converter
  * can be used to do this. At some time (hopefully soon) this will be automated here, and dependency to
  * package ivcon should be removed.
- * 
+ *
  * TODO: This should be separated in 2 different hierarchies, one to handle the URDF traversal
  * to apply all sorts of functions, and another to do the operations such as mesh conversion and model scaling.
  *
@@ -62,7 +62,7 @@ public:
     typedef ConversionResult<MeshFormat> ConversionResultT;
     typedef baselib_binding::shared_ptr<ConversionResultT>::type ConversionResultPtr;
     typedef baselib_binding::shared_ptr<ConversionParameters>::type ConversionParametersPtr;
-    
+
     typedef baselib_binding::shared_ptr<urdf_traverser::UrdfTraverser>::type UrdfTraverserPtr;
     typedef baselib_binding::shared_ptr<const urdf_traverser::UrdfTraverser>::type UrdfTraverserConstPtr;
 
@@ -84,27 +84,27 @@ public:
     static std::string TEX_OUTPUT_DIRECTORY_NAME;
 
     /**
-     * \param traverser the URDF traverser. Does not need to have a loaded URDF, as method loadAndConvert() will load the URDF into it. 
+     * \param traverser the URDF traverser. Does not need to have a loaded URDF, as method loadAndConvert() will load the URDF into it.
      * \param _scaleFactor the graspit model might have to be scaled (the urdf model is in meters, graspit! in millimeters).
      * This can be specified with this scale factor.
-     * \param _addAxes default value: add the local coordinate system axes of the links to the inventor nodes. 
+     * \param _addAxes default value: add the local coordinate system axes of the links to the inventor nodes.
      *      z axis is displayed blue, y axis green, x axis red, and the rotation axis pink.
      *      Fixed joints axes will be artificially altered to be slightly longer and thinner, so a distinction is
      *      visible.
-     * \param _axesRadius default value: radius of the axes, if \e _addAxes is true 
+     * \param _axesRadius default value: radius of the axes, if \e _addAxes is true
      * \param _axesLength default value: length of the axes, if \e _addAxes is true
      */
     explicit Urdf2Inventor(const UrdfTraverserPtr& traverser,
-            float _scaleFactor = 1, bool _addAxes=false, float _axesRadius = 0.003, float _axesLength=0.015):
+                           float _scaleFactor = 1, bool _addAxes = false, float _axesRadius = 0.003, float _axesLength = 0.015):
         urdf_traverser(traverser),
         scaleFactor(_scaleFactor),
         isScaled(false),
         addAxes(_addAxes),
         axesRadius(_axesRadius),
         axesLength(_axesLength)
-     {
-         assert(urdf_traverser.get());
-     }
+    {
+        assert(urdf_traverser.get());
+    }
 
     ~Urdf2Inventor()
     {
@@ -112,7 +112,7 @@ public:
 
     /**
      * Removes all fixed links in the model by adding visuals and collision geometry to the first parent link which is
-     * attached to a non-fixed link. Model has to be loaded with any of the load() methods first. 
+     * attached to a non-fixed link. Model has to be loaded with any of the load() methods first.
      */
     bool joinFixedLinks(const std::string& from_link);
 
@@ -140,22 +140,22 @@ public:
      * \param fromLink if empty string, the root link in the URDF is going to be used. Otherwise, a link
      *      name can be set here which will return the model starting from this link name.
      *
-     * \param addAxes add the local coordinate system axes of the links to the inventor nodes. 
+     * \param addAxes add the local coordinate system axes of the links to the inventor nodes.
      *      z axis is displayed blue, y axis green, x axis red, and the rotation axis pink.
      *      Fixed joints axes will be artificially altered to be slightly longer and thinner, so a distinction is
      *      visible.
-     * \param axesRadius radius of the axes, if \e _addAxes is true 
+     * \param axesRadius radius of the axes, if \e _addAxes is true
      * \param axesLength length of the axes, if \e _addAxes is true
      * \param addVisualTransform this transform will be post-multiplied on all links' **visuals** (not links!) local
-     *      transform (their "origin"). This can be used to correct transformation errors which may have been 
+     *      transform (their "origin"). This can be used to correct transformation errors which may have been
      *      introduced in converting meshes from one format to the other, losing orientation information
      *      (for example, .dae has an "up vector" definition which may have been ignored)
      * \param textureFiles if not NULL, a list of all texture files (absolute paths) in use are returned here.
      */
     SoNode * getAsInventor(const std::string& fromLink, bool useScaleFactor,
-        bool addAxes, float axesRadius, float axesLength,
-        const EigenTransform& addVisualTransform,
-        std::set<std::string> * textureFiles);
+                           bool addAxes, float axesRadius, float axesLength,
+                           const EigenTransform& addVisualTransform,
+                           std::set<std::string> * textureFiles);
 
     /**
      * writes all elements down from \e fromLink to files in inventor format.
@@ -163,26 +163,26 @@ public:
      * \param fromLink if empty string, the root link in the URDF is going to be used as starting point. Otherwise, a link
      *      name can be set here which will write the model starting from this link name.
      * \param addVisualTransform this transform will be post-multiplied on all links' **visuals** (not links!) local
-     *      transform (their "origin"). This can be used to correct transformation errors which may have been 
+     *      transform (their "origin"). This can be used to correct transformation errors which may have been
      *      introduced in converting meshes from one format to the other, losing orientation information
      *      (for example, .dae has an "up vector" definition which may have been ignored)
      */
-    bool writeAsInventor(const std::string& outputFilename,  const std::string& fromLink /*= ""*/, 
-        bool useScaleFactor /*= true*/, const EigenTransform& addVisualTransform);
+    bool writeAsInventor(const std::string& outputFilename,  const std::string& fromLink /*= ""*/,
+                         bool useScaleFactor /*= true*/, const EigenTransform& addVisualTransform);
 
     /**
      * Loads the URDF file into the UrdfTraverser (instance passed into the constructor),
      * then joins fixed links (only if \e joinFixed) and then converts the URDF file to
-     * inventor mesh files by calling convert(). 
+     * inventor mesh files by calling convert().
      */
     ConversionResultPtr loadAndConvert(const std::string& urdfFilename,
-        bool joinFixed,
-        const ConversionParametersPtr& params);
+                                       bool joinFixed,
+                                       const ConversionParametersPtr& params);
 
 
     /**
      * Loads the URDF model from file into the UrdfTraverser (instance passed into the constructor),
-     */ 
+     */
     bool loadModelFromFile(const std::string& urdfFilename);
 
     /**
@@ -191,8 +191,8 @@ public:
      *      name can be set here which will convert the model starting from this link name.
      */
     ConversionParametersPtr getBasicConversionParams(const std::string& rootLink,
-        const std::string& material,
-        const EigenTransform& addVisualTransform)
+            const std::string& material,
+            const EigenTransform& addVisualTransform)
     {
         return ConversionParametersPtr(new ConversionParameters(rootLink, material, addVisualTransform));
     }
@@ -238,7 +238,7 @@ public:
     void cleanup();
 
 protected:
-    
+
     UrdfTraverserPtr getTraverser()
     {
         return urdf_traverser;
@@ -249,15 +249,15 @@ protected:
         return urdf_traverser;
     }
 
-  
+
     /**
      * Method called by convert() which can be implemented by subclasses to return a different type of ConversionResult
      * and do any operations required *before* the main body of convert() is being done.
      * See also postConvert().
      * \param rootLink the conversion is to be done starting from this link.
      * \return NULL/invalid shared ptr if pre-conversion failed.
-     */ 
-    virtual ConversionResultPtr preConvert(const ConversionParametersPtr& params); 
+     */
+    virtual ConversionResultPtr preConvert(const ConversionParametersPtr& params);
 
     /**
      * Method called by convert() which can be implemented by subclasses to do any operations
@@ -268,34 +268,34 @@ protected:
      *      with changes applied by the main body of convert() applied to the base class fields.
      * \return Has to be the same as \e result, with possible changes applied.
      *      Set ConversionResult::success to false to indicate failure, or to true to indicate success.
-     */ 
-    virtual ConversionResultPtr postConvert(const ConversionParametersPtr& params, ConversionResultPtr& result); 
+     */
+    virtual ConversionResultPtr postConvert(const ConversionParametersPtr& params, ConversionResultPtr& result);
 
     /**
      * scale the model and the meshes
      */
     bool scale();
-   
+
     inline float getScaleFactor() const
     {
         return scaleFactor;
     }
 
     void addLocalAxes(const LinkConstPtr& link, SoSeparator * addToNode, bool useScaleFactor,
-        float _axesRadius, float _axesLength) const;
+                      float _axesRadius, float _axesLength) const;
 
     EigenTransform getTransform(const LinkPtr& from_link,  const JointPtr& to_joint);
- 
+
 private:
 
     /**
      * Recursive function which returns an inventor node for all links down from (and including) from_link.
      * See other getAsInventor() function.
      */
-    SoNode * getAsInventor(const LinkPtr& from_link, bool useScaleFactor, 
-        bool _addAxes, float _axesRadius, float _axesLength,
-        const EigenTransform& addTransform,
-        std::set<std::string> * textureFiles);
+    SoNode * getAsInventor(const LinkPtr& from_link, bool useScaleFactor,
+                           bool _addAxes, float _axesRadius, float _axesLength,
+                           const EigenTransform& addTransform,
+                           std::set<std::string> * textureFiles);
 
     /**
      * Writes the contents of SoNode into the file of given name.
@@ -307,7 +307,7 @@ private:
      * \param outFilename has to be an inventor filename
      */
     bool writeAsInventor(const std::string& outFilename, const LinkPtr& from_link,
-        bool useScaleFactor /*= true*/, const EigenTransform& addTransform);
+                         bool useScaleFactor /*= true*/, const EigenTransform& addTransform);
 
 
     UrdfTraverserPtr urdf_traverser;

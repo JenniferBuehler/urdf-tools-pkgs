@@ -83,7 +83,7 @@ extern void enforceDirectory(std::string& path, bool printWarn);
 extern bool getSubdirPath(const std::string& from, const std::string& to, std::string& result);
 
 /**
- * Determines the common parent path of \e p1 and \e p2. 
+ * Determines the common parent path of \e p1 and \e p2.
  * If paths are relative, they are converted to absolute relative to the current directory
  * Returns false if there is no commom path, which means the paths don't have a common root.
  * An empty path is returned only if both paths are relative, and the common parent is the
@@ -107,7 +107,7 @@ extern bool getCommonParentPath(const std::set<std::string>& allFiles, std::stri
  *
  * If either \e path or \e relTo are relative paths, they will temporarily be converted to absolute paths
  * within the current directory.
- * \return false if \e path and \e relTo have no common parent path (there has to be at least 
+ * \return false if \e path and \e relTo have no common parent path (there has to be at least
  * a common root).
  */
 extern bool getRelativeDirectory(const std::string& path, const std::string& relTo, std::string& result);
@@ -127,7 +127,7 @@ extern std::string getDirectory(const std::string& path);
 extern bool isDirectoryPath(const std::string& path);
 
 /**
- * Returns the name of the directory at the lowest 
+ * Returns the name of the directory at the lowest
  * level (eg. name of the directory a file is in, not
  * the whole path - only the directory name).
  */

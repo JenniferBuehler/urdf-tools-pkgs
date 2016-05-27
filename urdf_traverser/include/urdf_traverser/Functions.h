@@ -35,73 +35,73 @@
 
 namespace urdf_traverser
 {
-    // Returns the joint's rotation axis as Eigen Vector
-    extern Eigen::Vector3d getRotationAxis(const JointConstPtr& j); 
+// Returns the joint's rotation axis as Eigen Vector
+extern Eigen::Vector3d getRotationAxis(const JointConstPtr& j);
 
-    // Returns if this is an active joint in the URDF description
-    extern bool isActive(const JointPtr& joint);
+// Returns if this is an active joint in the URDF description
+extern bool isActive(const JointPtr& joint);
 
-    extern bool isChildOf(const LinkConstPtr& parent, const LinkConstPtr& child);
-    extern bool isChildJointOf(const LinkConstPtr& parent, const JointConstPtr& joint);
+extern bool isChildOf(const LinkConstPtr& parent, const LinkConstPtr& child);
+extern bool isChildJointOf(const LinkConstPtr& parent, const JointConstPtr& joint);
 
-    /**
-     * \return true if this joint needs a transformation to align its rotation axis with the given axis.
-     * In this case the rotation parameter contains the necessary rotation.
-     */
-    bool jointTransformForAxis(const JointConstPtr& joint, const Eigen::Vector3d& axis, Eigen::Quaterniond& rotation);
+/**
+ * \return true if this joint needs a transformation to align its rotation axis with the given axis.
+ * In this case the rotation parameter contains the necessary rotation.
+ */
+bool jointTransformForAxis(const JointConstPtr& joint, const Eigen::Vector3d& axis, Eigen::Quaterniond& rotation);
 
-    /**
-     *  Scales up the **translation part** of the transform \e t by the given factor
-     */
-    extern void scaleTranslation(EigenTransform& t, double scale_factor);
+/**
+ *  Scales up the **translation part** of the transform \e t by the given factor
+ */
+extern void scaleTranslation(EigenTransform& t, double scale_factor);
 
-    /**
-     * scales the translation part of the joint transform by the given factor
-     */
-    extern bool scaleTranslation(JointPtr& joint, double scale_factor);
+/**
+ * scales the translation part of the joint transform by the given factor
+ */
+extern bool scaleTranslation(JointPtr& joint, double scale_factor);
 
-    /**
-     * scales the translation part of the origins of visuals/collisions/inertial by the given factor
-     */
-    extern void scaleTranslation(LinkPtr& link, double scale_factor);
-
-
-    extern void setTransform(const EigenTransform& t, urdf::Pose& p);
-    extern void setTransform(const EigenTransform& t, JointPtr& joint);
-
-    // Get joint transform to parent
-    extern EigenTransform getTransform(const urdf::Pose& p);
-
-    // Get joint transform to parent
-    extern EigenTransform getTransform(const JointConstPtr& joint); 
-
-    // Get transform to parent link (transform of link's parent joint)
-    extern EigenTransform getTransform(const LinkConstPtr& link); 
-
-    extern Eigen::Matrix4d getTransformMatrix(const LinkConstPtr& from_link,  const LinkConstPtr& to_link);
-
-    extern EigenTransform getTransform(const LinkConstPtr& from_link,  const LinkConstPtr& to_link); 
+/**
+ * scales the translation part of the origins of visuals/collisions/inertial by the given factor
+ */
+extern void scaleTranslation(LinkPtr& link, double scale_factor);
 
 
-    /**
-     * Applies the transformation on the joint transform
-     * \param scaleTransform set to true if the urdf's transforms are to be scaled (using scaleFactor) before applying the transform
-     */
-    extern bool applyTransform(JointPtr& joint, const EigenTransform& trans, bool preMult);
+extern void setTransform(const EigenTransform& t, urdf::Pose& p);
+extern void setTransform(const EigenTransform& t, JointPtr& joint);
 
-    /**
-     * Applies the transformation on the link's visuals, collisions and intertial.
-     * \param scaleTransform set to true if the urdf's transforms are to be scaled (using scaleFactor) before applying the transform
-     */
-    extern void applyTransform(LinkPtr& link, const EigenTransform& trans, bool preMult);
+// Get joint transform to parent
+extern EigenTransform getTransform(const urdf::Pose& p);
 
-    extern void applyTransform(const EigenTransform& t, urdf::Vector3& v);
+// Get joint transform to parent
+extern EigenTransform getTransform(const JointConstPtr& joint);
 
-    /**
-     * Returns all joints between \e from_link and \e to_link which are along the path between the
-     * links - this will only work if there is only one path between both links.
-     */
-    extern std::vector<JointPtr> getChain(const LinkConstPtr& from_link, const LinkConstPtr& to_link);
+// Get transform to parent link (transform of link's parent joint)
+extern EigenTransform getTransform(const LinkConstPtr& link);
+
+extern Eigen::Matrix4d getTransformMatrix(const LinkConstPtr& from_link,  const LinkConstPtr& to_link);
+
+extern EigenTransform getTransform(const LinkConstPtr& from_link,  const LinkConstPtr& to_link);
+
+
+/**
+ * Applies the transformation on the joint transform
+ * \param scaleTransform set to true if the urdf's transforms are to be scaled (using scaleFactor) before applying the transform
+ */
+extern bool applyTransform(JointPtr& joint, const EigenTransform& trans, bool preMult);
+
+/**
+ * Applies the transformation on the link's visuals, collisions and intertial.
+ * \param scaleTransform set to true if the urdf's transforms are to be scaled (using scaleFactor) before applying the transform
+ */
+extern void applyTransform(LinkPtr& link, const EigenTransform& trans, bool preMult);
+
+extern void applyTransform(const EigenTransform& t, urdf::Vector3& v);
+
+/**
+ * Returns all joints between \e from_link and \e to_link which are along the path between the
+ * links - this will only work if there is only one path between both links.
+ */
+extern std::vector<JointPtr> getChain(const LinkConstPtr& from_link, const LinkConstPtr& to_link);
 
 
 

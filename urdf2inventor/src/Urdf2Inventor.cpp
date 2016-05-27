@@ -56,42 +56,44 @@ std::string Urdf2Inventor::TEX_OUTPUT_DIRECTORY_NAME = "textures/";
 
 bool Urdf2Inventor::joinFixedLinks(const std::string& fromLink)
 {
-    std::string startLinkName=fromLink;
-    if (startLinkName.empty()){
+    std::string startLinkName = fromLink;
+    if (startLinkName.empty())
+    {
         startLinkName = urdf_traverser->getRootLinkName();
     }
 //    ROS_INFO_STREAM("Getting as inventor starting from '"<<startLinkName<<"'");
     LinkPtr startLink = urdf_traverser->getLink(startLinkName);
     if (!startLink.get())
     {
-        ROS_ERROR_STREAM("No link named '"<<startLink<<"'");
+        ROS_ERROR_STREAM("No link named '" << startLink << "'");
         return false;
     }
 
     ROS_INFO("############### Joining fixed links");
-    if (!urdf_transform::joinFixedLinks(*urdf_traverser,startLinkName))
+    if (!urdf_transform::joinFixedLinks(*urdf_traverser, startLinkName))
     {
         ROS_ERROR_STREAM("Could not join fixed links");
         return false;
     }
     return true;
 }
-    
+
 bool Urdf2Inventor::allRotationsToAxis(const std::string& fromLinkName, const Eigen::Vector3d& axis)
 {
-    std::string startLinkName=fromLinkName;
-    if (startLinkName.empty()){
+    std::string startLinkName = fromLinkName;
+    if (startLinkName.empty())
+    {
         startLinkName = urdf_traverser->getRootLinkName();
     }
 //    ROS_INFO_STREAM("Getting as inventor starting from '"<<startLinkName<<"'");
     LinkPtr startLink = urdf_traverser->getLink(startLinkName);
     if (!startLink.get())
     {
-        ROS_ERROR_STREAM("No link named '"<<startLink<<"'");
+        ROS_ERROR_STREAM("No link named '" << startLink << "'");
         return false;
     }
 
-    ROS_INFO_STREAM("############### Aligning rotation axis to "<<axis);
+    ROS_INFO_STREAM("############### Aligning rotation axis to " << axis);
     if (!urdf_transform::allRotationsToAxis(*urdf_traverser, fromLinkName, axis))
     {
         ROS_ERROR_STREAM("Could not align to axis");
@@ -102,14 +104,14 @@ bool Urdf2Inventor::allRotationsToAxis(const std::string& fromLinkName, const Ei
 
 bool Urdf2Inventor::scale()
 {
-    if (fabs(scaleFactor-1.0)<1e-04)
+    if (fabs(scaleFactor - 1.0) < 1e-04)
     {
         //ROS_INFO("Scale factor 1, so no need to scale model");
         return true;
     }
     ROS_INFO("############### Scaling model");
 
-    if (!urdf_transform::scaleModel(*urdf_traverser,scaleFactor))
+    if (!urdf_transform::scaleModel(*urdf_traverser, scaleFactor))
     {
         ROS_ERROR("Could not scale model");
         return false;
@@ -141,7 +143,7 @@ urdf_traverser::EigenTransform Urdf2Inventor::getTransform(const LinkPtr& from_l
 Urdf2Inventor::ConversionResultPtr Urdf2Inventor::preConvert(const ConversionParametersPtr& params)
 {
     ConversionResultPtr res(new ConversionResultT(OUTPUT_EXTENSION, MESH_OUTPUT_DIRECTORY_NAME, TEX_OUTPUT_DIRECTORY_NAME));
-    res->success=false;
+    res->success = false;
     return res;
 }
 
@@ -171,11 +173,11 @@ Urdf2Inventor::ConversionResultPtr Urdf2Inventor::convert(const ConversionParame
 
     std::map<std::string, std::set<std::string> > textureFiles;
     if (!urdf2inventor::convertMeshes(*urdf_traverser, params->rootLinkName,
-                scaleFactor,
-                params->material,
-                OUTPUT_EXTENSION,
-                params->addVisualTransform,
-                res->meshes, textureFiles))
+                                      scaleFactor,
+                                      params->material,
+                                      OUTPUT_EXTENSION,
+                                      params->addVisualTransform,
+                                      res->meshes, textureFiles))
     {
         ROS_ERROR("Could not convert meshes");
         return res;
@@ -191,11 +193,11 @@ Urdf2Inventor::ConversionResultPtr Urdf2Inventor::convert(const ConversionParame
         return res;
     }
 
-/*    for (std::map<std::string, std::set<std::string> >::iterator mit=res->textureFiles.begin(); mit!=res->textureFiles.end(); ++mit)
-    {
-        for (std::set<std::string>::iterator tit=mit->second.begin(); tit!=mit->second.end(); ++tit)
-            ROS_INFO_STREAM("Required: cp "<<*tit<<" "<<mit->first);
-    }*/
+    /*    for (std::map<std::string, std::set<std::string> >::iterator mit=res->textureFiles.begin(); mit!=res->textureFiles.end(); ++mit)
+        {
+            for (std::set<std::string>::iterator tit=mit->second.begin(); tit!=mit->second.end(); ++tit)
+                ROS_INFO_STREAM("Required: cp "<<*tit<<" "<<mit->first);
+        }*/
 
     return postConvert(params, res);
 }
@@ -254,7 +256,7 @@ bool Urdf2Inventor::writeInventorFile(SoNode * node, const std::string& filename
     return transform;
 }*/
 
-void Urdf2Inventor::printJointNames(const std::string& fromLink) 
+void Urdf2Inventor::printJointNames(const std::string& fromLink)
 {
     std::vector<std::string> jointNames;
     if (!getJointNames(fromLink, false, jointNames))
@@ -263,12 +265,12 @@ void Urdf2Inventor::printJointNames(const std::string& fromLink)
     }
     else
     {
-        ROS_INFO_STREAM("Joint names starting from "<<fromLink<<":");
-        for (int i=0; i<jointNames.size(); ++i) ROS_INFO_STREAM(jointNames[i]);
+        ROS_INFO_STREAM("Joint names starting from " << fromLink << ":");
+        for (int i = 0; i < jointNames.size(); ++i) ROS_INFO_STREAM(jointNames[i]);
         ROS_INFO("---");
     }
 }
-    
+
 /*
 SoNode * Urdf2Inventor::loadAndGetAsInventor(const std::string& urdfFilename,
     const std::string from_link, bool useScaleFactor,   )
@@ -278,7 +280,7 @@ SoNode * Urdf2Inventor::loadAndGetAsInventor(const std::string& urdfFilename,
         ROS_ERROR("Could not load file");
         return NULL;
     }
-    
+
 
     ROS_INFO("Converting robot %s URDF to inventor", getRobotName().c_str());
     std::string rootLink=from_link;
@@ -291,46 +293,46 @@ SoNode * Urdf2Inventor::loadAndGetAsInventor(const std::string& urdfFilename,
 
 
 void Urdf2Inventor::addLocalAxes(const LinkConstPtr& link, SoSeparator * addToNode, bool useScaleFactor,
-    float _axesRadius, float _axesLength) const
+                                 float _axesRadius, float _axesLength) const
 {
     bool active = urdf_traverser::isActive(link->parent_joint);
     float rad = _axesRadius;
-    float rotRad = _axesRadius/3;
-    float h=_axesLength;
-    float rotH=h*1.8;
+    float rotRad = _axesRadius / 3;
+    float h = _axesLength;
+    float rotH = h * 1.8;
     float rtr, rtg, rtb;
     // rotation axis pink
     rtr = rtb = 1;
     rtg = 0;
     if (useScaleFactor)
     {
-        rad*=scaleFactor;
-        h*=scaleFactor;
-        rotRad*=scaleFactor;
-        rotH*=scaleFactor;
+        rad *= scaleFactor;
+        h *= scaleFactor;
+        rotRad *= scaleFactor;
+        rotH *= scaleFactor;
     }
     if (!active)
     {
-        rad/=2;
-        h*=1.5;
+        rad /= 2;
+        h *= 1.5;
     }
     urdf2inventor::addLocalAxes(addToNode, rad, h);
-   
-    Eigen::Vector3d rotAxis(0,0,1);
-    if(link->parent_joint) rotAxis=urdf_traverser::getRotationAxis(link->parent_joint);
-    Eigen::Vector3d z(0,0,1);
+
+    Eigen::Vector3d rotAxis(0, 0, 1);
+    if (link->parent_joint) rotAxis = urdf_traverser::getRotationAxis(link->parent_joint);
+    Eigen::Vector3d z(0, 0, 1);
     Eigen::Quaterniond q;
     q.setIdentity();
-    if (active) q=Eigen::Quaterniond::FromTwoVectors(z, rotAxis);
-    urdf2inventor::addCylinder(addToNode,Eigen::Vector3d(0,0,0), q, rotRad, rotH, rtr, rtg, rtb);
+    if (active) q = Eigen::Quaterniond::FromTwoVectors(z, rotAxis);
+    urdf2inventor::addCylinder(addToNode, Eigen::Vector3d(0, 0, 0), q, rotRad, rotH, rtr, rtg, rtb);
 }
 
 
 SoNode * Urdf2Inventor::getAsInventor(const LinkPtr& from_link, bool useScaleFactor,
-    bool _addAxes, float _axesRadius, float _axesLength,
-    const EigenTransform& addVisualTransform,
-    std::set<std::string> * textureFiles
-    )
+                                      bool _addAxes, float _axesRadius, float _axesLength,
+                                      const EigenTransform& addVisualTransform,
+                                      std::set<std::string> * textureFiles
+                                     )
 {
     if (!from_link.get())
     {
@@ -339,9 +341,9 @@ SoNode * Urdf2Inventor::getAsInventor(const LinkPtr& from_link, bool useScaleFac
     }
     // ROS_INFO_STREAM("Get all visuals of "<<from_link->name);//<<" (parent joint "<<from_link->parent_joint->name<<")");
     SoNode * allVisuals = getAllVisuals(from_link,
-        useScaleFactor ? scaleFactor : 1.0,
-        addVisualTransform,
-        useScaleFactor);
+                                        useScaleFactor ? scaleFactor : 1.0,
+                                        addVisualTransform,
+                                        useScaleFactor);
     if (!allVisuals)
     {
         ROS_ERROR("Could not get visuals");
@@ -350,19 +352,19 @@ SoNode * Urdf2Inventor::getAsInventor(const LinkPtr& from_link, bool useScaleFac
 
     if (textureFiles)
     {
-        // collect all relative texture filenames from the absolute texture paths. 
+        // collect all relative texture filenames from the absolute texture paths.
         std::set<std::string> allFiles =  urdf2inventor::getAllTexturePaths(allVisuals);
         textureFiles->insert(allFiles.begin(), allFiles.end());
     }
 
-    if (_addAxes) 
+    if (_addAxes)
     {
         SoSeparator * _allVisuals = dynamic_cast<SoSeparator*>(allVisuals);
         if (!_allVisuals)
         {
-            ROS_WARN_STREAM("The node for link "<<from_link->name<<" is not a separator, so cannot add axes");
+            ROS_WARN_STREAM("The node for link " << from_link->name << " is not a separator, so cannot add axes");
         }
-        else 
+        else
         {
             addLocalAxes(from_link, _allVisuals, useScaleFactor, _axesRadius, _axesLength);
         }
@@ -373,17 +375,17 @@ SoNode * Urdf2Inventor::getAsInventor(const LinkPtr& from_link, bool useScaleFac
     {
         JointPtr joint = *pj;
         // ROS_INFO_STREAM("Get inventor files down from joint "<<joint->name);
-        LinkPtr childLink=urdf_traverser->getLink(joint->child_link_name);
+        LinkPtr childLink = urdf_traverser->getLink(joint->child_link_name);
         if (!childLink.get())
         {
-            ROS_ERROR_STREAM("Consistency: Link "<<joint->child_link_name<<" does not exist.");
+            ROS_ERROR_STREAM("Consistency: Link " << joint->child_link_name << " does not exist.");
             return NULL;
         }
         SoNode * childNode = getAsInventor(childLink, useScaleFactor,
-            _addAxes, _axesRadius, _axesLength, addVisualTransform, textureFiles);
+                                           _addAxes, _axesRadius, _axesLength, addVisualTransform, textureFiles);
         if (!childNode)
         {
-            ROS_ERROR_STREAM("Could not get child node for "<<childLink->name);
+            ROS_ERROR_STREAM("Could not get child node for " << childLink->name);
             return NULL;
         }
         EigenTransform jointTransform = urdf_traverser::getTransform(joint);
@@ -400,50 +402,52 @@ SoNode * Urdf2Inventor::getAsInventor(const LinkPtr& from_link, bool useScaleFac
 
 
 SoNode * Urdf2Inventor::getAsInventor(const std::string& fromLink, bool useScaleFactor,
-    bool _addAxes, float _axesRadius, float _axesLength, const EigenTransform& addVisualTransform,
-    std::set<std::string> * textureFiles
-    )
+                                      bool _addAxes, float _axesRadius, float _axesLength, const EigenTransform& addVisualTransform,
+                                      std::set<std::string> * textureFiles
+                                     )
 {
-    std::string startLinkName=fromLink;
-    if (startLinkName.empty()){
+    std::string startLinkName = fromLink;
+    if (startLinkName.empty())
+    {
         startLinkName = urdf_traverser->getRootLinkName();
     }
 //    ROS_INFO_STREAM("Getting as inventor starting from '"<<startLinkName<<"'");
     LinkPtr startLink = urdf_traverser->getLink(startLinkName);
     if (!startLink.get())
     {
-        ROS_ERROR_STREAM("No link named '"<<startLink<<"'");
+        ROS_ERROR_STREAM("No link named '" << startLink << "'");
         return NULL;
     }
     SoNode * root = getAsInventor(startLink, useScaleFactor, _addAxes, _axesRadius, _axesLength,
-            addVisualTransform, textureFiles);
+                                  addVisualTransform, textureFiles);
     urdf2inventor::removeTextureCopies(root);
     return root;
 }
 
 
 bool Urdf2Inventor::writeAsInventor(const std::string& ivFilename,
-    const std::string& fromLink,
-    bool useScaleFactor, const EigenTransform& addVisualTransform)
+                                    const std::string& fromLink,
+                                    bool useScaleFactor, const EigenTransform& addVisualTransform)
 {
-    std::string startLinkName=fromLink;
-    if (startLinkName.empty()){
+    std::string startLinkName = fromLink;
+    if (startLinkName.empty())
+    {
         startLinkName = urdf_traverser->getRootLinkName();
     }
 //    ROS_INFO_STREAM("Getting as inventor starting from '"<<startLinkName<<"'");
     LinkPtr startLink = urdf_traverser->getLink(startLinkName);
     if (!startLink.get())
     {
-        ROS_ERROR_STREAM("No link named '"<<startLinkName<<"'");
+        ROS_ERROR_STREAM("No link named '" << startLinkName << "'");
         return false;
     }
 
-    ROS_INFO_STREAM("Writing from link '"<<startLinkName<<"' to file "<<ivFilename);
+    ROS_INFO_STREAM("Writing from link '" << startLinkName << "' to file " << ivFilename);
     return writeAsInventor(ivFilename, startLink, useScaleFactor, addVisualTransform);
 }
 
 bool Urdf2Inventor::writeAsInventor(const std::string& ivFilename, const LinkPtr& from_link,
-    bool useScaleFactor, const EigenTransform& addVisualTransform)
+                                    bool useScaleFactor, const EigenTransform& addVisualTransform)
 {
     ROS_INFO("Converting model...");
 
@@ -463,11 +467,11 @@ bool Urdf2Inventor::writeAsInventor(const std::string& ivFilename, const LinkPtr
         ROS_ERROR("Could not get the mesh file content");
         return false;
     }
-   
+
     // handle textures: adjust file references, if required.
     if (!textureFiles.empty())
     {
-    
+
         // get common parent path of all textures
         std::string commonParent;
         if (!urdf_traverser::helpers::getCommonParentPath(textureFiles, commonParent))
@@ -477,7 +481,7 @@ bool Urdf2Inventor::writeAsInventor(const std::string& ivFilename, const LinkPtr
         }
 
         // ROS_INFO_STREAM("Common parent path for all textures: "<<commonParent);
-        
+
         std::string fileDir = urdf_traverser::helpers::getDirectory(ivFilename);
         //std::string fileDir = urdf_traverser::helpers::getDirectoryName(ivFilename);
 
@@ -488,7 +492,7 @@ bool Urdf2Inventor::writeAsInventor(const std::string& ivFilename, const LinkPtr
         ROS_INFO("Fixing texture file references...");
         if (!urdf2inventor::helpers::fixFileReferences(
                     fileDir,
-                    fileDir+TEX_OUTPUT_DIRECTORY_NAME,
+                    fileDir + TEX_OUTPUT_DIRECTORY_NAME,
                     commonParent,
                     textureFiles,
                     resultFileContent, texToCopy))
@@ -510,12 +514,12 @@ bool Urdf2Inventor::writeAsInventor(const std::string& ivFilename, const LinkPtr
     // write content to file
     if (!urdf_traverser::helpers::writeToFile(resultFileContent, ivFilename))
     {
-        ROS_ERROR_STREAM("Could not write file " <<ivFilename);
+        ROS_ERROR_STREAM("Could not write file " << ivFilename);
         return false;
     }
-    
-    ROS_INFO_STREAM("Whole robot model written to "<<ivFilename);
- 
+
+    ROS_INFO_STREAM("Whole robot model written to " << ivFilename);
+
 
     return true;
 }
@@ -527,7 +531,7 @@ Urdf2Inventor::ConversionResultPtr Urdf2Inventor::loadAndConvert(const std::stri
     ConversionResultPtr failResult(new ConversionResultT(OUTPUT_EXTENSION, MESH_OUTPUT_DIRECTORY_NAME, TEX_OUTPUT_DIRECTORY_NAME));
     failResult->success = false;
 
-    ROS_INFO_STREAM("Loading model from file "<<urdfFilename);
+    ROS_INFO_STREAM("Loading model from file " << urdfFilename);
 
     if (!urdf_traverser->loadModelFromFile(urdfFilename))
     {
@@ -551,7 +555,7 @@ Urdf2Inventor::ConversionResultPtr Urdf2Inventor::loadAndConvert(const std::stri
         ROS_ERROR("Could not do the conversion");
         return result;
     }
-    
+
     // ROS_INFO_STREAM("Contacts generated: "<<result.contacts);
     return result;
 }

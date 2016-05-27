@@ -19,8 +19,8 @@ public:
     typedef MeshConvertRecursionParams<MeshFormat> Self;
     typedef typename baselib_binding::shared_ptr<Self>::type Ptr;
     explicit MeshConvertRecursionParams(double _scale_factor, const std::string _material,
-                               const std::string& _extension,
-                               const urdf_traverser::EigenTransform& _addVisualTransform):
+                                        const std::string& _extension,
+                                        const urdf_traverser::EigenTransform& _addVisualTransform):
         FactorRecursionParams(_scale_factor),
         material(_material),
         extension(_extension),
@@ -41,9 +41,9 @@ public:
     // will have.
     std::string extension;
 
-    /** 
+    /**
      * this transform will be post-multiplied on all links' **visuals** (not links!) local
-     * transform (their "origin"). This can be used to correct transformation errors which may have been 
+     * transform (their "origin"). This can be used to correct transformation errors which may have been
      * introduced in converting meshes from one format to the other, losing orientation information
      * (for example, .dae has an "up vector" definition which may have been ignored)
      */
@@ -62,7 +62,7 @@ public:
     // Key is the same as in \e resultMeshes.
     std::map<std::string, std::set<std::string> > textureFiles;
 private:
-    explicit MeshConvertRecursionParams(){}
+    explicit MeshConvertRecursionParams() {}
 };
 
 }  // namespace

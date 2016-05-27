@@ -52,7 +52,7 @@ std::string UrdfTraverser::getRootLinkName() const
 
 bool UrdfTraverser::printModel(const std::string& fromLink, bool verbose)
 {
-    return urdf_traverser::printModel(*this,fromLink,verbose);
+    return urdf_traverser::printModel(*this, fromLink, verbose);
 }
 
 bool UrdfTraverser::printModel(bool verbose)
@@ -73,12 +73,13 @@ bool UrdfTraverser::getDependencyOrderedJoints(std::vector<JointPtr>& result, co
     return urdf_traverser::getDependencyOrderedJoints(*this, result, from_link->name, allowSplits, onlyActive);
 }
 
-    
+
 bool UrdfTraverser::getJointNames(const std::string& fromLink,
-            const bool skipFixed, std::vector<std::string>& result)
+                                  const bool skipFixed, std::vector<std::string>& result)
 {
-    std::string rootLink=fromLink;
-    if (rootLink.empty()){
+    std::string rootLink = fromLink;
+    if (rootLink.empty())
+    {
         rootLink = getRootLinkName();
     }
 
@@ -107,7 +108,8 @@ int UrdfTraverser::getChildJoint(const JointPtr& joint, JointPtr& child)
         return -1;
     }
     if (childLink->child_joints.empty())
-    {   // this is the end link, and we've defined the end
+    {
+        // this is the end link, and we've defined the end
         // frame to be at the same location as the last joint,
         // so no rotation should be needed?
         return 0;
@@ -159,19 +161,19 @@ bool UrdfTraverser::hasChildLink(const LinkConstPtr& link, const std::string& ch
 
 
 int UrdfTraverser::traverseTreeTopDown(const std::string& linkName, boost::function< int(RecursionParamsPtr&)> link_cb,
-                                      RecursionParamsPtr& params, bool includeLink)
+                                       RecursionParamsPtr& params, bool includeLink)
 {
-    LinkPtr link=getLink(linkName);
+    LinkPtr link = getLink(linkName);
     if (!link)
     {
-        ROS_ERROR_STREAM("Could not get Link "<<linkName);
+        ROS_ERROR_STREAM("Could not get Link " << linkName);
         return -1;
     }
     return traverseTreeTopDown(link, link_cb, params, includeLink, 0);
 }
 
 int UrdfTraverser::traverseTreeTopDown(const LinkPtr& link, boost::function< int(RecursionParamsPtr&)> link_cb,
-                                      RecursionParamsPtr& params, bool includeLink, unsigned int level)
+                                       RecursionParamsPtr& params, bool includeLink, unsigned int level)
 {
     if (includeLink)
     {
@@ -217,12 +219,12 @@ int UrdfTraverser::traverseTreeTopDown(const LinkPtr& link, boost::function< int
 };
 
 int UrdfTraverser::traverseTreeBottomUp(const std::string& linkName, boost::function< int(RecursionParamsPtr&)> link_cb,
-                                      RecursionParamsPtr& params, bool includeLink)
+                                        RecursionParamsPtr& params, bool includeLink)
 {
-    LinkPtr link=getLink(linkName);
+    LinkPtr link = getLink(linkName);
     if (!link)
     {
-        ROS_ERROR_STREAM("Could not get Link "<<linkName);
+        ROS_ERROR_STREAM("Could not get Link " << linkName);
         return -1;
     }
     return traverseTreeBottomUp(link, link_cb, params, includeLink, 0);
@@ -231,7 +233,7 @@ int UrdfTraverser::traverseTreeBottomUp(const std::string& linkName, boost::func
 
 
 int UrdfTraverser::traverseTreeBottomUp(const LinkPtr& link, boost::function<int(RecursionParamsPtr&)> link_cb,
-                         RecursionParamsPtr& params, bool includeLink, unsigned int level)
+                                        RecursionParamsPtr& params, bool includeLink, unsigned int level)
 {
     std::set<std::string> toTraverse;
     for (unsigned int i = 0; i < link->child_links.size(); ++i)
@@ -242,12 +244,12 @@ int UrdfTraverser::traverseTreeBottomUp(const LinkPtr& link, boost::function<int
 
     for (std::set<std::string>::iterator it = toTraverse.begin(); it != toTraverse.end(); ++it)
     {
-        if (!hasChildLink(link,*it))
+        if (!hasChildLink(link, *it))
         {
-            ROS_ERROR_STREAM("Consistency: Link "<<link->name<<" does not have child "<<*it<<" any more.");
+            ROS_ERROR_STREAM("Consistency: Link " << link->name << " does not have child " << *it << " any more.");
             return -1;
         }
-        
+
         LinkPtr childLink;
         this->model->getLink(*it, childLink);
 
@@ -255,13 +257,13 @@ int UrdfTraverser::traverseTreeBottomUp(const LinkPtr& link, boost::function<int
         {
             // ROS_INFO("Traversal into child %s",childLink->name.c_str());
             // recurse down the tree
-            int travRes=traverseTreeBottomUp(childLink, link_cb, params, true, level+1);
-            if (travRes==0)
+            int travRes = traverseTreeBottomUp(childLink, link_cb, params, true, level + 1);
+            if (travRes == 0)
             {
                 ROS_INFO("Stopping traversal at %s", childLink->name.c_str());
                 return 0;
             }
-            else if (travRes<0)
+            else if (travRes < 0)
             {
                 ROS_ERROR("Error parsing branch of %s", childLink->name.c_str());
                 return -1;
@@ -281,7 +283,7 @@ int UrdfTraverser::traverseTreeBottomUp(const LinkPtr& link, boost::function<int
     }
     // ROS_INFO("Callback for link %s",link->name.c_str());
     params->setParams(link, level);
-    int cbRet=link_cb(params);
+    int cbRet = link_cb(params);
     if (cbRet < 0)
     {
         ROS_ERROR("Error parsing branch of %s", link->name.c_str());
@@ -322,7 +324,7 @@ urdf_traverser::JointConstPtr UrdfTraverser::readJoint(const std::string& name) 
 }
 
 
-void UrdfTraverser::printJointNames(const std::string& fromLink) 
+void UrdfTraverser::printJointNames(const std::string& fromLink)
 {
     std::vector<std::string> jointNames;
     if (!getJointNames(fromLink, false, jointNames))
@@ -331,8 +333,8 @@ void UrdfTraverser::printJointNames(const std::string& fromLink)
     }
     else
     {
-        ROS_INFO_STREAM("Joint names starting from "<<fromLink<<":");
-        for (int i=0; i<jointNames.size(); ++i) ROS_INFO_STREAM(jointNames[i]);
+        ROS_INFO_STREAM("Joint names starting from " << fromLink << ":");
+        for (int i = 0; i < jointNames.size(); ++i) ROS_INFO_STREAM(jointNames[i]);
         ROS_INFO("---");
     }
 }
@@ -348,7 +350,7 @@ bool UrdfTraverser::loadModelFromFile(const std::string& urdfFilename)
 
     boost::filesystem::path filePath(urdfFilename);
     setModelDirectory(filePath.parent_path().string());
-    ROS_INFO_STREAM("Setting base model directory to "<<modelDir);
+    ROS_INFO_STREAM("Setting base model directory to " << modelDir);
 
     if (!loadModelFromXMLString(xml_file))
     {
