@@ -19,7 +19,6 @@ find_package(catkin REQUIRED COMPONENTS ${CATKIN_PKGS})
 ###################################
 
 set (CATKIN_DEPEND_PKGS roscpp urdf eigen_conversions baselib_binding)
-#set (CATKIN_DEPENDS_LIBS <system libraries>)
 
 ## The catkin_package macro generates cmake config files for your package
 ## Declare things to be passed to dependent projects
@@ -31,7 +30,6 @@ catkin_package(
   INCLUDE_DIRS include
   LIBRARIES urdf_traverser
   CATKIN_DEPENDS ${CATKIN_DEPEND_PKGS} 
-  #DEPENDS ${CATKIN_DEPENDS_LIBS}
   CFG_EXTRAS export_definitions.cmake
 )
 
@@ -96,18 +94,17 @@ target_link_libraries(print_model urdf_traverser ${DEPEND_LIBRARIES})
 # )
 
 ## Mark executables and/or libraries for installation
-# install(TARGETS urdf_traverser
-#   ARCHIVE DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
-#   LIBRARY DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
-#   RUNTIME DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
-# )
+install(TARGETS urdf_traverser print_model
+   ARCHIVE DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
+   LIBRARY DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
+   RUNTIME DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
+)
 
 ## Mark cpp header files for installation
-# install(DIRECTORY include/${PROJECT_NAME}/
-#   DESTINATION ${CATKIN_PACKAGE_INCLUDE_DESTINATION}
-#   FILES_MATCHING PATTERN "*.h"
-#   PATTERN ".svn" EXCLUDE
-# )
+install(DIRECTORY include/${PROJECT_NAME}/
+   DESTINATION ${CATKIN_PACKAGE_INCLUDE_DESTINATION}
+   FILES_MATCHING PATTERN "*.h"
+)
 
 ## Mark other files for installation (e.g. launch and bag files, etc.)
 # install(FILES
