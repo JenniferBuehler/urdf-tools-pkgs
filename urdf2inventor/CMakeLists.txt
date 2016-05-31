@@ -37,7 +37,7 @@ find_package(Boost REQUIRED COMPONENTS filesystem)
 
 set (CATKIN_DEPEND_PKGS roscpp urdf eigen_conversions baselib_binding urdf_traverser urdf_transform)
 
-set (CATKIN_DEPENDS_LIBS libsoqt4-dev libqt4-dev libcoin80-dev libassimp-dev)
+set (CATKIN_DEPENDS_LIBS libsoqt4-dev libqt4-dev libcoin80-dev assimp-dev)
 
 # directories to include and to export with catkin_package
 set (URDF_VIEWER_INCLUDE_DIRS
