@@ -33,7 +33,7 @@ catkin_package(
 ## Build ##
 ###########
 
-add_definitions(${urdf_traverser_DEFINITIONS})
+add_definitions(${baselib_binding_DEFINITIONS} ${urdf_traverser_DEFINITIONS})
 
 ## Specify additional locations of header files
 ## Your package locations should be listed before other locations

@@ -20,7 +20,7 @@
    59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 \*************************************************************************/
 
-/* Author: Nestor Garcia Hidalgo */
+/* Author: Nestor Garcia Hidalgo, extended by Jennifer Buehler */
 
 #include <ros/ros.h>
 #include <urdf2inventor/AssimpImport.h>

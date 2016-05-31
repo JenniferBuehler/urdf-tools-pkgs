@@ -1,5 +1,5 @@
 /**
-    Copyright (C) 2015 Jennifer Buehler
+    Copyright (C) 2016 Jennifer Buehler
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -41,15 +41,6 @@ namespace urdf2inventor
 
 /**
  * \brief This class provides functions to transform a robot described in URDF to the inventor format.
- *
- * Careful: So far, only meshes with .stl and .obj extensions have been tested. There were problems
- * with some .stl meshes and ivcon however (it idles forever, crashes, or even freezes the screen).
- * So far, the best solution is to convert all meshes to .obj beforehand. Package assimp_mesh_converter
- * can be used to do this. At some time (hopefully soon) this will be automated here, and dependency to
- * package ivcon should be removed.
- *
- * TODO: This should be separated in 2 different hierarchies, one to handle the URDF traversal
- * to apply all sorts of functions, and another to do the operations such as mesh conversion and model scaling.
  *
  * \author Jennifer Buehler
  * \date March 2016
