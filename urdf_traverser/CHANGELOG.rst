@@ -2,8 +2,8 @@
 Changelog for package urdf_traverser
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+0.0.1 (2016-05-31)
+------------------
 * urdf2inventor now copies textures for the whole model as well
 * Now exports textures to file for individual meshes, working on getting it to work with overall robot
 * Now can use material from URDF too

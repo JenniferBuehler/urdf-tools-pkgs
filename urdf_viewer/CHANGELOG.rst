@@ -2,8 +2,8 @@
 Changelog for package urdf_viewer
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+0.0.1 (2016-05-31)
+------------------
 * Now exports textures to file for individual meshes, working on getting it to work with overall robot
 * Fixed error in scaling after transforming from assimp
 * Added urdf2inventor and urdf_viewer
