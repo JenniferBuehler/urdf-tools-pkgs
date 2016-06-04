@@ -76,10 +76,15 @@ add_executable(urdf_viewer_node
 add_dependencies(urdf_viewer_node ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
 
 ## Specify libraries to link a library or executable target against
+target_link_libraries(urdf_viewer
+   ${catkin_LIBRARIES}
+)
 target_link_libraries(urdf_viewer_node
    urdf_viewer
    ${catkin_LIBRARIES}
 )
+
+
 
 #############
 ## Install ##
