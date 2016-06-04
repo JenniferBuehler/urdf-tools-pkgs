@@ -2,8 +2,8 @@
 Changelog for package urdf_viewer
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+0.0.3 (2016-06-04)
+------------------
 * Fixed small error in urdf_viewer CMakeLists
 * Contributors: Jennifer Buehler
 
