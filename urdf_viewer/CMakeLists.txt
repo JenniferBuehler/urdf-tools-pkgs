@@ -84,8 +84,6 @@ target_link_libraries(urdf_viewer_node
    ${catkin_LIBRARIES}
 )
 
-
-
 #############
 ## Install ##
 #############
