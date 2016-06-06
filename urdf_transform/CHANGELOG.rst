@@ -2,6 +2,9 @@
 Changelog for package urdf_transform
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+
 0.0.3 (2016-06-04)
 ------------------
 
