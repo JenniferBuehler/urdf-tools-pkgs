@@ -2,8 +2,8 @@
 Changelog for package urdf2inventor
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+0.0.4 (2016-06-06)
+------------------
 * Fixed export depending system libs in cmakelists
 * Contributors: Jennifer Buehler
 

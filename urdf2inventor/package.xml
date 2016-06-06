@@ -1,7 +1,7 @@
 <?xml version="1.0"?>
 <package>
   <name>urdf2inventor</name>
-  <version>0.0.3</version>
+  <version>0.0.4</version>
   <description>A conversion from URDF 2 Inventor including a simple viewer.</description>
 
   <!-- One maintainer tag required, multiple allowed, one person per tag --> 
