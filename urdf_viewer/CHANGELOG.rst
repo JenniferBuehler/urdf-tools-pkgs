@@ -2,8 +2,8 @@
 Changelog for package urdf_viewer
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+1.0.0 (2016-06-07)
+------------------
 * Added installation of launch files
 * Contributors: Jennifer Buehler
 

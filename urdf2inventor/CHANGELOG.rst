@@ -2,8 +2,8 @@
 Changelog for package urdf2inventor
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+1.0.0 (2016-06-07)
+------------------
 * Added missing installation of hpp files
 * Added installation of launch files
 * Contributors: Jennifer Buehler
