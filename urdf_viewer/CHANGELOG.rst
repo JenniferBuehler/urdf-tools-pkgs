@@ -2,6 +2,11 @@
 Changelog for package urdf_viewer
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+* Added installation of launch files
+* Contributors: Jennifer Buehler
+
 0.0.4 (2016-06-06)
 ------------------
 * Fixed export depending system libs in cmakelists
