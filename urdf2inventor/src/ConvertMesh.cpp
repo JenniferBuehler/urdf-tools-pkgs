@@ -300,6 +300,24 @@ SoNode * urdf2inventor::getAllVisuals(const urdf_traverser::LinkPtr link, double
             urdf2inventor::addBox(allVisuals, vTransform, box->dim.x * scale_factor, box->dim.y * scale_factor, box->dim.z * scale_factor, 1, 0, 0, 0);
             break;
         }
+        case urdf::Geometry::CYLINDER:
+        {
+            ROS_INFO("Urdf2Inventor debug: Model has a cylinder");
+            CylinderPtr cylinder = baselib_binding_ns::dynamic_pointer_cast<urdf::Cylinder>(geom);
+            if (!cylinder.get())
+            {
+                ROS_ERROR("Cylinder cast error");
+                return NULL;
+            }
+
+            SoSeparator * cylinderNode = new SoSeparator();
+            cylinderNode->ref();
+            Eigen::Quaterniond rot = Eigen::Quaterniond(vTransform.rotation());
+
+            urdf2inventor::addCylinder(allVisuals, vTransform.translation(),
+                rot, cylinder->radius, cylinder->length, 1, 0, 0, 0);
+            break;
+        }
         default:
         {
             ROS_ERROR_STREAM("This geometry type not supported so far: " << geom->type);

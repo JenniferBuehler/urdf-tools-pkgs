@@ -61,15 +61,17 @@ bool Urdf2Inventor::joinFixedLinks(const std::string& fromLink)
     {
         startLinkName = urdf_traverser->getRootLinkName();
     }
+        
+    ROS_INFO("############### Joining fixed links");
+    ROS_INFO_STREAM("Start from root link: "<<startLinkName);
 //    ROS_INFO_STREAM("Getting as inventor starting from '"<<startLinkName<<"'");
     LinkPtr startLink = urdf_traverser->getLink(startLinkName);
     if (!startLink.get())
     {
-        ROS_ERROR_STREAM("No link named '" << startLink << "'");
+        ROS_ERROR_STREAM("No link named '" << startLinkName << "'");
         return false;
     }
 
-    ROS_INFO("############### Joining fixed links");
     if (!urdf_transform::joinFixedLinks(*urdf_traverser, startLinkName))
     {
         ROS_ERROR_STREAM("Could not join fixed links");

@@ -43,7 +43,7 @@
 
     <!-- /////////  launch node /////////  -->
 
-	<node name="urdf_viewer" pkg="urdf2inventor" type="urdf_viewer" respawn="false"
+	<node name="urdf_viewer" pkg="urdf_viewer" type="urdf_viewer_node" respawn="false"
         output="screen" args="$(arg use_file)">
         <param name="join_fixed_links" value="$(arg join_fixed_links)"/>
         <param name="rotate_axes_z" value="$(arg rotate_axes_z)"/>
