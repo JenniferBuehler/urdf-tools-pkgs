@@ -32,7 +32,9 @@ namespace urdf2inventor
 
 typedef Eigen::Transform<double, 3, Eigen::Affine> EigenTransform;
 
-extern SoTransform * getTransform(const EigenTransform& trans);
+
+extern EigenTransform getEigenTransform(const SbMatrix& m);
+extern SbMatrix getSbMatrix(const urdf2inventor::EigenTransform& m);
 
 /**
  * Adds a SoNode (addAsChild) as a child (to parent), transformed by the given transform (eTrans)
@@ -58,10 +60,21 @@ extern void addBox(SoSeparator * addToNode, const EigenTransform& trans,
                    float r, float g, float b, float a = 0);
 
 /**
- * Add a cylinder oriented around z axis, pointed along +z, originating at \e pos
+ * Add a cylinder oriented around z axis, pointed along +z, originating at \e pos.
+ * The rotation \e rot is going to be post-multiplied on the \e pos translation.
+ * This function is deprecated, use other addCylinder (with EigenTransform parameter) instead.
  */
 extern void addCylinder(SoSeparator * addToNode, const Eigen::Vector3d& pos,
                         const Eigen::Quaterniond& rot,
+                        float radius, float height,
+                        float r, float g, float b, float a = 0);
+
+/**
+ * Add a cylinder oriented around z axis, pointed along +z to \e addToNode, and transform
+ * the cylinder given \e trans from \e addToNode.
+ */
+extern void addCylinder(SoSeparator * addToNode, 
+                        const urdf2inventor::EigenTransform& trans,
                         float radius, float height,
                         float r, float g, float b, float a = 0);
 

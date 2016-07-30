@@ -65,7 +65,7 @@ public:
      * TODO: For some reason I haven't yet further investigated, this has to be called **after**
      * functions as Urdf2Inventor::loadAndGetAsInventor(), or it won't work. Find out why, and fix it.
      */
-    void init(const char * windowName = "InventorViewer");
+    void init(const char * windowName = "InventorViewer", float bck_r=0.3, float bck_g=0.3, float bck_b=0.3);
 
     /**
      * Load a model into the viewer
@@ -92,13 +92,20 @@ protected:
 
     /**
      * Calculates the correct face normal of the pick point.
+     * \param shapeIdx output: the index in the \e pick path at which the actual shape resides. 
+     *      Normal coordinates are in the frame of this shape.
      */
-    static bool computeCorrectFaceNormal(const SoPickedPoint * pick, bool ccw_face, Eigen::Vector3d& normal);
+    static bool computeCorrectFaceNormal(const SoPickedPoint * pick, bool ccw_face, Eigen::Vector3d& normal, int& shapeIdx);
 
     /**
-     * Helper function which can be used to determine a URDF link name from a picked path
+     * Helper function which can be used to determine a URDF link name from a picked path. Links are found
+     * based on their name (which is formatted *_visual_<number>_<name>). The last link found in the path
+     * is returned. 
+     * \param linkName output: name of the link
+     * \param visualNum output: number of the link in the name
+     * \param pathIdx output: index the link has in the path.
      */
-    static SoNode * getLinkDesc(const SoPath * path, std::string& linkName, int& visualNum);
+    static SoNode * getLinkDesc(const SoPath * path, std::string& linkName, int& visualNum, int& pathIdx);
 
     SoQtExaminerViewer * getViewer()
     {

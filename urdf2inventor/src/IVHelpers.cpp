@@ -92,12 +92,93 @@ std::set<std::string> urdf2inventor::getAllTexturePaths(SoNode * root)
     return allFiles;
 }
 
+urdf2inventor::EigenTransform urdf2inventor::getEigenTransform(const SbMatrix& m)
+{
+    Eigen::Matrix3d em;
+    /*em(0,0)=m[0][0];
+    em(0,1)=m[0][1];
+    em(0,2)=m[0][2];
+    em(0,3)=m[0][3];
+    em(1,0)=m[1][0];
+    em(1,1)=m[1][1];
+    em(1,2)=m[1][2];
+    em(1,3)=m[1][3];
+    em(2,0)=m[2][0];
+    em(2,1)=m[2][1];
+    em(2,2)=m[2][2];
+    em(2,3)=m[2][3];
+    em(3,0)=m[3][0];
+    em(3,1)=m[3][1];
+    em(3,2)=m[3][2];
+    em(3,3)=m[3][3];*/
+
+    em(0,0)=m[0][0];
+    em(0,1)=m[1][0];
+    em(0,2)=m[2][0];
+    em(0,3)=m[3][0];
+    em(1,0)=m[0][1];
+    em(1,1)=m[1][1];
+    em(1,2)=m[2][1];
+    em(1,3)=m[3][1];
+    em(2,0)=m[0][2];
+    em(2,1)=m[1][2];
+    em(2,2)=m[2][2];
+    em(2,3)=m[3][2];
+    em(3,0)=m[0][3];
+    em(3,1)=m[1][3];
+    em(3,2)=m[2][3];
+    em(3,3)=m[3][3];
+    
+    return urdf2inventor::EigenTransform(em);
+}
+
+SbMatrix urdf2inventor::getSbMatrix(const urdf2inventor::EigenTransform& m)
+{
+    SbMatrix sm;
+    /*sm[0][0]=m(0,0);
+    sm[0][1]=m(0,1);
+    sm[0][2]=m(0,2);
+    sm[0][3]=m(0,3);
+    sm[1][0]=m(1,0);
+    sm[1][1]=m(1,1);
+    sm[1][2]=m(1,2);
+    sm[1][3]=m(1,3);
+    sm[2][0]=m(2,0);
+    sm[2][1]=m(2,1);
+    sm[2][2]=m(2,2);
+    sm[2][3]=m(2,3);
+    sm[3][0]=m(3,0);
+    sm[3][1]=m(3,1);
+    sm[3][2]=m(3,2);
+    sm[3][3]=m(3,3);*/
+
+    sm[0][0]=m(0,0);
+    sm[0][1]=m(1,0);
+    sm[0][2]=m(2,0);
+    sm[0][3]=m(3,0);
+    sm[1][0]=m(0,1);
+    sm[1][1]=m(1,1);
+    sm[1][2]=m(2,1);
+    sm[1][3]=m(3,1);
+    sm[2][0]=m(0,2);
+    sm[2][1]=m(1,2);
+    sm[2][2]=m(2,2);
+    sm[2][3]=m(3,2);
+    sm[3][0]=m(0,3);
+    sm[3][1]=m(1,3);
+    sm[3][2]=m(2,3);
+    sm[3][3]=m(3,3);
+    
+    return sm;
+}
 
 
-SoTransform * urdf2inventor::getTransform(const urdf2inventor::EigenTransform& eTrans)
+SoTransform * getSoTransform(const urdf2inventor::EigenTransform& eTrans)
 {
     SoTransform * transform = new SoTransform();
 
+    transform->setMatrix(urdf2inventor::getSbMatrix(eTrans));
+/*
     SoSFVec3f translation;
     translation.setValue(eTrans.translation().x(), eTrans.translation().y(), eTrans.translation().z());
     transform->translation = translation;
@@ -105,14 +186,15 @@ SoTransform * urdf2inventor::getTransform(const urdf2inventor::EigenTransform& e
     SoSFRotation rotation;
     Eigen::Quaterniond vQuat(eTrans.rotation());
     rotation.setValue(vQuat.x(), vQuat.y(), vQuat.z(), vQuat.w());
-    transform->rotation = rotation;
+    transform->rotation = rotation;*/
+
     return transform;
 }
 
 SoSeparator * urdf2inventor::addSubNode(SoNode * addAsChild,
                                         SoNode* parent, const urdf2inventor::EigenTransform& eTrans)
 {
-    SoTransform * transform = getTransform(eTrans);
+    SoTransform * transform = getSoTransform(eTrans);
     return urdf2inventor::addSubNode(addAsChild, parent, transform);
 }
 
@@ -195,8 +277,8 @@ void urdf2inventor::addSphere(SoSeparator * addToNode, const Eigen::Vector3d& po
     addSubNode(s, addToNode, trans, mat);
 }
 
-void urdf2inventor::addCylinder(SoSeparator * addToNode, const Eigen::Vector3d& pos,
-                                const Eigen::Quaterniond& rot,
+void urdf2inventor::addCylinder(SoSeparator * addToNode, 
+                                const urdf2inventor::EigenTransform& extraTrans,
                                 float radius, float height,
                                 float r, float g, float b, float a)
 {
@@ -227,14 +309,25 @@ void urdf2inventor::addCylinder(SoSeparator * addToNode, const Eigen::Vector3d& 
     // SoCylinder is oriented along y axis, so change this to z axis
     // and also translate such that it extends along +z
     Eigen::Quaterniond toZ = Eigen::Quaterniond::FromTwoVectors(Eigen::Vector3d(0, 1, 0), Eigen::Vector3d(0, 0, 1));
-    EigenTransform trans;
-    trans.setIdentity();
-    trans.translate(pos);
-    trans.rotate(rot);
+    EigenTransform trans = extraTrans;
     trans.translate(Eigen::Vector3d(0, 0, height / 2.0));
     trans.rotate(toZ);
 
     addSubNode(c, addToNode, trans, mat);
+}
+
+
+
+void urdf2inventor::addCylinder(SoSeparator * addToNode, const Eigen::Vector3d& pos,
+                                const Eigen::Quaterniond& rot,
+                                float radius, float height,
+                                float r, float g, float b, float a)
+{
+    EigenTransform trans;
+    trans.setIdentity();
+    trans.translate(pos);
+    trans.rotate(rot);
+    addCylinder(addToNode, trans, radius, height, r, g, b, a);
 }
 
 void urdf2inventor::addLocalAxes(SoSeparator * addToNode, float axesRadius, float axesLength)
