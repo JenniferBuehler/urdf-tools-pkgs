@@ -29,10 +29,32 @@
 
 #include <Inventor/actions/SoWriteAction.h>
 #include <Inventor/actions/SoSearchAction.h>
+#include <Inventor/SbBox.h>
+#include <Inventor/actions/SoGetBoundingBoxAction.h>
 
 #include <boost/filesystem.hpp>
 
 #include <iostream>
+#include <sstream>
+
+
+void urdf2inventor::getBoundingBox(SoNode* node, Eigen::Vector3d& minPoint, Eigen::Vector3d& maxPoint)
+{
+    minPoint=Eigen::Vector3d(0,0,0);
+    maxPoint=Eigen::Vector3d(0,0,0);
+
+    // viewport required for any viewport-dependent 
+    // nodes (eg text), but not required for others
+    SbViewportRegion anyVP(0,0);  
+    SoGetBoundingBoxAction bbAction( anyVP );
+    bbAction.apply( node );
+    SbBox3f bbox = bbAction.getBoundingBox();
+    const SbVec3f& minIV = bbox.getMin();
+    const SbVec3f& maxIV = bbox.getMax();
+    minPoint=Eigen::Vector3d(minIV[0], minIV[1], minIV[2]);
+    maxPoint=Eigen::Vector3d(maxIV[0], maxIV[1], maxIV[2]);
+}
+
 
 bool urdf2inventor::writeInventorFileString(SoNode * node, std::string& result)
 {
@@ -92,26 +114,22 @@ std::set<std::string> urdf2inventor::getAllTexturePaths(SoNode * root)
     return allFiles;
 }
 
+std::string urdf2inventor::printMatrix(const urdf2inventor::EigenTransform& em)
+{
+    std::stringstream s;
+    s<< em(0,0)<<","<<em(0,1)<<","<<em(0,2)<<","<<em(0,3)<<","<<std::endl<<
+    em(1,0)<<","<<em(1,1)<<","<<em(1,2)<<","<<em(1,3)<<","<<std::endl<<
+    em(2,0)<<","<<em(2,1)<<","<<em(2,2)<<","<<em(2,3)<<","<<std::endl<<
+    em(3,0)<<","<<em(3,1)<<","<<em(3,2)<<","<<em(3,3)<<","<<std::endl;
+    return s.str();
+}
+
 urdf2inventor::EigenTransform urdf2inventor::getEigenTransform(const SbMatrix& m)
 {
     Eigen::Matrix3d em;
-    /*em(0,0)=m[0][0];
-    em(0,1)=m[0][1];
-    em(0,2)=m[0][2];
-    em(0,3)=m[0][3];
-    em(1,0)=m[1][0];
-    em(1,1)=m[1][1];
-    em(1,2)=m[1][2];
-    em(1,3)=m[1][3];
-    em(2,0)=m[2][0];
-    em(2,1)=m[2][1];
-    em(2,2)=m[2][2];
-    em(2,3)=m[2][3];
-    em(3,0)=m[3][0];
-    em(3,1)=m[3][1];
-    em(3,2)=m[3][2];
-    em(3,3)=m[3][3];*/
 
+    // Matrix is transposed: SbMatrix m[i][j] is the value in column i and row j.
+    // Eigen: operator() (Index row, Index col) 
     em(0,0)=m[0][0];
     em(0,1)=m[1][0];
     em(0,2)=m[2][0];
@@ -135,23 +153,8 @@ urdf2inventor::EigenTransform urdf2inventor::getEigenTransform(const SbMatrix& m
 SbMatrix urdf2inventor::getSbMatrix(const urdf2inventor::EigenTransform& m)
 {
     SbMatrix sm;
-    /*sm[0][0]=m(0,0);
-    sm[0][1]=m(0,1);
-    sm[0][2]=m(0,2);
-    sm[0][3]=m(0,3);
-    sm[1][0]=m(1,0);
-    sm[1][1]=m(1,1);
-    sm[1][2]=m(1,2);
-    sm[1][3]=m(1,3);
-    sm[2][0]=m(2,0);
-    sm[2][1]=m(2,1);
-    sm[2][2]=m(2,2);
-    sm[2][3]=m(2,3);
-    sm[3][0]=m(3,0);
-    sm[3][1]=m(3,1);
-    sm[3][2]=m(3,2);
-    sm[3][3]=m(3,3);*/
-
+    // Matrix is transposed: SbMatrix m[i][j] is the value in column i and row j.
+    // Eigen: operator() (Index row, Index col) 
     sm[0][0]=m(0,0);
     sm[0][1]=m(1,0);
     sm[0][2]=m(2,0);
@@ -168,7 +171,6 @@ SbMatrix urdf2inventor::getSbMatrix(const urdf2inventor::EigenTransform& m)
     sm[3][1]=m(1,3);
     sm[3][2]=m(2,3);
     sm[3][3]=m(3,3);
-    
     return sm;
 }
 
@@ -315,8 +317,6 @@ void urdf2inventor::addCylinder(SoSeparator * addToNode,
 
     addSubNode(c, addToNode, trans, mat);
 }
-
-
 
 void urdf2inventor::addCylinder(SoSeparator * addToNode, const Eigen::Vector3d& pos,
                                 const Eigen::Quaterniond& rot,

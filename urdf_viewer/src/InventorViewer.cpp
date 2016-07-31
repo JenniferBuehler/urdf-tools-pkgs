@@ -146,10 +146,10 @@ bool InventorViewer::computeCorrectFaceNormal(const SoPickedPoint * pick, bool c
             ROS_ERROR("Clicked on degenerate face, can't compute normal");
             return false;
         }
-        else
+        /*else
         {
             ROS_INFO_STREAM("Clicked on face with "<<fd->getNumPoints()<<" points.");
-        }        
+        }*/       
         
         //ROS_INFO("Pick path:");
         //printPath(pick->getPath());
@@ -200,10 +200,10 @@ bool InventorViewer::computeCorrectFaceNormal(const SoPickedPoint * pick, bool c
             }
 
             shapeIdx=searchCoords.getPath()->getLength()-1;
-            //ROS_INFO_STREAM("Coords at Idx: "<<shapeIdx);
+            // ROS_INFO_STREAM("Coords at Idx: "<<shapeIdx);
 
-            ROS_INFO("SearchCoords path:");
-            printPath(searchCoords.getPath());
+            // ROS_INFO("SearchCoords path:");
+            // printPath(searchCoords.getPath());
 
             SoIndexedShape * vShapeNode = dynamic_cast<SoIndexedShape*>(searchCoords.getPath()->getTail());
             if (!vShapeNode)
@@ -242,15 +242,14 @@ bool InventorViewer::computeCorrectFaceNormal(const SoPickedPoint * pick, bool c
                             " points is not a triangle and may lead to wrong normal calculations.");
         }
 
-        ROS_INFO_STREAM("Coords "<<p1<<", "<<p2<<", "<<p3);
+        /*ROS_INFO_STREAM("Coords "<<p1<<", "<<p2<<", "<<p3);
         float _x, _y, _z;
         coord1.getValue(_x, _y, _z);
         ROS_INFO_STREAM("val1 "<<_x<<", "<<_y<<", "<<_z);
         coord2.getValue(_x, _y, _z);
         ROS_INFO_STREAM("val2 "<<_x<<", "<<_y<<", "<<_z);
         coord3.getValue(_x, _y, _z);
-        ROS_INFO_STREAM("val3 "<<_x<<", "<<_y<<", "<<_z);
-
+        ROS_INFO_STREAM("val3 "<<_x<<", "<<_y<<", "<<_z);*/
 
         SbVec3f diff1(coord2.getValue());
         diff1 -= coord1;

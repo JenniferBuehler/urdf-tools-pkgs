@@ -33,8 +33,14 @@ namespace urdf2inventor
 typedef Eigen::Transform<double, 3, Eigen::Affine> EigenTransform;
 
 
+/*! Returns axis-aligned bounding box min and max points of the node 
+ */
+extern void getBoundingBox(SoNode* node, Eigen::Vector3d& minPoint, Eigen::Vector3d& maxPoint);
+
+
 extern EigenTransform getEigenTransform(const SbMatrix& m);
 extern SbMatrix getSbMatrix(const urdf2inventor::EigenTransform& m);
+extern std::string printMatrix(const urdf2inventor::EigenTransform& t);
 
 /**
  * Adds a SoNode (addAsChild) as a child (to parent), transformed by the given transform (eTrans)
