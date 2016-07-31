@@ -396,7 +396,7 @@ SoNode * Urdf2Inventor::getAsInventor(const LinkPtr& from_link, bool useScaleFac
         // ROS_WARN_STREAM("Transform joint "<<joint->name<<": "<<jointTransform);
         // ROS_INFO_STREAM("Adding sub node for "<<childLink->name);
 
-        allVisuals = urdf2inventor::addSubNode(childNode, allVisuals, jointTransform);
+        urdf2inventor::addSubNode(childNode, allVisuals, jointTransform);
     }
 
     return allVisuals;

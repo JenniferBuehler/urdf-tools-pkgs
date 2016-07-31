@@ -193,54 +193,61 @@ SoTransform * getSoTransform(const urdf2inventor::EigenTransform& eTrans)
     return transform;
 }
 
-SoSeparator * urdf2inventor::addSubNode(SoNode * addAsChild,
-                                        SoNode* parent, const urdf2inventor::EigenTransform& eTrans)
+bool urdf2inventor::addSubNode(SoNode * addAsChild,
+                                        SoNode* parent, const urdf2inventor::EigenTransform& eTrans,
+                                        const char * name)
 {
     SoTransform * transform = getSoTransform(eTrans);
-    return urdf2inventor::addSubNode(addAsChild, parent, transform);
+    return urdf2inventor::addSubNode(addAsChild, parent, transform, name);
 }
 
-SoSeparator * urdf2inventor::addSubNode(SoNode * addAsChild,
-                                        SoNode* parent, SoTransform * trans)
+bool urdf2inventor::addSubNode(SoNode * addAsChild,
+                                        SoNode* parent,
+                                        SoTransform * trans,
+                                        const char * transName)
 {
     SoSeparator * sep = dynamic_cast<SoSeparator*>(parent);
     if (!sep)
     {
         std::cerr << "parent is not a separator" << std::endl;
-        return NULL;
+        return false;
     }
 
     SoSeparator * sepChild = dynamic_cast<SoSeparator*>(addAsChild);
     if (!sepChild)
     {
         std::cerr << "child is not a separator" << std::endl;
-        return NULL;
+        return false;
     }
 
     // ROS_WARN_STREAM("######### Adding transform "<<trans->translation<<", "<<trans->rotation);
 
     SoSeparator * transNode = new SoSeparator();
+    if (transName) transNode->setName(transName);
     transNode->addChild(trans);
     transNode->addChild(sepChild);
 
     sep->addChild(transNode);
-    return sep;
+    return true;
 }
 
 
 void urdf2inventor::addSubNode(SoNode * addAsChild, SoSeparator * parent,
                                const EigenTransform& transform,
-                               SoMaterial * mat)
+                               SoMaterial * mat, const char * name)
 {
     SoMatrixTransform * trans = new SoMatrixTransform();
-    EigenTransform t = transform; //.inverse();
-    trans->matrix.setValue(t(0, 0), t(1, 0), t(2, 0), t(3, 0),
+    EigenTransform t = transform;
+    trans->matrix=getSbMatrix(t);
+/*    trans->matrix.setValue(t(0, 0), t(1, 0), t(2, 0), t(3, 0),
                            t(0, 1), t(1, 1), t(2, 1), t(3, 1),
                            t(0, 2), t(1, 2), t(2, 2), t(3, 2),
-                           t(0, 3), t(1, 3), t(2, 3), t(3, 3));
+                           t(0, 3), t(1, 3), t(2, 3), t(3, 3));*/
 
 
     SoSeparator * transSep = new SoSeparator();
+    if (name) transSep->setName(name);
+
     transSep->addChild(trans);
     transSep->addChild(addAsChild);
     if (mat) parent->addChild(mat);
@@ -282,7 +289,8 @@ void urdf2inventor::addSphere(SoSeparator * addToNode, const Eigen::Vector3d& po
 void urdf2inventor::addCylinder(SoSeparator * addToNode, 
                                 const urdf2inventor::EigenTransform& extraTrans,
                                 float radius, float height,
-                                float r, float g, float b, float a)
+                                float r, float g, float b, float a,
+                                const char * name)
 {
     SoCylinder * c = new SoCylinder();
     c->radius = radius;
@@ -315,19 +323,20 @@ void urdf2inventor::addCylinder(SoSeparator * addToNode,
     trans.translate(Eigen::Vector3d(0, 0, height / 2.0));
     trans.rotate(toZ);
 
-    addSubNode(c, addToNode, trans, mat);
+    addSubNode(c, addToNode, trans, mat, name);
 }
 
 void urdf2inventor::addCylinder(SoSeparator * addToNode, const Eigen::Vector3d& pos,
                                 const Eigen::Quaterniond& rot,
                                 float radius, float height,
-                                float r, float g, float b, float a)
+                                float r, float g, float b, float a,
+                                const char * name)
 {
     EigenTransform trans;
     trans.setIdentity();
     trans.translate(pos);
     trans.rotate(rot);
-    addCylinder(addToNode, trans, radius, height, r, g, b, a);
+    addCylinder(addToNode, trans, radius, height, r, g, b, a, name);
 }
 
 void urdf2inventor::addLocalAxes(SoSeparator * addToNode, float axesRadius, float axesLength)

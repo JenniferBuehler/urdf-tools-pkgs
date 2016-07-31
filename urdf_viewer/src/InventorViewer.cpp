@@ -273,28 +273,22 @@ bool InventorViewer::computeCorrectFaceNormal(const SoPickedPoint * pick, bool c
 }
 
 
-
-/**
- * string which is used for sscanf to extract following information form an SoNode:
- * the name of the link, and the nubmer of the visual. This sscanf should get first an int (visual number), then a string (link name).
- * it should fail for all nodes except those which contain the visual mesh.
- */
-#define VISUAL_SCANF "_visual_%i_%s"
-
-SoNode * InventorViewer::getLinkDesc(const SoPath * path, std::string& linkName, int& visualNum, int& pathIdx)
+SoNode * InventorViewer::getIntStr(const std::string& sscanfStr, const SoPath * path, std::string& extStr, int& extNum, int& pathIdx)
 {
     if (path->getLength()==0) return NULL;
     for (int i = path->getLength() - 1; i >= 0;  --i)
     {
         SoNode * n = path->getNode(i);
         std::string name = n->getName().getString();
-        // ROS_INFO("Pick path len %s\n",name.c_str());
+        
+        //ROS_INFO("Path[%i]: %s, type %s",i,name.c_str(),n->getTypeId().getName().getString());
+
         char ln[1000];
         int num;
-        if (sscanf(name.c_str(), VISUAL_SCANF, &num, ln) < 2) continue;
+        if (sscanf(name.c_str(), sscanfStr.c_str(), &num, ln) < 2) continue;
         // ROS_INFO("num: %i rest: %s\n",num,ln);
-        linkName = ln; //urdf2inventor::helpers::getFilename(ln); // take only the name after the last '/'
-        visualNum = num;
+        extStr = ln; //urdf2inventor::helpers::getFilename(ln); // take only the name after the last '/'
+        extNum = num;
         pathIdx = i;
         return n;
     }

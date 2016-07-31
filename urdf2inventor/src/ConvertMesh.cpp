@@ -227,7 +227,7 @@ SoNode * urdf2inventor::getAllVisuals(const urdf_traverser::LinkPtr link, double
         urdf_traverser::EigenTransform vTransform = urdf_traverser::getTransform(visual->origin);
         // ROS_INFO_STREAM("Visual "<<i<<" of link "<<link->name<<" transform: "<<visual->origin);
 
-        vTransform = vTransform * addVisualTransform;
+        urdf_traverser::EigenTransform meshVTransform = vTransform * addVisualTransform;
 
         if (scaleUrdfTransforms) urdf_traverser::scaleTranslation(vTransform, scale_factor);
 
@@ -267,12 +267,12 @@ SoNode * urdf2inventor::getAllVisuals(const urdf_traverser::LinkPtr link, double
             str << "_visual_" << i << "_" << linkName;
             // ROS_INFO_STREAM("Visual name "<<str.str());
             somesh->setName(str.str().c_str());
-            allVisuals = urdf2inventor::addSubNode(somesh, allVisuals, vTransform);
+            urdf2inventor::addSubNode(somesh, allVisuals, meshVTransform);
             break;
         }
         case urdf::Geometry::SPHERE:
         {
-            ROS_INFO("Urdf2Inventor debug: Model has a Sphere");
+            ROS_INFO("Urdf2Inventor: Model has a Sphere");
             SpherePtr sphere = baselib_binding_ns::dynamic_pointer_cast<urdf::Sphere>(geom);
             if (!sphere.get())
             {
@@ -287,7 +287,7 @@ SoNode * urdf2inventor::getAllVisuals(const urdf_traverser::LinkPtr link, double
         }
         case urdf::Geometry::BOX:
         {
-            ROS_INFO("Urdf2Inventor debug: Model has a box");
+            ROS_INFO("Urdf2Inventor: Model has a box");
             BoxPtr box = baselib_binding_ns::dynamic_pointer_cast<urdf::Box>(geom);
             if (!box.get())
             {
@@ -297,12 +297,18 @@ SoNode * urdf2inventor::getAllVisuals(const urdf_traverser::LinkPtr link, double
 
             SoSeparator * boxNode = new SoSeparator();
             boxNode->ref();
-            urdf2inventor::addBox(allVisuals, vTransform, box->dim.x * scale_factor, box->dim.y * scale_factor, box->dim.z * scale_factor, 1, 0, 0, 0);
+            ROS_INFO_STREAM("Visual "<<i<<" of link "<<link->name<<" transform: "<<visual->origin);
+            urdf2inventor::EigenTransform tmpT;
+            urdf2inventor::EigenTransform vTransformInv = vTransform.inverse(); 
+            tmpT.setIdentity();
+            tmpT.translate(vTransform.translation());
+            tmpT.rotate(vTransform.rotation());
+            urdf2inventor::addBox(allVisuals, tmpT, box->dim.x * scale_factor, box->dim.y * scale_factor, box->dim.z * scale_factor, 1, 0, 0, 0);
             break;
         }
         case urdf::Geometry::CYLINDER:
         {
-            ROS_INFO("Urdf2Inventor debug: Model has a cylinder");
+            ROS_INFO("Urdf2Inventor: Model has a cylinder");
             CylinderPtr cylinder = baselib_binding_ns::dynamic_pointer_cast<urdf::Cylinder>(geom);
             if (!cylinder.get())
             {
@@ -312,10 +318,7 @@ SoNode * urdf2inventor::getAllVisuals(const urdf_traverser::LinkPtr link, double
 
             SoSeparator * cylinderNode = new SoSeparator();
             cylinderNode->ref();
-            Eigen::Quaterniond rot = Eigen::Quaterniond(vTransform.rotation());
-
-            urdf2inventor::addCylinder(allVisuals, vTransform.translation(),
-                rot, cylinder->radius, cylinder->length, 1, 0, 0, 0);
+            urdf2inventor::addCylinder(allVisuals, vTransform, cylinder->radius/2, cylinder->length, 1, 0, 0, 0); // for some reason, half the radius is required
             break;
         }
         default:

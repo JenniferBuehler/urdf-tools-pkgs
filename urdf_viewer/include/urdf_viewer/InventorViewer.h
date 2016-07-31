@@ -98,14 +98,16 @@ protected:
     static bool computeCorrectFaceNormal(const SoPickedPoint * pick, bool ccw_face, Eigen::Vector3d& normal, int& shapeIdx);
 
     /**
-     * Helper function which can be used to determine a URDF link name from a picked path. Links are found
-     * based on their name (which is formatted *_visual_<number>_<name>). The last link found in the path
-     * is returned. 
-     * \param linkName output: name of the link
-     * \param visualNum output: number of the link in the name
+     * Helper function which can be used to find a specific node along the path which is formatted in
+     * a given way, such that a a number and a name can be extracted.
+     * The last such node found along the path is returned, along with the extracted number and string as paramter.
+     * \param sscanfStr input: the string to use in sscanf, which must extract *first* a number (int),
+     *      *then* a string for the name. This could be for example "_visual_%i_%s"
+     * \param str output: extracted string / name 
+     * \param num output: extracted number
      * \param pathIdx output: index the link has in the path.
      */
-    static SoNode * getLinkDesc(const SoPath * path, std::string& linkName, int& visualNum, int& pathIdx);
+    static SoNode * getIntStr(const std::string& sscanfStr, const SoPath * path, std::string& str, int& num, int& pathIdx);
 
     SoQtExaminerViewer * getViewer()
     {
