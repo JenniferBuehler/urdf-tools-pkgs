@@ -2,6 +2,15 @@
 Changelog for package urdf_viewer
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+* Changed to BSD 3-clause license
+* Fix cylinder and box orientations
+* Added function to compute Bounding Box
+* Added new transform and cylinder methods to IVHelpers
+* Supports Cylinder in urdf2inventor now
+* Contributors: Jennifer Buehler
+
 1.0.0 (2016-06-07)
 ------------------
 * Added installation of launch files
