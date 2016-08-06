@@ -1,5 +1,5 @@
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-Changelog for package urdf_tools
+Changelog for package urdf_processing_tools
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 1.0.0 (2016-06-07)
