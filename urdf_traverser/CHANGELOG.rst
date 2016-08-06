@@ -2,8 +2,8 @@
 Changelog for package urdf_traverser
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+1.0.1 (2016-08-06)
+------------------
 * Changed to BSD 3-clause license
 * Contributors: Jennifer Buehler
 

@@ -2,8 +2,8 @@
 Changelog for package urdf_viewer
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+1.0.1 (2016-08-06)
+------------------
 * Changed to BSD 3-clause license
 * Fix cylinder and box orientations
 * Added function to compute Bounding Box

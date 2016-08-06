@@ -2,8 +2,8 @@
 Changelog for package urdf_processing_tools
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+1.0.1 (2016-08-06)
+------------------
 * resolved urdf_tools name clash and renamed to urdf_processing_tools
 * Contributors: Jennifer Buehler
 

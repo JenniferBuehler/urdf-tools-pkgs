@@ -1,7 +1,7 @@
 <?xml version="1.0"?>
 <package>
   <name>urdf_traverser</name>
-  <version>1.0.0</version>
+  <version>1.0.1</version>
   <description>
       Urdf traverser (C++) which provides functions to traverse
       the URDF and convenience functions to access the URDF model.
