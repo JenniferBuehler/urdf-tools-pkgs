@@ -355,10 +355,14 @@ SoNode * Urdf2Inventor::getAsInventor(const LinkPtr& from_link, bool useScaleFac
         ROS_ERROR("getAsInventor: from_link is NULL");
         return NULL;
     }
+    
+    bool useVisuals = true; // XXX TODO: Parameterize
+
     // ROS_INFO_STREAM("Get all visuals of "<<from_link->name);//<<" (parent joint "<<from_link->parent_joint->name<<")");
-    SoNode * allVisuals = getAllVisuals(from_link,
+    SoNode * allVisuals = getAllGeometry(from_link,
                                         useScaleFactor ? scaleFactor : 1.0,
                                         addVisualTransform,
+                                        useVisuals,
                                         useScaleFactor);
     if (!allVisuals)
     {

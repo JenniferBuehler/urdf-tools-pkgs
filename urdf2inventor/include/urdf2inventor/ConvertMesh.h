@@ -118,10 +118,12 @@ bool fixTextureReferences(const std::string& relModelDir,
  *      transform (their "origin"). This can be used to correct transformation errors which may have been
  *      introduced in converting meshes from one format to the other, losing orientation information
  *      (for example, .dae has an "up vector" definition which may have been ignored)
+ * \param useVisuals true to use the visuals as base for the geometry, false if the collision geometry should be used instead.
  */
-SoNode * getAllVisuals(const urdf_traverser::LinkPtr link, double scale_factor,
+SoNode * getAllGeometry(const urdf_traverser::LinkPtr link, double scale_factor,
                        const urdf_traverser::EigenTransform& addTransform,
-                       bool scaleUrdfTransforms = false);
+                       const bool useVisuals,
+                       const bool scaleUrdfTransforms); // default: false
 
 /**
  * Removes all texture copies in the nodes.

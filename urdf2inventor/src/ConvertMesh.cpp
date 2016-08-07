@@ -60,6 +60,7 @@ using urdf_traverser::RecursionParams;
 using urdf_traverser::LinkRecursionParams;
 
 typedef urdf_traverser::VisualPtr VisualPtr;
+typedef urdf_traverser::CollisionPtr CollisionPtr;
 typedef urdf_traverser::GeometryPtr GeometryPtr;
 typedef urdf_traverser::MaterialPtr MaterialPtr;
 typedef urdf_traverser::MeshPtr MeshPtr;
@@ -214,33 +215,23 @@ void urdf2inventor::removeTextureCopies(SoNode * root)
 }*/
 
 
+
 // XXX TODO could specify material as parameter to override any possibly already
-// existing materials. Propagate this to other functions using getAllVisuals().
-SoNode * urdf2inventor::getAllVisuals(const urdf_traverser::LinkPtr link, double scale_factor,
-                                      const urdf_traverser::EigenTransform& addVisualTransform,
-                                      bool scaleUrdfTransforms)
+// existing materials. Propagate this to other functions using getAllGeometry().
+bool addGeometry(SoSeparator * addToNode, const std::string& linkName, double scale_factor,
+                   const GeometryPtr& geom,
+                   const int geomNum,  // number to assign to this visual
+                   const MaterialPtr& mat,
+                   const urdf_traverser::EigenTransform& geometryTransform,  // transform to the geometry
+                   const urdf_traverser::EigenTransform& addMeshTransform, // transform to add only to mesh shapes
+                   const bool scaleUrdfTransforms)
 {
-    SoNodeKit::init();
-    SoSeparator * allVisuals = new SoSeparator();
-    allVisuals->ref();
-    std::string linkName = link->name;
-    unsigned int i = 0;
-    for (std::vector<VisualPtr>::const_iterator vit = link->visual_array.begin();
-            vit != link->visual_array.end(); ++vit)
-    {
-        VisualPtr visual = (*vit);
-        GeometryPtr geom = visual->geometry;
-        MaterialPtr mat = visual->material;
+    
+        urdf_traverser::EigenTransform geomTransform = geometryTransform;
+        // ROS_INFO_STREAM("Visual "<<i<<" of link "<<linkName<<" transform: "<<geomTransform);
+        urdf_traverser::EigenTransform meshGeomTransform = geomTransform * addMeshTransform;
 
-        // ROS_INFO_STREAM("Visual "<<visual->group_name);
-        // if (mat) ROS_INFO_STREAM("Material "<<mat->color.r<<", "<<mat->color.g<<", "<<mat->color.b<<", "<<mat->color.a);
-
-        urdf_traverser::EigenTransform vTransform = urdf_traverser::getTransform(visual->origin);
-        // ROS_INFO_STREAM("Visual "<<i<<" of link "<<link->name<<" transform: "<<visual->origin);
-
-        urdf_traverser::EigenTransform meshVTransform = vTransform * addVisualTransform;
-
-        if (scaleUrdfTransforms) urdf_traverser::scaleTranslation(vTransform, scale_factor);
+        if (scaleUrdfTransforms) urdf_traverser::scaleTranslation(geomTransform, scale_factor);
 
         switch (geom->type)
         {
@@ -251,7 +242,7 @@ SoNode * urdf2inventor::getAllVisuals(const urdf_traverser::LinkPtr link, double
             if (!mesh.get())
             {
                 ROS_ERROR("Mesh cast error");
-                return NULL;
+                return false;
             }
             std::string meshFilename = urdf_traverser::helpers::packagePathToAbsolute(mesh->filename);
 
@@ -272,13 +263,13 @@ SoNode * urdf2inventor::getAllVisuals(const urdf_traverser::LinkPtr link, double
             if (!somesh)
             {
                 ROS_ERROR("Mesh could not be read");
-                return NULL;
+                return false;
             }
             std::stringstream str;
-            str << "_visual_" << i << "_" << linkName;
+            str << "_visual_" << geomNum << "_" << linkName;
             // ROS_INFO_STREAM("Visual name "<<str.str());
             somesh->setName(str.str().c_str());
-            urdf2inventor::addSubNode(somesh, allVisuals, meshVTransform);
+            urdf2inventor::addSubNode(somesh, addToNode, meshGeomTransform);
             break;
         }
         case urdf::Geometry::SPHERE:
@@ -288,12 +279,12 @@ SoNode * urdf2inventor::getAllVisuals(const urdf_traverser::LinkPtr link, double
             if (!sphere.get())
             {
                 ROS_ERROR("Sphere cast error");
-                return NULL;
+                return false;
             }
 
             SoSeparator * sphereNode = new SoSeparator();
             sphereNode->ref();
-            urdf2inventor::addSphere(allVisuals, vTransform.translation(), sphere->radius * scale_factor, 1, 0, 0);
+            urdf2inventor::addSphere(addToNode, geomTransform.translation(), sphere->radius * scale_factor, 1, 0, 0);
             break;
         }
         case urdf::Geometry::BOX:
@@ -303,18 +294,18 @@ SoNode * urdf2inventor::getAllVisuals(const urdf_traverser::LinkPtr link, double
             if (!box.get())
             {
                 ROS_ERROR("Box cast error");
-                return NULL;
+                return false;
             }
 
             SoSeparator * boxNode = new SoSeparator();
             boxNode->ref();
-            ROS_INFO_STREAM("Visual "<<i<<" of link "<<link->name<<" transform: "<<visual->origin);
+            ROS_INFO_STREAM("Geometry "<<geomNum<<" of link "<<linkName<<" transform: "<<geometryTransform);
             urdf2inventor::EigenTransform tmpT;
-            urdf2inventor::EigenTransform vTransformInv = vTransform.inverse(); 
+            urdf2inventor::EigenTransform geomTransformInv = geomTransform.inverse(); 
             tmpT.setIdentity();
-            tmpT.translate(vTransform.translation());
-            tmpT.rotate(vTransform.rotation());
-            urdf2inventor::addBox(allVisuals, tmpT, box->dim.x * scale_factor, box->dim.y * scale_factor, box->dim.z * scale_factor, 1, 0, 0, 0);
+            tmpT.translate(geomTransform.translation());
+            tmpT.rotate(geomTransform.rotation());
+            urdf2inventor::addBox(addToNode, tmpT, box->dim.x * scale_factor, box->dim.y * scale_factor, box->dim.z * scale_factor, 1, 0, 0, 0);
             break;
         }
         case urdf::Geometry::CYLINDER:
@@ -324,21 +315,94 @@ SoNode * urdf2inventor::getAllVisuals(const urdf_traverser::LinkPtr link, double
             if (!cylinder.get())
             {
                 ROS_ERROR("Cylinder cast error");
-                return NULL;
+                return false;
             }
 
             SoSeparator * cylinderNode = new SoSeparator();
             cylinderNode->ref();
-            urdf2inventor::addCylinder(allVisuals, vTransform, cylinder->radius/2, cylinder->length, 1, 0, 0, 0); // for some reason, half the radius is required
+            urdf2inventor::addCylinder(addToNode, geomTransform, cylinder->radius/2, cylinder->length, 1, 0, 0, 0); // for some reason, half the radius is required
             break;
         }
         default:
         {
             ROS_ERROR_STREAM("This geometry type not supported so far: " << geom->type);
-            return NULL;
+            return false;
         }
         }
-        ++i;
+
+        return true;
+}
+
+
+
+
+
+
+// XXX TODO could specify material as parameter to override any possibly already
+// existing materials. Propagate this to other functions using getAllGeometry().
+SoNode * urdf2inventor::getAllGeometry(const urdf_traverser::LinkPtr link, double scale_factor,
+                                      const urdf_traverser::EigenTransform& addVisualTransform,
+                                      const bool useVisuals,
+                                      const bool scaleUrdfTransforms)
+{
+    SoNodeKit::init();
+    SoSeparator * allVisuals = new SoSeparator();
+    allVisuals->ref();
+    std::string linkName = link->name;
+
+    if (useVisuals)
+    {
+        unsigned int i = 0;
+        for (std::vector<VisualPtr>::const_iterator vit = link->visual_array.begin();
+                vit != link->visual_array.end(); ++vit)
+        {
+            VisualPtr visual = (*vit);
+            GeometryPtr geom = visual->geometry;
+            MaterialPtr mat = visual->material;
+
+            // ROS_INFO_STREAM("Visual "<<visual->group_name);
+            // if (mat) ROS_INFO_STREAM("Material "<<mat->color.r<<", "<<mat->color.g<<", "<<mat->color.b<<", "<<mat->color.a);
+
+            urdf_traverser::EigenTransform vTransform = urdf_traverser::getTransform(visual->origin);
+            // ROS_INFO_STREAM("Visual "<<i<<" of link "<<link->name<<" transform: "<<visual->origin);
+
+            if (!addGeometry(allVisuals, linkName, scale_factor,
+                       geom, i, mat, vTransform, addVisualTransform, scaleUrdfTransforms))
+            {
+                ROS_ERROR_STREAM("Could not add geometry of link "<<link->name);
+                return NULL;
+            }
+            ++i;
+        }
+    }
+    else
+    {
+        unsigned int i = 0;
+        for (std::vector<CollisionPtr>::const_iterator cit = link->collision_array.begin();
+                cit != link->collision_array.end(); ++cit)
+        {
+            CollisionPtr coll = (*cit);
+            GeometryPtr geom = coll->geometry;
+            // XXX TODO allow to set a material for collision shapes, which inherently don't have materials.
+            // Because collision geometries don't match to visual geometries
+            // (could be different numbers!), we can't infer from visual.
+            MaterialPtr mat(new urdf::Material());
+            mat->color.r=0.1;
+            mat->color.g=0.1;
+            mat->color.b=0.5;
+            mat->color.a=1;
+
+            urdf_traverser::EigenTransform cTransform = urdf_traverser::getTransform(coll->origin);
+            // ROS_INFO_STREAM("Collision geometry "<<i<<" of link "<<link->name<<" transform: "<<coll->origin);
+
+            if (!addGeometry(allVisuals, linkName, scale_factor,
+                       geom, i, mat, cTransform, addVisualTransform, scaleUrdfTransforms))
+            {
+                ROS_ERROR_STREAM("Could not add geometry of link "<<link->name);
+                return NULL;
+            }
+            ++i;
+        }
     }
 
     std::stringstream str;
@@ -360,13 +424,14 @@ SoNode * urdf2inventor::getAllVisuals(const urdf_traverser::LinkPtr link, double
 bool convertMeshToIVString(urdf_traverser::LinkPtr& link,
                            const float scale_factor,
                            const urdf_traverser::EigenTransform& addVisualTransform,
+                           const bool useVisuals,
                            const bool scaleUrdfTransforms,
                            std::string& resultIV,
                            std::set<std::string>& textureFiles)
 {
     ROS_INFO("Convert mesh for link '%s'", link->name.c_str());
 
-    SoNode * allVisuals = urdf2inventor::getAllVisuals(link, scale_factor, addVisualTransform, scaleUrdfTransforms);
+    SoNode * allVisuals = urdf2inventor::getAllGeometry(link, scale_factor, addVisualTransform, useVisuals, scaleUrdfTransforms);
     if (!allVisuals)
     {
         ROS_ERROR("Could not get visuals");
@@ -402,10 +467,11 @@ int convertMeshToIVString(urdf_traverser::RecursionParamsPtr& p)
         return -1;
     }
 
+    bool useVisuals=true;  // XXX TODO: Parameterize
     urdf_traverser::LinkPtr link = param->getLink();
     std::string resultFileContent;
     std::set<std::string> textureFiles;
-    if (!convertMeshToIVString(link, param->factor, param->addVisualTransform, false, resultFileContent, textureFiles))
+    if (!convertMeshToIVString(link, param->factor, param->addVisualTransform, useVisuals, false, resultFileContent, textureFiles))
         return -1;
 
     //ROS_INFO_STREAM("Result file content: "<<resultFileContent);
