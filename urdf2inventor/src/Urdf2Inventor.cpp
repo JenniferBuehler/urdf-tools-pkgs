@@ -447,7 +447,8 @@ SoNode * Urdf2Inventor::getAsInventor(const std::string& fromLink, bool useScale
 
 bool Urdf2Inventor::writeAsInventor(const std::string& ivFilename,
                                     const std::string& fromLink,
-                                    bool useScaleFactor, const EigenTransform& addVisualTransform)
+                                    bool useScaleFactor, const EigenTransform& addVisualTransform,
+                                    bool _addAxes, float _axesRadius, float _axesLength)
 {
     std::string startLinkName = fromLink;
     if (startLinkName.empty())
@@ -463,16 +464,17 @@ bool Urdf2Inventor::writeAsInventor(const std::string& ivFilename,
     }
 
     ROS_INFO_STREAM("Writing from link '" << startLinkName << "' to file " << ivFilename);
-    return writeAsInventor(ivFilename, startLink, useScaleFactor, addVisualTransform);
+    return writeAsInventor(ivFilename, startLink, useScaleFactor, addVisualTransform, _addAxes, _axesRadius, _axesLength);
 }
 
 bool Urdf2Inventor::writeAsInventor(const std::string& ivFilename, const LinkPtr& from_link,
-                                    bool useScaleFactor, const EigenTransform& addVisualTransform)
+                                    bool useScaleFactor, const EigenTransform& addVisualTransform,
+                                    bool _addAxes, float _axesRadius, float _axesLength)
 {
     ROS_INFO("Converting model...");
 
     std::set<std::string> textureFiles;
-    SoNode * inv = getAsInventor(from_link, useScaleFactor, addAxes, axesRadius, axesLength,
+    SoNode * inv = getAsInventor(from_link, useScaleFactor, _addAxes, _axesRadius, _axesLength,
                                  addVisualTransform, &textureFiles);
     if (!inv)
     {

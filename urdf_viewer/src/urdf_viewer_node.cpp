@@ -97,7 +97,7 @@ int main(int argc, char *argv[])
 
     bool success = true;
     urdf2inventor::Urdf2Inventor::UrdfTraverserPtr traverser(new urdf_traverser::UrdfTraverser());
-    Urdf2Inventor converter(traverser, 1, displayAxes, axRad, axLen);
+    Urdf2Inventor converter(traverser, 1);
     InventorViewer view;
     view.init("WindowName");
     if (isURDF)

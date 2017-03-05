@@ -61,7 +61,7 @@ using urdf_viewer::InventorViewer;
 
 InventorViewer::InventorViewer(bool _faces_ccw):
     root(NULL), viewWindow(NULL), viewer(NULL),
-    faces_ccw(_faces_ccw) {}
+    faces_ccw(_faces_ccw), initialized(false) {}
 
 
 InventorViewer::InventorViewer(const InventorViewer& o):
@@ -94,15 +94,26 @@ void InventorViewer::init(const char * windowName, float bck_r, float bck_g, flo
     SoEventCallback * ecb = new SoEventCallback();
     ecb->addEventCallback(SoMouseButtonEvent::getClassTypeId(), InventorViewer::mouseBtnCB, this);
     root->addChild(ecb);
+    initialized = true;
 }
 
 void InventorViewer::loadModel(SoNode * model)
 {
+    if (!initialized)
+    {
+      ROS_ERROR("InventorViewer not initialized.");
+      return;
+    }
     if (model) root->addChild(model);
 }
 
 bool InventorViewer::loadModel(const std::string& filename)
 {
+    if (!initialized)
+    {
+      ROS_ERROR("InventorViewer not initialized.");
+      return false;
+    }
     SoInput in;
     SoNode  *model = NULL;
     if (!in.openFile(filename.c_str()))
@@ -119,6 +130,11 @@ bool InventorViewer::loadModel(const std::string& filename)
 
 void InventorViewer::runViewer()
 {
+    if (!initialized)
+    {
+      ROS_ERROR("InventorViewer not initialized.");
+      return;
+    }
     viewer->setSceneGraph(root);
     viewer->show();
 

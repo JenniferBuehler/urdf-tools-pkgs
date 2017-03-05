@@ -1,10 +1,10 @@
 /**
- * <ORGANIZATION> = Jennifer Buehler 
- * <COPYRIGHT HOLDER> = Jennifer Buehler 
- * 
- * Copyright (c) 2016 Jennifer Buehler 
+ * <ORGANIZATION> = Jennifer Buehler
+ * <COPYRIGHT HOLDER> = Jennifer Buehler
+ *
+ * Copyright (c) 2016 Jennifer Buehler
  * All rights reserved.
- * 
+ *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
  *     * Redistributions of source code must retain the above copyright
@@ -15,7 +15,7 @@
  *     * Neither the name of the <ORGANIZATION> nor the
  *       names of its contributors may be used to endorse or promote products
  *       derived from this software without specific prior written permission.
- * 
+ *
  * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND
  * ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
  * WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
@@ -105,7 +105,7 @@ protected:
 
     /**
      * Calculates the correct face normal of the pick point.
-     * \param shapeIdx output: the index in the \e pick path at which the actual shape resides. 
+     * \param shapeIdx output: the index in the \e pick path at which the actual shape resides.
      *      Normal coordinates are in the frame of this shape.
      */
     static bool computeCorrectFaceNormal(const SoPickedPoint * pick, bool ccw_face, Eigen::Vector3d& normal, int& shapeIdx);
@@ -116,7 +116,7 @@ protected:
      * The last such node found along the path is returned, along with the extracted number and string as paramter.
      * \param sscanfStr input: the string to use in sscanf, which must extract *first* a number (int),
      *      *then* a string for the name. This could be for example "_visual_%i_%s"
-     * \param str output: extracted string / name 
+     * \param str output: extracted string / name
      * \param num output: extracted number
      * \param pathIdx output: index the link has in the path.
      */
@@ -145,6 +145,7 @@ private:
     SoQtExaminerViewer * viewer;
     bool faces_ccw;
     SoSelection * root;
+    bool initialized;
 };
 
 }  //  namespace urdf_viewer
