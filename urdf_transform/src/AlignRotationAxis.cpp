@@ -33,6 +33,7 @@
 
 #include <ros/ros.h>
 #include <urdf_traverser/Functions.h>
+#include <urdf_traverser/Helpers.h>
 #include <urdf_traverser/UrdfTraverser.h>
 #include <urdf_transform/AlignRotationAxis.h>
 
@@ -97,13 +98,16 @@ int allRotationsToAxisCB(urdf_traverser::RecursionParamsPtr& p)
     Eigen::Quaterniond alignAxis;
     if (urdf_traverser::jointTransformForAxis(joint, axis, alignAxis))
     {
-        // ROS_INFO_STREAM("Transforming axis for joint "<<joint->name<<" with transform "<<alignAxis);
+        Eigen::Vector3d rotAxis(joint->axis.x, joint->axis.y, joint->axis.z);
+        // ROS_INFO_STREAM("Transforming axis "<<rotAxis<<" for joint "<<joint->name<<" with transform "<<urdf_traverser::EigenTransform(alignAxis));
+
         urdf_traverser::applyTransform(joint, urdf_traverser::EigenTransform(alignAxis), false);
-        // the link has to receive the inverse transorm, so it stays at the original position
+
+        // the link has to receive the inverse transform, so it stays at the original position
         Eigen::Quaterniond alignAxisInv = alignAxis.inverse();
         urdf_traverser::applyTransform(link, urdf_traverser::EigenTransform(alignAxisInv), true);
 
-        // now, we have to fix the child joint's (1st order child joints) transform
+        // we also have to fix the child joint's (1st order child joints) transform
         // to correct for this transformation.
         for (std::vector<urdf_traverser::JointPtr>::iterator pj = link->child_joints.begin();
                 pj != link->child_joints.end(); pj++)

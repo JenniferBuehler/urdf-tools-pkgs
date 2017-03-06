@@ -30,6 +30,7 @@
  **/
 #include <ros/ros.h>
 #include <urdf_traverser/Functions.h>
+#include <urdf_traverser/Helpers.h>
 
 
 bool urdf_traverser::isActive(const JointPtr& joint)
@@ -311,11 +312,13 @@ bool urdf_traverser::jointTransformForAxis(const JointConstPtr& joint,
     Eigen::Vector3d rotAxis(joint->axis.x, joint->axis.y, joint->axis.z);
     if (rotAxis.norm() < 1e-06) return false;
     rotAxis.normalize();
-    // ROS_INFO_STREAM("Rotation axis for joint "<<joint.name<<": "<<rotAxis);
+    // ROS_INFO_STREAM("Rotation axis for joint "<<joint->name<<": "<<rotAxis);
     if (equalAxes(rotAxis, axis, 1e-06)) return false;
 
-    rotation = Eigen::Quaterniond::FromTwoVectors(rotAxis, axis);
-    // ROS_WARN_STREAM("z alignment: "<<rotation);
+    //rotation = Eigen::Quaterniond::FromTwoVectors(rotAxis, axis);
+    //ROS_WARN_STREAM("z alignment from "<<rotAxis<<" to "<<axis<<" : "<<rotation);
+    rotation = Eigen::Quaterniond::FromTwoVectors(axis, rotAxis);
+    // ROS_WARN_STREAM("z alignment from "<<axis<<" to "<<rotAxis<<" : "<<rotation);
     return true;
 }
 
