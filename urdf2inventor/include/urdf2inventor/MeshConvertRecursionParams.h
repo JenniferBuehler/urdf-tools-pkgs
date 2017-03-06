@@ -1,10 +1,10 @@
 /**
- * <ORGANIZATION> = Jennifer Buehler 
- * <COPYRIGHT HOLDER> = Jennifer Buehler 
- * 
- * Copyright (c) 2016 Jennifer Buehler 
+ * <ORGANIZATION> = Jennifer Buehler
+ * <COPYRIGHT HOLDER> = Jennifer Buehler
+ *
+ * Copyright (c) 2016 Jennifer Buehler
  * All rights reserved.
- * 
+ *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
  *     * Redistributions of source code must retain the above copyright
@@ -15,7 +15,7 @@
  *     * Neither the name of the <ORGANIZATION> nor the
  *       names of its contributors may be used to endorse or promote products
  *       derived from this software without specific prior written permission.
- * 
+ *
  * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND
  * ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
  * WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
@@ -73,12 +73,16 @@ public:
     std::string extension;
 
     /**
-     * this transform will be post-multiplied on all links' **visuals** (not links!) local
-     * transform (their "origin"). This can be used to correct transformation errors which may have been
-     * introduced in converting meshes from one format to the other, losing orientation information
-     * (for example, .dae has an "up vector" definition which may have been ignored)
+     * this transform will be post-multiplied the link **visual** (not the link!) local
+     * transform (their "origin"). This may be the same transform for all links,
+     * or it may be different per link.
      */
-    urdf_traverser::EigenTransform addVisualTransform;
+    virtual urdf_traverser::EigenTransform getVisualTransform()
+    {
+      ROS_INFO("CALLING STANDARD");
+      return addVisualTransform;
+    }
+
 
     // the resulting meshes (files in output MeshFormat), indexed by their name.
     // The name (map key) may also be a relative path, with the last element
@@ -94,6 +98,17 @@ public:
     std::map<std::string, std::set<std::string> > textureFiles;
 private:
     explicit MeshConvertRecursionParams() {}
+
+protected:
+    /**
+     * this transform will be post-multiplied on *all* link **visuals**
+     * (not ithe link!) local transform (their "origin").
+     * This can be used to correct transformation errors which may have been
+     * introduced in converting meshes from one format to the other, losing
+     * orientation information (for example, .dae has an "up vector"
+     * definition which may have been ignored)
+     */
+    urdf_traverser::EigenTransform addVisualTransform;
 };
 
 }  // namespace

@@ -471,7 +471,7 @@ int convertMeshToIVString(urdf_traverser::RecursionParamsPtr& p)
     urdf_traverser::LinkPtr link = param->getLink();
     std::string resultFileContent;
     std::set<std::string> textureFiles;
-    if (!convertMeshToIVString(link, param->factor, param->addVisualTransform, useVisuals, false, resultFileContent, textureFiles))
+    if (!convertMeshToIVString(link, param->factor, param->getVisualTransform(), useVisuals, false, resultFileContent, textureFiles))
         return -1;
 
     //ROS_INFO_STREAM("Result file content: "<<resultFileContent);

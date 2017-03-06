@@ -334,8 +334,10 @@ void Urdf2Inventor::addLocalAxes(const LinkConstPtr& link, SoSeparator * addToNo
     }
     urdf2inventor::addLocalAxes(addToNode, rad, h);
 
+    // add the rotation axis as well:
     Eigen::Vector3d rotAxis(0, 0, 1);
-    if (link->parent_joint) rotAxis = urdf_traverser::getRotationAxis(link->parent_joint);
+    if (link->parent_joint)
+      rotAxis = urdf_traverser::getRotationAxis(link->parent_joint);
     Eigen::Vector3d z(0, 0, 1);
     Eigen::Quaterniond q;
     q.setIdentity();
@@ -386,6 +388,7 @@ SoNode * Urdf2Inventor::getAsInventor(const LinkPtr& from_link, bool useScaleFac
         }
         else
         {
+            // ROS_INFO_STREAM("Adding local axes for "<<from_link->name);
             addLocalAxes(from_link, _allVisuals, useScaleFactor, _axesRadius, _axesLength);
         }
     }
