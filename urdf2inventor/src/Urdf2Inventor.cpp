@@ -170,7 +170,8 @@ Urdf2Inventor::ConversionResultPtr Urdf2Inventor::postConvert(const ConversionPa
 }
 
 
-Urdf2Inventor::ConversionResultPtr Urdf2Inventor::convert(const ConversionParametersPtr& params)
+Urdf2Inventor::ConversionResultPtr Urdf2Inventor::convert(const ConversionParametersPtr& params,
+                                                          const MeshConvertRecursionParamsPtr& meshParams)
 {
     ConversionResultPtr res = preConvert(params);
     if (!res.get())
@@ -187,8 +188,8 @@ Urdf2Inventor::ConversionResultPtr Urdf2Inventor::convert(const ConversionParame
 
     ROS_INFO_STREAM("############### Converting meshes"); //, base dir " << params->baseDir);
 
-    std::map<std::string, std::set<std::string> > textureFiles;
-    if (!urdf2inventor::convertMeshes(*urdf_traverser, params->rootLinkName,
+/*    std::map<std::string, std::set<std::string> > textureFiles;
+    if (!urdf2inventor::convertMeshesSimple(*urdf_traverser, params->rootLinkName,
                                       scaleFactor,
                                       params->material,
                                       OUTPUT_EXTENSION,
@@ -198,11 +199,27 @@ Urdf2Inventor::ConversionResultPtr Urdf2Inventor::convert(const ConversionParame
         ROS_ERROR("Could not convert meshes");
         return res;
     }
+    */
+    MeshConvertRecursionParamsPtr mParams=meshParams;
+    if (!mParams)
+    {
+        mParams.reset(new MeshConvertRecursionParamsT(scaleFactor, params->material,
+                                        OUTPUT_EXTENSION, params->addVisualTransform));
+    }
+
+    if (!urdf2inventor::convertMeshes<MeshFormat>(*urdf_traverser, params->rootLinkName, mParams))
+    {
+        ROS_ERROR("Could not convert meshes");
+        return res;
+    }
+
+    res->meshes = mParams->resultMeshes;
 
     if (!urdf2inventor::fixTextureReferences(
                 res->meshOutputDirectoryName,
                 res->texOutputDirectoryName,
-                textureFiles,
+                mParams->textureFiles,
+                //textureFiles,
                 res->meshes, res->textureFiles))
     {
         ROS_ERROR("Could not fix texture references");

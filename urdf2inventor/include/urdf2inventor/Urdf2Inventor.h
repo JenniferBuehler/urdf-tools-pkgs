@@ -33,7 +33,12 @@
 // Copyright Jennifer Buehler
 
 //-----------------------------------------------------
+#include <urdf2inventor/ConversionResult.h>
+#include <urdf2inventor/MeshConvertRecursionParams.h>
+
 #include <urdf_traverser/UrdfTraverser.h>
+
+#include <baselib_binding/SharedPtr.h>
 
 #include <iostream>
 #include <string>
@@ -45,8 +50,6 @@
 
 #include <Inventor/nodes/SoSeparator.h>
 
-#include <baselib_binding/SharedPtr.h>
-#include <urdf2inventor/ConversionResult.h>
 
 namespace urdf2inventor
 {
@@ -65,6 +68,9 @@ public:
     typedef ConversionResult<MeshFormat> ConversionResultT;
     typedef baselib_binding::shared_ptr<ConversionResultT>::type ConversionResultPtr;
     typedef baselib_binding::shared_ptr<ConversionParameters>::type ConversionParametersPtr;
+
+    typedef MeshConvertRecursionParams<MeshFormat> MeshConvertRecursionParamsT;
+    typedef baselib_binding::shared_ptr<MeshConvertRecursionParamsT>::type MeshConvertRecursionParamsPtr;
 
     typedef baselib_binding::shared_ptr<urdf_traverser::UrdfTraverser>::type UrdfTraverserPtr;
     typedef baselib_binding::shared_ptr<const urdf_traverser::UrdfTraverser>::type UrdfTraverserConstPtr;
@@ -211,8 +217,11 @@ public:
      * To save an inventor file of the *whole* robot, use writeAsInventor() instead.
      *
      * \param params parameters of the conversion
+     * \param meshParams optional: pre-instantiated MeshConvertRecursionParams. Can be
+     *   left null and then default is constructed.
      */
-    virtual ConversionResultPtr convert(const ConversionParametersPtr& params);
+    virtual ConversionResultPtr convert(const ConversionParametersPtr& params,
+                                        const MeshConvertRecursionParamsPtr& meshParams=MeshConvertRecursionParamsPtr());
 
     /**
      * Prints the structure of the URDF to standard out

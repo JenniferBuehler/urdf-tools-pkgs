@@ -33,6 +33,7 @@
 #define URDF2INVENTOR_MESHCONVERTRECURSIONPARAMS
 
 #include <urdf_traverser/RecursionParams.h>
+#include <ros/ros.h>
 #include <set>
 #include <string>
 #include <map>
@@ -77,12 +78,10 @@ public:
      * transform (their "origin"). This may be the same transform for all links,
      * or it may be different per link.
      */
-    virtual urdf_traverser::EigenTransform getVisualTransform()
+    virtual urdf_traverser::EigenTransform getVisualTransform() const
     {
-      ROS_INFO("CALLING STANDARD");
       return addVisualTransform;
     }
-
 
     // the resulting meshes (files in output MeshFormat), indexed by their name.
     // The name (map key) may also be a relative path, with the last element

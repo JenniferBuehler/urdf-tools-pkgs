@@ -485,8 +485,9 @@ int convertMeshToIVString(urdf_traverser::RecursionParamsPtr& p)
     return 1;
 }
 
+#if 0
 template <class MeshFormat>
-bool urdf2inventor::convertMeshes(urdf_traverser::UrdfTraverser& traverser,
+bool urdf2inventor::convertMeshesSimple(urdf_traverser::UrdfTraverser& traverser,
                                   const std::string& fromLink,
                                   const float scaleFactor,
                                   const std::string& material,
@@ -526,6 +527,42 @@ bool urdf2inventor::convertMeshes(urdf_traverser::UrdfTraverser& traverser,
 
     return true;
 }
+#endif
+
+template <class MeshFormat>
+bool urdf2inventor::convertMeshes(urdf_traverser::UrdfTraverser& traverser,
+                                  const std::string& fromLink,
+                                  const typename urdf2inventor::MeshConvertRecursionParams<MeshFormat>::Ptr& meshParams)
+{
+    if (!meshParams)
+    {
+      ROS_ERROR("Need to specify mesh parameters");
+      return false;
+    }
+
+    std::string startLinkName = fromLink;
+    if (startLinkName.empty())
+    {
+        startLinkName = traverser.getRootLinkName();
+    }
+
+    urdf_traverser::LinkPtr startLink = traverser.getLink(startLinkName);
+    if (!startLink.get())
+    {
+        ROS_ERROR("Link %s does not exist", startLinkName.c_str());
+        return false;
+    }
+
+    // go through entire tree
+    urdf_traverser::RecursionParamsPtr p(meshParams);
+    if (traverser.traverseTreeTopDown(startLinkName, boost::bind(&convertMeshToIVString, _1), p, true) <= 0)
+    {
+        ROS_ERROR("Could nto convert meshes.");
+        return false;
+    }
+    return true;
+}
+
 
 
 bool urdf2inventor::fixTextureReferences(
@@ -586,12 +623,16 @@ bool urdf2inventor::fixTextureReferences(
 
 
 // instantiation for string meshes
-template bool urdf2inventor::convertMeshes<std::string>(urdf_traverser::UrdfTraverser& traverser,
+/*template bool urdf2inventor::convertMeshesSimple<std::string>(urdf_traverser::UrdfTraverser& traverser,
         const std::string& fromLink,
         const float scaleFactor,
         const std::string& material,
         const std::string& file_extension,
         const urdf_traverser::EigenTransform& addVisualTransform,
         std::map<std::string, std::string>& meshes,
-        std::map<std::string, std::set<std::string> >& textureFiles);
+        std::map<std::string, std::set<std::string> >& textureFiles);*/
 
+// instantiation for string meshes
+template bool urdf2inventor::convertMeshes<std::string>(urdf_traverser::UrdfTraverser& traverser,
+        const std::string& fromLink,
+        const urdf2inventor::MeshConvertRecursionParams<std::string>::Ptr& meshParams);

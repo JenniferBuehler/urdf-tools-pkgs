@@ -1,10 +1,10 @@
 /**
- * <ORGANIZATION> = Jennifer Buehler 
- * <COPYRIGHT HOLDER> = Jennifer Buehler 
- * 
- * Copyright (c) 2016 Jennifer Buehler 
+ * <ORGANIZATION> = Jennifer Buehler
+ * <COPYRIGHT HOLDER> = Jennifer Buehler
+ *
+ * Copyright (c) 2016 Jennifer Buehler
  * All rights reserved.
- * 
+ *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
  *     * Redistributions of source code must retain the above copyright
@@ -15,7 +15,7 @@
  *     * Neither the name of the <ORGANIZATION> nor the
  *       names of its contributors may be used to endorse or promote products
  *       derived from this software without specific prior written permission.
- * 
+ *
  * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND
  * ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
  * WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
@@ -31,6 +31,7 @@
 #ifndef URDF2INVENTOR_CONVERTMESH_H
 #define URDF2INVENTOR_CONVERTMESH_H
 
+#include <urdf2inventor/MeshConvertRecursionParams.h>
 #include <urdf_traverser/Types.h>
 
 // this is a temporary filename (extension .iv) which is needed for internal usage, but can be deleted after execution.
@@ -63,8 +64,8 @@ namespace urdf2inventor
  * \param textureFiles if the \e resultMeshes have textures, this is a list of textures
  *      (absolute file paths) referenced from the meshes. Key is the same as in \e resultMeshes.
  */
-template<class MeshFormat>
-bool convertMeshes(urdf_traverser::UrdfTraverser& traverser,
+/*template<class MeshFormat>
+bool convertMeshesSimple(urdf_traverser::UrdfTraverser& traverser,
                    const std::string& fromLinkName,
                    const float scaleFactor,
                    const std::string& material,
@@ -72,6 +73,21 @@ bool convertMeshes(urdf_traverser::UrdfTraverser& traverser,
                    const urdf_traverser::EigenTransform& addVisualTransform,
                    std::map<std::string, MeshFormat>& meshes,
                    std::map<std::string, std::set<std::string> >& textureFiles);
+*/
+
+/**
+ * Convert all meshes starting from fromLinkName into the inventor format, and store them in the given
+ * mesh files container.
+ * Results will be in \e meshParams.
+ *
+ * Note that this template function is only instantiated for MeshFormat=std::string at this point,
+ * which means returned meshes can be represented in a string (eg. XML format).
+ */
+template <class MeshFormat>
+bool convertMeshes(urdf_traverser::UrdfTraverser& traverser,
+                   const std::string& fromLink,
+                   const typename urdf2inventor::MeshConvertRecursionParams<MeshFormat>::Ptr& meshParams);
+
 
 /**
  * Changes the texture references (absolute paths) in the model string descriptions so they reference the
