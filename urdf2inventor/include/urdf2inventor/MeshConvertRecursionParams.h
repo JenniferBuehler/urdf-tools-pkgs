@@ -95,6 +95,7 @@ public:
     // (absolute file paths) referenced from the meshes.
     // Key is the same as in \e resultMeshes.
     std::map<std::string, std::set<std::string> > textureFiles;
+
 private:
     explicit MeshConvertRecursionParams() {}
 
