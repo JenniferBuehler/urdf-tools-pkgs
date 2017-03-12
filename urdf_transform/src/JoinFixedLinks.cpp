@@ -39,15 +39,16 @@ using urdf_traverser::RecursionParams;
 using urdf_traverser::LinkRecursionParams;
 
 /**
- * Callback: If the parent joint of this link is fixed, it will be removed, and this link's visual will be
- * connected to the parent link.
+ * Callback: If the parent joint of this link is fixed, it will be removed,
+ * and this link's visual will be connected to the parent link.
  * If the joint was active, the function returns the same link as in the parameter.
  * Otherwise, it returns the pointer to the parent link which now contains
  * this link's visual/collision.
  */
 int joinFixedLinksOnThis(urdf_traverser::RecursionParamsPtr& params)
 {
-    LinkRecursionParams::Ptr lparam = baselib_binding_ns::dynamic_pointer_cast<LinkRecursionParams>(params);
+    LinkRecursionParams::Ptr lparam =
+      baselib_binding_ns::dynamic_pointer_cast<LinkRecursionParams>(params);
     if (!lparam)
     {
         ROS_ERROR("Wrong recursion parameter type");
@@ -75,7 +76,7 @@ int joinFixedLinksOnThis(urdf_traverser::RecursionParamsPtr& params)
     lparam->model->getLink(jointToParent->parent_link_name, parentLink);
     if (!parentLink)
     {
-        ROS_WARN("End of chain at %s, because of no parent link", link->name.c_str());
+        // ROS_WARN("End of chain at %s, because of no parent link", link->name.c_str());
         lparam->resultLink = link;
         return 1;
     }
@@ -90,13 +91,14 @@ int joinFixedLinksOnThis(urdf_traverser::RecursionParamsPtr& params)
     {
         // ROS_INFO("Parent of %s (%s) is active so won't delete",link->name.c_str(), jointToParent->name.c_str());
         // We won't delete this joint, as it is active.
-        // ROS_INFO("Joining chain finished between %s and %s",parentLink->name.c_str(),link->name.c_str());
+        /*ROS_INFO("No joining of %s and %s (return latter)",
+                 parentLink->name.c_str(),link->name.c_str());*/
         lparam->resultLink = link;
         return 1;
     }
 
     // this joint is fixed, so we will delete it
-    // ROS_INFO("Joining fixed joint (%s) between %s and %s",jointToParent->name.c_str(), parentLink->name.c_str(),link->name.c_str());
+    ROS_INFO("Joining fixed joint (%s) between %s and %s",jointToParent->name.c_str(), parentLink->name.c_str(),link->name.c_str());
 
     // remove this link from the parent
     for (std::vector<urdf_traverser::LinkPtr>::iterator pc = parentLink->child_links.begin();
@@ -197,6 +199,8 @@ int joinFixedLinksOnThis(urdf_traverser::RecursionParamsPtr& params)
 
     // combine inertials
     // parent->inertial=XXX TODO;
+        
+    // ROS_INFO("Resulting link: %s",parentLink->name.c_str());
 
     lparam->resultLink = parentLink;
     return 1;
@@ -220,11 +224,12 @@ bool urdf_transform::joinFixedLinks(UrdfTraverser& traverser, const std::string&
 
     // ROS_INFO_STREAM("### Joining fixed links starting from "<<startLink);
 
-    // join fixed joints *not* incl. parent joint
-    bool includeParent = false;
+    bool includeRoot = false;
     LinkRecursionParams * lp = new LinkRecursionParams(traverser.getModel());
     urdf_traverser::RecursionParamsPtr p(lp);
-    int travResult = traverser.traverseTreeBottomUp(startLink, boost::bind(&joinFixedLinksOnThis, _1), p, includeParent);
+    int travResult = traverser.traverseTreeBottomUp(startLink,
+                                                    boost::bind(&joinFixedLinksOnThis, _1),
+                                                    p, includeRoot);
     if (travResult < 0)
     {
         ROS_ERROR("Could not join fixed links");
@@ -232,7 +237,7 @@ bool urdf_transform::joinFixedLinks(UrdfTraverser& traverser, const std::string&
     }
 
     urdf_traverser::LinkPtr newLink = lp->resultLink;
-    if (newLink->name != startLink)
+    if (includeRoot && (newLink->name != startLink))
     {
         ROS_INFO_STREAM("Starting link " << startLink << " re-assigned to be " << newLink->name << ".");
         if (startLink == rootLinkName)

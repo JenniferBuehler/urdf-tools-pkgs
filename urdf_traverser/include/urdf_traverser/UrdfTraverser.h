@@ -1,10 +1,10 @@
 /**
- * <ORGANIZATION> = Jennifer Buehler 
- * <COPYRIGHT HOLDER> = Jennifer Buehler 
- * 
- * Copyright (c) 2016 Jennifer Buehler 
+ * <ORGANIZATION> = Jennifer Buehler
+ * <COPYRIGHT HOLDER> = Jennifer Buehler
+ *
+ * Copyright (c) 2016 Jennifer Buehler
  * All rights reserved.
- * 
+ *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
  *     * Redistributions of source code must retain the above copyright
@@ -15,7 +15,7 @@
  *     * Neither the name of the <ORGANIZATION> nor the
  *       names of its contributors may be used to endorse or promote products
  *       derived from this software without specific prior written permission.
- * 
+ *
  * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND
  * ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
  * WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
@@ -147,15 +147,18 @@ public:
     int traverseTreeTopDown(const std::string& linkName, boost::function< int(RecursionParamsPtr&)> link_cb,
                             RecursionParamsPtr& params, bool includeLink = true);
     /**
-     * Similar to traverseTreeTopDown(), but traverses bottom-up and is allows to re-link tree (by traversing it safely such
-     * that changes in structure won't matter).
-     * \param includeLink include the link itself. If false, will start to traverse starting from the link's children.
+     * Similar to traverseTreeTopDown(), but traverses bottom-up and is allows to re-link tree
+     * (by traversing it safely such that changes in structure won't matter).
+     * \param includeLink include the link itself. If false, will start to traverse starting
+     *    from the link's children.
      * \param link_cb Callback to be called when traversing a link.
-     *      returns -1 or 0 if traversal is to be stopped, otherwise 1. -1 is for stop because of an error,
-     *      while 0 is stop because an expected condition found and traversal has been stopped with  no error.
+     *      returns -1 or 0 if traversal is to be stopped, otherwise 1.
+     *      -1 is for stop because of an error, while 0 is stop because an expected
+     *      condition found and traversal has been stopped with  no error.
      * \return the last return value of the callback
      */
-    int traverseTreeBottomUp(const std::string& linkName, boost::function< int(RecursionParamsPtr&)> link_cb,
+    int traverseTreeBottomUp(const std::string& linkName,
+                             boost::function< int(RecursionParamsPtr&)> link_cb,
                              RecursionParamsPtr& params, bool includeLink = true);
 
 
