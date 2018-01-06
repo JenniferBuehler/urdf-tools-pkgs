@@ -2,6 +2,15 @@
 Changelog for package urdf2inventor
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+* Urdf2Inventor::convert() now accepts MeshRecursionParams so that it additional transforms can be handled per link
+* Backup
+* Backup before critical changes
+* Some tidy up
+* Can now use collision geometry instead of visual for meshes, though it still needs to be added as paramter
+* Contributors: Jennifer Buehler
+
 1.0.1 (2016-08-06)
 ------------------
 * Changed to BSD 3-clause license
