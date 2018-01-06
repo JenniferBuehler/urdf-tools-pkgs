@@ -2,8 +2,8 @@
 Changelog for package urdf_viewer
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+1.0.2 (2018-01-06)
+------------------
 * Some tidy up
 * Contributors: Jennifer Buehler
 

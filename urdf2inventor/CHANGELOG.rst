@@ -2,8 +2,8 @@
 Changelog for package urdf2inventor
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+1.0.2 (2018-01-06)
+------------------
 * Urdf2Inventor::convert() now accepts MeshRecursionParams so that it additional transforms can be handled per link
 * Backup
 * Backup before critical changes
