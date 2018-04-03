@@ -33,6 +33,7 @@
 #include <urdf_traverser/UrdfTraverser.h>
 #include <urdf_traverser/PrintModel.h>
 #include <urdf_traverser/Functions.h>
+#include <cmath>
 
 using urdf_traverser::UrdfTraverser;
 using urdf_traverser::RecursionParams;
@@ -86,7 +87,7 @@ int printLink(urdf_traverser::RecursionParamsPtr& p)
     double roll, pitch, yaw;
     link->parent_joint->parent_to_joint_origin_transform.rotation.getRPY(roll, pitch, yaw);
 
-    if (isnan(roll) || isnan(pitch) || isnan(yaw))
+    if (std::isnan(roll) || std::isnan(pitch) || std::isnan(yaw))
     {
         ROS_ERROR("getRPY() returned nan!");
         return -1;
