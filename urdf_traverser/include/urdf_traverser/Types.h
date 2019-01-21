@@ -31,7 +31,6 @@
 #ifndef URDF_TRAVERSER_TYPES_H
 #define URDF_TRAVERSER_TYPES_H
 
-#include <boost/shared_ptr.hpp>
 #include <Eigen/Core>
 #include <Eigen/Geometry>
 
@@ -44,24 +43,24 @@ namespace urdf_traverser
 
 typedef Eigen::Transform<double, 3, Eigen::Affine> EigenTransform;
 
-typedef boost::shared_ptr<urdf::Link> LinkPtr;
-typedef boost::shared_ptr<const urdf::Link> LinkConstPtr;
+typedef std::shared_ptr<urdf::Link> LinkPtr;
+typedef std::shared_ptr<const urdf::Link> LinkConstPtr;
 
-typedef boost::shared_ptr<urdf::Joint> JointPtr;
-typedef boost::shared_ptr<const urdf::Joint> JointConstPtr;
+typedef std::shared_ptr<urdf::Joint> JointPtr;
+typedef std::shared_ptr<const urdf::Joint> JointConstPtr;
 
-typedef boost::shared_ptr<urdf::Visual> VisualPtr;
-typedef boost::shared_ptr<urdf::Geometry> GeometryPtr;
-typedef boost::shared_ptr<urdf::Mesh> MeshPtr;
-typedef boost::shared_ptr<urdf::Sphere> SpherePtr;
-typedef boost::shared_ptr<urdf::Box> BoxPtr;
-typedef boost::shared_ptr<urdf::Cylinder> CylinderPtr;
-typedef boost::shared_ptr<urdf::Collision> CollisionPtr;
-typedef boost::shared_ptr<urdf::Inertial> InertialPtr;
-typedef boost::shared_ptr<urdf::Material> MaterialPtr;
+typedef std::shared_ptr<urdf::Visual> VisualPtr;
+typedef std::shared_ptr<urdf::Geometry> GeometryPtr;
+typedef std::shared_ptr<urdf::Mesh> MeshPtr;
+typedef std::shared_ptr<urdf::Sphere> SpherePtr;
+typedef std::shared_ptr<urdf::Box> BoxPtr;
+typedef std::shared_ptr<urdf::Cylinder> CylinderPtr;
+typedef std::shared_ptr<urdf::Collision> CollisionPtr;
+typedef std::shared_ptr<urdf::Inertial> InertialPtr;
+typedef std::shared_ptr<urdf::Material> MaterialPtr;
 
-typedef boost::shared_ptr<urdf::Model> ModelPtr;
-typedef boost::shared_ptr<const urdf::Model> ModelConstPtr;
+typedef std::shared_ptr<urdf::Model> ModelPtr;
+typedef std::shared_ptr<const urdf::Model> ModelConstPtr;
 
 
 

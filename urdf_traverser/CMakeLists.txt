@@ -1,6 +1,8 @@
 cmake_minimum_required(VERSION 2.8.3)
 project(urdf_traverser)
 
+add_compile_options(-std=c++11)
+
 set (CATKIN_PKGS
   roscpp
   urdf
