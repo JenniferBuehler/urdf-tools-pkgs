@@ -29,6 +29,7 @@
  * ------------------------------------------------------------------------------
  **/
 #include <ros/ros.h>
+#include <urdf_traverser/Types.h>
 #include <urdf_traverser/UrdfTraverser.h>
 #include <urdf_traverser/Functions.h>
 #include <urdf2inventor/Helpers.h>
@@ -238,7 +239,7 @@ bool addGeometry(SoSeparator * addToNode, const std::string& linkName, double sc
         case urdf::Geometry::MESH:
         {
             // ROS_INFO_STREAM("Mesh for "<<visual->group_name);
-            MeshPtr mesh = boost::dynamic_pointer_cast<urdf::Mesh>(geom);
+            MeshPtr mesh = shr_lib::dynamic_pointer_cast<urdf::Mesh>(geom);
             if (!mesh.get())
             {
                 ROS_ERROR("Mesh cast error");
@@ -275,7 +276,7 @@ bool addGeometry(SoSeparator * addToNode, const std::string& linkName, double sc
         case urdf::Geometry::SPHERE:
         {
             ROS_INFO("Urdf2Inventor: Model has a Sphere");
-            SpherePtr sphere = boost::dynamic_pointer_cast<urdf::Sphere>(geom);
+            SpherePtr sphere = shr_lib::dynamic_pointer_cast<urdf::Sphere>(geom);
             if (!sphere.get())
             {
                 ROS_ERROR("Sphere cast error");
@@ -290,7 +291,7 @@ bool addGeometry(SoSeparator * addToNode, const std::string& linkName, double sc
         case urdf::Geometry::BOX:
         {
             ROS_INFO("Urdf2Inventor: Model has a box");
-            BoxPtr box = boost::dynamic_pointer_cast<urdf::Box>(geom);
+            BoxPtr box = shr_lib::dynamic_pointer_cast<urdf::Box>(geom);
             if (!box.get())
             {
                 ROS_ERROR("Box cast error");
@@ -311,7 +312,7 @@ bool addGeometry(SoSeparator * addToNode, const std::string& linkName, double sc
         case urdf::Geometry::CYLINDER:
         {
             ROS_INFO("Urdf2Inventor: Model has a cylinder");
-            CylinderPtr cylinder = boost::dynamic_pointer_cast<urdf::Cylinder>(geom);
+            CylinderPtr cylinder = shr_lib::dynamic_pointer_cast<urdf::Cylinder>(geom);
             if (!cylinder.get())
             {
                 ROS_ERROR("Cylinder cast error");
@@ -517,7 +518,7 @@ bool urdf2inventor::convertMeshesSimple(urdf_traverser::UrdfTraverser& traverser
     urdf_traverser::RecursionParamsPtr p(meshParams);
 
     // go through entire tree
-    if (traverser.traverseTreeTopDown(startLinkName, boost::bind(&convertMeshToIVString, _1), p, true) <= 0)
+    if (traverser.traverseTreeTopDown(startLinkName, shr_lib::bind(&convertMeshToIVString, _1), p, true) <= 0)
     {
         ROS_ERROR("Could nto convert meshes.");
         return false;
@@ -562,8 +563,6 @@ bool urdf2inventor::convertMeshes(urdf_traverser::UrdfTraverser& traverser,
     }
     return true;
 }
-
-
 
 bool urdf2inventor::fixTextureReferences(
     const std::string& relMeshDir,

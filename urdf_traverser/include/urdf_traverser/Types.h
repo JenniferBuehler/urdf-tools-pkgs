@@ -1,10 +1,10 @@
 /**
- * <ORGANIZATION> = Jennifer Buehler 
- * <COPYRIGHT HOLDER> = Jennifer Buehler 
- * 
- * Copyright (c) 2016 Jennifer Buehler 
+ * <ORGANIZATION> = Jennifer Buehler
+ * <COPYRIGHT HOLDER> = Jennifer Buehler
+ *
+ * Copyright (c) 2016 Jennifer Buehler
  * All rights reserved.
- * 
+ *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
  *     * Redistributions of source code must retain the above copyright
@@ -15,7 +15,7 @@
  *     * Neither the name of the <ORGANIZATION> nor the
  *       names of its contributors may be used to endorse or promote products
  *       derived from this software without specific prior written permission.
- * 
+ *
  * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND
  * ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
  * WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
@@ -31,7 +31,6 @@
 #ifndef URDF_TRAVERSER_TYPES_H
 #define URDF_TRAVERSER_TYPES_H
 
-#include <boost/shared_ptr.hpp>
 #include <Eigen/Core>
 #include <Eigen/Geometry>
 
@@ -39,29 +38,37 @@
 #include <urdf_model/link.h>
 #include <urdf_model/joint.h>
 
+#if ROS_VERSION_MINIMUM(1, 12, 0)
+#include <memory>
+namespace shr_lib = std;
+#else
+#include <boost/shared_ptr.hpp>
+namespace shr_lib = boost;
+#endif
+
 namespace urdf_traverser
 {
 
 typedef Eigen::Transform<double, 3, Eigen::Affine> EigenTransform;
 
-typedef boost::shared_ptr<urdf::Link> LinkPtr;
-typedef boost::shared_ptr<const urdf::Link> LinkConstPtr;
+typedef shr_lib::shared_ptr<urdf::Link> LinkPtr;
+typedef shr_lib::shared_ptr<const urdf::Link> LinkConstPtr;
 
-typedef boost::shared_ptr<urdf::Joint> JointPtr;
-typedef boost::shared_ptr<const urdf::Joint> JointConstPtr;
+typedef shr_lib::shared_ptr<urdf::Joint> JointPtr;
+typedef shr_lib::shared_ptr<const urdf::Joint> JointConstPtr;
 
-typedef boost::shared_ptr<urdf::Visual> VisualPtr;
-typedef boost::shared_ptr<urdf::Geometry> GeometryPtr;
-typedef boost::shared_ptr<urdf::Mesh> MeshPtr;
-typedef boost::shared_ptr<urdf::Sphere> SpherePtr;
-typedef boost::shared_ptr<urdf::Box> BoxPtr;
-typedef boost::shared_ptr<urdf::Cylinder> CylinderPtr;
-typedef boost::shared_ptr<urdf::Collision> CollisionPtr;
-typedef boost::shared_ptr<urdf::Inertial> InertialPtr;
-typedef boost::shared_ptr<urdf::Material> MaterialPtr;
+typedef shr_lib::shared_ptr<urdf::Visual> VisualPtr;
+typedef shr_lib::shared_ptr<urdf::Geometry> GeometryPtr;
+typedef shr_lib::shared_ptr<urdf::Mesh> MeshPtr;
+typedef shr_lib::shared_ptr<urdf::Sphere> SpherePtr;
+typedef shr_lib::shared_ptr<urdf::Box> BoxPtr;
+typedef shr_lib::shared_ptr<urdf::Cylinder> CylinderPtr;
+typedef shr_lib::shared_ptr<urdf::Collision> CollisionPtr;
+typedef shr_lib::shared_ptr<urdf::Inertial> InertialPtr;
+typedef shr_lib::shared_ptr<urdf::Material> MaterialPtr;
 
-typedef boost::shared_ptr<urdf::Model> ModelPtr;
-typedef boost::shared_ptr<const urdf::Model> ModelConstPtr;
+typedef shr_lib::shared_ptr<urdf::Model> ModelPtr;
+typedef shr_lib::shared_ptr<const urdf::Model> ModelConstPtr;
 
 
 
