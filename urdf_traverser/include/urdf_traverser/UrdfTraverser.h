@@ -35,15 +35,18 @@
 //-----------------------------------------------------
 
 
+#include <urdf_traverser/Types.h>
+#include <urdf_traverser/RecursionParams.h>
+
 #include <iostream>
 #include <string>
 #include <map>
 #include <vector>
 
+#define BOOST_NO_CXX11_SCOPED_ENUMS
 #include <boost/filesystem.hpp>
+#undef BOOST_NO_CXX11_SCOPED_ENUMS
 
-#include <urdf_traverser/Types.h>
-#include <urdf_traverser/RecursionParams.h>
 
 namespace urdf_traverser
 {

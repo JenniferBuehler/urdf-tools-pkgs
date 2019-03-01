@@ -16,7 +16,10 @@
     Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301  USA
 **/
 #include <urdf2inventor/Helpers.h>
+
+#define BOOST_NO_CXX11_SCOPED_ENUMS
 #include <boost/filesystem.hpp>
+#undef BOOST_NO_CXX11_SCOPED_ENUMS
 
 template<typename MeshFormat>
 bool urdf2inventor::FileIO<MeshFormat>::initOutputDir(const std::string& robotName) const

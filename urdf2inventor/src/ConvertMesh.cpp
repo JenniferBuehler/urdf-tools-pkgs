@@ -38,8 +38,6 @@
 #include <urdf2inventor/MeshConvertRecursionParams.h>
 
 #include <urdf2inventor/AssimpImport.h>
-#include <urdf2inventor/Helpers.h>
-#include <boost/filesystem.hpp>
 
 #include <Inventor/nodes/SoGroup.h>
 #include <Inventor/nodes/SoTransform.h>

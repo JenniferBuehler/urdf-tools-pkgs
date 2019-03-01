@@ -35,8 +35,6 @@
 #include <urdf_traverser/JointNames.h>
 #include <urdf_traverser/DependencyOrderedJoints.h>
 
-#include <boost/filesystem.hpp>
-
 #include <string>
 #include <ros/ros.h>
 #include <ros/package.h>

@@ -43,11 +43,12 @@
 #include <Inventor/SbBox.h>
 #include <Inventor/actions/SoGetBoundingBoxAction.h>
 
-#include <boost/filesystem.hpp>
-
 #include <iostream>
 #include <sstream>
 
+#define BOOST_NO_CXX11_SCOPED_ENUMS
+#include <boost/filesystem.hpp>
+#undef BOOST_NO_CXX11_SCOPED_ENUMS
 
 void urdf2inventor::getBoundingBox(SoNode* node, Eigen::Vector3d& minPoint, Eigen::Vector3d& maxPoint)
 {

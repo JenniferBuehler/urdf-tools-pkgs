@@ -33,8 +33,11 @@
 #include <ros/ros.h>
 #include <ros/package.h>
 
-#include <fcntl.h>
+#define BOOST_NO_CXX11_SCOPED_ENUMS
 #include <boost/filesystem.hpp>
+#undef BOOST_NO_CXX11_SCOPED_ENUMS
+
+#include <fcntl.h>
 #include <fstream>
 #include <string>
 
