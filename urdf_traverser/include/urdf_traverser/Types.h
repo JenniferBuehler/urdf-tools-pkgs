@@ -38,7 +38,7 @@
 #include <urdf_model/link.h>
 #include <urdf_model/joint.h>
 
-#if ROS_VERSION_MINIMUM(1, 12, 0)
+#if ROS_VERSION_MINIMUM(1, 13, 0)
 #include <memory>
 namespace shr_lib = std;
 #else
