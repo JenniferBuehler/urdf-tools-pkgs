@@ -138,7 +138,7 @@ std::string urdf2inventor::printMatrix(const urdf2inventor::EigenTransform& em)
 
 urdf2inventor::EigenTransform urdf2inventor::getEigenTransform(const SbMatrix& m)
 {
-    Eigen::Matrix3d em;
+    Eigen::Matrix4d em;
 
     // Matrix is transposed: SbMatrix m[i][j] is the value in column i and row j.
     // Eigen: operator() (Index row, Index col) 
