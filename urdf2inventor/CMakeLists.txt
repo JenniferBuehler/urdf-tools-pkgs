@@ -20,34 +20,37 @@ find_package(catkin REQUIRED COMPONENTS ${CATKIN_PKGS})
 ## System dependencies are found with CMake's conventions
 set(CMAKE_MODULE_PATH "${PROJECT_SOURCE_DIR}/CMakeMacros/")
 find_package(SoQt4 REQUIRED)
-find_package(Coin REQUIRED)
+#find_package(Coin REQUIRED)
 find_package(Qt4 REQUIRED)
 find_package(assimp REQUIRED)
 
 ## System dependencies are found with CMake's conventions
 find_package(Boost REQUIRED COMPONENTS filesystem)
 
-## Uncomment this if the package has a setup.py. This macro ensures
-## modules and global scripts declared therein get installed
-## See http://ros.org/doc/api/catkin/html/user_guide/setup_dot_py.html
-# catkin_python_setup()
-
 ###################################
 ## catkin specific configuration ##
 ###################################
 
+# Standardize include dirs/libs names
+list(APPEND SoQt4_INCLUDE_DIRS ${SOQT_INCLUDE_DIRS})
+list(APPEND SoQt4_LIBRARIES ${SOQT_LIBRARY})
+list(APPEND Qt4_INCLUDE_DIRS ${QT_INCLUDE_DIR} ${QT_INCLUDE_DIR}/Qt)
+list(APPEND Qt4_LIBRARIES ${QT_LIBRARIES})
+list(APPEND assimp_INCLUDE_DIRS ${ASSIMP_INCLUDE_DIRS})
+list(APPEND assimp_LIBRARIES ${ASSIMP_LIBRARY} ${ASSIMP_LIBRARIES})
+
 # list of catkin packages this package depends on, to be put in catkin_package CATKIN_DEPENDS
 set (CATKIN_DEPEND_PKGS roscpp urdf eigen_conversions baselib_binding urdf_traverser urdf_transform)
 # list of cmake projects this package depends on, to be put in catkin_package DEPENDS
-set (CATKIN_DEPENDS_LIBS SoQt4 Qt4 Coin assimp Boost) # libsoqt4-dev libqt4-dev libcoin80-dev assimp-dev)
+set (CATKIN_DEPENDS_LIBS
+      SoQt4 Qt4 assimp Boost) #Coin
 
 # Libraries this project depends on, and which also need to be exported
 # because depending projects will require them.
 set (DEPEND_LIBRARIES
-    ${SOQT_LIBRARY}
-    ${QT_LIBRARIES}
-    ${ASSIMP_LIBRARY}
-    ${ASSIMP_LIBRARIES}
+    ${SoQt4_LIBRARIES}
+    ${Qt4_LIBRARIES}
+    ${assimp_LIBRARIES}
     ${Boost_LIBRARIES}
 )
 
@@ -57,9 +60,8 @@ set (URDF2INVENTOR_INCLUDE_DIRS
   include
   ${Boost_INCLUDE_DIRS}
   ${assimp_INCLUDE_DIRS}
-  ${SOQt_INCLUDE_DIRS}
-  ${QT_INCLUDE_DIR}
-  ${QT_INCLUDE_DIR}/Qt
+  ${SoQt4_INCLUDE_DIRS}
+  ${Qt4_INCLUDE_DIRS}
 )
 
 ## The catkin_package macro generates cmake config files for your package
